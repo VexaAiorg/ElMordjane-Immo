@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Example models for a real estate application
+// Uncomment and modify as needed
+
+// model User {
+//   id        String   @id @default(uuid())
+//   email     String   @unique
+//   name      String?
+//   role      UserRole @default(CLIENT)
+//   phone     String?
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   
+//   properties Property[]
+//   inquiries  Inquiry[]
+// }
+
+// enum UserRole {
+//   ADMIN
+//   AGENT
+//   CLIENT
+// }
+
+// model Property {
+//   id          String         @id @default(uuid())
+//   title       String
+//   description String?
+//   price       Decimal
+//   area        Float?
+//   bedrooms    Int?
+//   bathrooms   Int?
+//   type        PropertyType
+//   status      PropertyStatus @default(AVAILABLE)
+//   address     String
+//   city        String
+//   country     String         @default("Algeria")
+//   latitude    Float?
+//   longitude   Float?
+//   images      String[]
+//   features    String[]
+//   createdAt   DateTime       @default(now())
+//   updatedAt   DateTime       @updatedAt
+//   
+//   ownerId   String?
+//   owner     User?      @relation(fields: [ownerId], references: [id])
+//   inquiries Inquiry[]
+// }
+
+// enum PropertyType {
+//   APARTMENT
+//   VILLA
+//   HOUSE
+//   LAND
+//   COMMERCIAL
+// }
+
+// enum PropertyStatus {
+//   AVAILABLE
+//   SOLD
+//   RENTED
+//   PENDING
+// }
+
+// model Inquiry {
+//   id         String   @id @default(uuid())
+//   name       String
+//   email      String
+//   phone      String?
+//   message    String
+//   status     InquiryStatus @default(NEW)
+//   createdAt  DateTime @default(now())
+//   updatedAt  DateTime @updatedAt
+//   
+//   propertyId String
+//   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+//   
+//   userId     String?
+//   user       User?    @relation(fields: [userId], references: [id])
+// }
+
+// enum InquiryStatus {
+//   NEW
+//   CONTACTED
+//   CLOSED
+// }
