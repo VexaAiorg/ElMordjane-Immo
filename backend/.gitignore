@@ -4,4 +4,4 @@ node_modules
 
 /src/generated/prisma
 #readmes 
-DATABASE_SETUP.node_modules
+DATABASE_SETUP.md
