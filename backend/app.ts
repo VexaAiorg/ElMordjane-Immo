@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
+import authRoutes from "./src/routes/authRoutes.js";
 
 const app = express();
 
@@ -25,5 +26,8 @@ app.get('/health', (req, res) => {
     uptime: process.uptime()
   });
 });
+
+// API Routes
+app.use('/api/auth', authRoutes);
 
 export default app;
