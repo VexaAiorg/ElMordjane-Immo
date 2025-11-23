@@ -22,7 +22,7 @@ const Auth = () => {
                 : await signup({ email, password });
 
             if (response.status === 'success') {
-                navigate('/dashboard');
+                navigate('/dashboard', { replace: true });
             }
         } catch (err) {
             setError(err.message || `${activeTab === 'signin' ? 'Login' : 'Signup'} failed. Please try again.`);

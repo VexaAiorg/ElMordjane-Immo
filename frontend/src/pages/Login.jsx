@@ -19,7 +19,7 @@ const Login = () => {
 
             if (response.status === 'success') {
                 // Redirect to dashboard on successful login
-                navigate('/dashboard');
+                navigate('/dashboard', { replace: true });
             }
         } catch (err) {
             setError(err.message || 'Login failed. Please try again.');

@@ -2,12 +2,16 @@
 
 .auth-container {
     width: 100%;
-    max-width: 550px;
-    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 1rem;
 }
 
 .auth-card {
+    width: 100%;
+    max-width: 550px;
     background: transparent;
     padding: 2rem 0.5rem;
     animation: fadeInUp 0.5s ease-out;

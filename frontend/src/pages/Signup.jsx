@@ -19,7 +19,7 @@ const Signup = () => {
 
             if (response.status === 'success') {
                 // Redirect to dashboard on successful signup
-                navigate('/dashboard');
+                navigate('/dashboard', { replace: true });
             }
         } catch (err) {
             setError(err.message || 'Signup failed. Please try again.');
