@@ -1,0 +1,216 @@
+
+// API Utility Module
+// Configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_TIMEOUT = 10000; // 10 seconds
+
+// Helper Functions
+/**
+ * Get authentication token from localStorage
+ * @returns {string|null} JWT token or null if not found
+ */
+const getAuthToken = () => {
+    return localStorage.getItem('authToken');
+};
+/**
+ * Set authentication token in localStorage
+ * @param {string} token - JWT token to store
+ */
+const setAuthToken = (token) => {
+    localStorage.setItem('authToken', token);
+};
+/**
+ * Remove authentication token from localStorage
+ */
+const removeAuthToken = () => {
+    localStorage.removeItem('authToken');
+};
+
+/**
+ * Create headers for API requests
+ * @param {boolean} includeAuth - Whether to include authorization header
+ * @returns {Object} Headers object
+ */
+const createHeaders = (includeAuth = false) => {
+    const headers = {
+        'Content-Type': 'application/json',
+    };
+
+    if (includeAuth) {
+        const token = getAuthToken();
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+    }
+
+    return headers;
+};
+
+/**
+ * Generic API request handler with error handling
+ * @param {string} endpoint - API endpoint path
+ * @param {Object} options - Fetch options
+ * @returns {Promise<Object>} Response data
+ * @throws {Error} API error with message
+ */
+const apiRequest = async (endpoint, options = {}) => {
+    const url = `${API_BASE_URL}${endpoint}`;
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        // Parse response
+        const data = await response.json();
+
+        // Handle non-2xx responses
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return data;
+    } catch (error) {
+        // Handle network errors
+        if (error.name === 'AbortError') {
+            throw new Error('Request timeout. Please try again.');
+        }
+
+        // Handle fetch errors
+        if (error instanceof TypeError) {
+            throw new Error('Network error. Please check your connection.');
+        }
+
+        // Re-throw API errors
+        throw error;
+    }
+};
+// Authentication API
+/**
+ * Sign up a new admin user (one-time only)
+ * @param {Object} credentials - User credentials
+ * @param {string} credentials.email - User email
+ * @param {string} credentials.password - User password
+ * @returns {Promise<Object>} Response with user data and token
+ */
+export const signup = async ({ email, password }) => {
+    const data = await apiRequest('/api/auth/signup', {
+        method: 'POST',
+        headers: createHeaders(false),
+        body: JSON.stringify({ email, password }),
+    });
+
+    // Store token if signup is successful
+    if (data.status === 'success' && data.data?.token) {
+        setAuthToken(data.data.token);
+    }
+
+    return data;
+};
+
+/**
+ * Login an existing user
+ * @param {Object} credentials - User credentials
+ * @param {string} credentials.email - User email
+ * @param {string} credentials.password - User password
+ * @returns {Promise<Object>} Response with user data and token
+ */
+export const login = async ({ email, password }) => {
+    const data = await apiRequest('/api/auth/login', {
+        method: 'POST',
+        headers: createHeaders(false),
+        body: JSON.stringify({ email, password }),
+    });
+
+    // Store token if login is successful
+    if (data.status === 'success' && data.data?.token) {
+        setAuthToken(data.data.token);
+    }
+
+    return data;
+};
+
+/**
+ * Logout the current user
+ * @returns {Promise<Object>} Response confirming logout
+ */
+export const logout = async () => {
+    try {
+        const data = await apiRequest('/api/auth/logout', {
+            method: 'POST',
+            headers: createHeaders(true),
+        });
+
+        // Remove token from storage
+        removeAuthToken();
+
+        return data;
+    } catch (error) {
+        // Remove token even if API call fails
+        removeAuthToken();
+        throw error;
+    }
+};
+
+/**
+ * Verify the current authentication token
+ * @returns {Promise<Object>} Response with user data if token is valid
+ */
+export const verifyToken = async () => {
+    const data = await apiRequest('/api/auth/verify', {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+
+    return data;
+};
+
+/**
+ * Check if user is currently authenticated
+ * @returns {boolean} True if user has a token stored
+ */
+export const isAuthenticated = () => {
+    return !!getAuthToken();
+};
+
+// ============================================================================
+// User Management (for future use)
+// ============================================================================
+
+/**
+ * Get current user profile
+ * @returns {Promise<Object>} User profile data
+ */
+export const getCurrentUser = async () => {
+    const data = await apiRequest('/api/auth/verify', {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+
+    return data.data?.user || null;
+};
+
+// ============================================================================
+// Export Token Management Functions (for advanced use cases)
+// ============================================================================
+
+export const tokenManager = {
+    get: getAuthToken,
+    set: setAuthToken,
+    remove: removeAuthToken,
+};
+
+// ============================================================================
+// Export API Configuration (for testing/debugging)
+// ============================================================================
+
+export const apiConfig = {
+    baseUrl: API_BASE_URL,
+    timeout: API_TIMEOUT,
+};
