@@ -1,96 +1,354 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-}
-
 datasource db {
   provider = "postgresql"
 }
 
-// Example models for a real estate application
-// Uncomment and modify as needed
+generator client {
+  provider = "prisma-client-js"
+}
 
-// model User {
-//   id        String   @id @default(uuid())
-//   email     String   @unique
-//   name      String?
-//   role      UserRole @default(CLIENT)
-//   phone     String?
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-//   
-//   properties Property[]
-//   inquiries  Inquiry[]
-// }
+// --- ENUMS ---
 
-// enum UserRole {
-//   ADMIN
-//   AGENT
-//   CLIENT
-// }
+enum TypeBien {
+  APPARTEMENT
+  TERRAIN
+  VILLA
+  LOCAL
+  IMMEUBLE
+}
 
-// model Property {
-//   id          String         @id @default(uuid())
-//   title       String
-//   description String?
-//   price       Decimal
-//   area        Float?
-//   bedrooms    Int?
-//   bathrooms   Int?
-//   type        PropertyType
-//   status      PropertyStatus @default(AVAILABLE)
-//   address     String
-//   city        String
-//   country     String         @default("Algeria")
-//   latitude    Float?
-//   longitude   Float?
-//   images      String[]
-//   features    String[]
-//   createdAt   DateTime       @default(now())
-//   updatedAt   DateTime       @updatedAt
-//   
-//   ownerId   String?
-//   owner     User?      @relation(fields: [ownerId], references: [id])
-//   inquiries Inquiry[]
-// }
+enum StatutBien {
+  DISPONIBLE
+  VENDU
+  LOUE
+  SUSPENDU
+}
 
-// enum PropertyType {
-//   APARTMENT
-//   VILLA
-//   HOUSE
-//   LAND
-//   COMMERCIAL
-// }
+enum TypeTransaction {
+  VENTE
+  LOCATION
+}
 
-// enum PropertyStatus {
-//   AVAILABLE
-//   SOLD
-//   RENTED
-//   PENDING
-// }
+enum Priorite {
+  TRES_IMPORTANT
+  IMPORTANT
+  NORMAL
+}
 
-// model Inquiry {
-//   id         String   @id @default(uuid())
-//   name       String
-//   email      String
-//   phone      String?
-//   message    String
-//   status     InquiryStatus @default(NEW)
-//   createdAt  DateTime @default(now())
-//   updatedAt  DateTime @updatedAt
-//   
-//   propertyId String
-//   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-//   
-//   userId     String?
-//   user       User?    @relation(fields: [userId], references: [id])
-// }
+enum TypePieceJointe {
+  DOCUMENT
+  PHOTO
+  LOCALISATION
+}
 
-// enum InquiryStatus {
-//   NEW
-//   CONTACTED
-//   CLOSED
-// }
+enum Visibilite {
+  PUBLIABLE
+  INTERNE
+}
+
+// reste a confirmé
+enum TypeMandat {
+  EXCLUSIF
+  SIMPLE
+  SEMI_EXCLUSIF
+}
+
+// Proprietaire Enums
+enum TypeIdentite {
+  CNI // carte nationale
+  PC // permis de conduite 
+  PP // passeport
+}
+
+enum QualiteProprietaire {
+  PROPRIETAIRE
+  HERITIER
+  PROCUREUR
+}
+
+enum PrixType {
+  DEMANDE
+  OFFERT
+}
+
+enum PrixNature {
+  FERME
+  FIXE
+  NEGOCIABLE
+}
+
+enum PrixSource {
+  A_MON_NIVEAU
+  AILLEURS
+}
+
+enum PaiementVente {
+  CREDIT
+  CACHE
+}
+
+enum PaiementLocation {
+  ANNUEL
+  SEMESTRIEL
+  JOURNALIER
+}
+
+// Papier Enums
+enum PapierStatut {
+  DISPONIBLE
+  MANQUANT
+  EN_COURS
+}
+
+// Detail Enums
+enum EtatVilla {
+  RECENTE
+  A_DEMOLIR
+  A_REFAIRE
+}
+
+enum TypeLocal {
+  BUREAU
+  OPEN_SPACE
+  RDC
+  AUTRE
+}
+
+enum TypeChauffage {
+  CENTRAL
+  BAINS
+  AUTRE
+}
+
+enum TypeTransport {
+  BUS
+  TRAMWAY
+  METRO
+  TRAIN
+}
+
+// --- MODELS ---
+
+model Utilisateur {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  motDePasse   String
+  role         String   @default("ADMIN")
+  dateCreation DateTime @default(now())
+}
+
+model Proprietaire {
+  id        Int     @id @default(autoincrement())
+  nom       String
+  prenom    String
+  telephone String
+  email     String?
+  adresse   String?
+
+  // Identité
+  typeIdentite TypeIdentite?
+  numIdentite  String?
+
+  // Qualité
+  qualite QualiteProprietaire?
+
+  // Prix
+  prixType   PrixType?
+  prixNature PrixNature?
+  prixSource PrixSource?
+
+  // Paiement
+  paiementVente    PaiementVente?
+  paiementLocation PaiementLocation?
+
+  biens        BienImmobilier[]
+  dateCreation DateTime         @default(now())
+}
+
+model BienImmobilier {
+  id          Int             @id @default(autoincrement())
+  titre       String
+  description String?
+  type        TypeBien
+  statut      StatutBien      @default(DISPONIBLE)
+  transaction TypeTransaction @default(VENTE)
+
+  prixVente    Float?
+  prixLocation Float?
+
+  adresse       String?
+  dateCreation  DateTime @default(now())
+  dateMiseAJour DateTime @updatedAt
+
+  // Relations
+  proprietaireId Int
+  proprietaire   Proprietaire @relation(fields: [proprietaireId], references: [id])
+
+  suivi         Suivi?
+  papiers       Papier[]
+  piecesJointes PieceJointe[]
+  visites       Visite[]
+
+  // Détails Spécifiques
+  detailAppartement DetailAppartement?
+  detailVilla       DetailVilla?
+  detailTerrain     DetailTerrain?
+  detailLocal       DetailLocal?
+  detailImmeuble    DetailImmeuble?
+}
+
+model Suivi {
+  id     Int            @id @default(autoincrement())
+  bienId Int            @unique
+  bien   BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)
+
+  estVisite Boolean  @default(false)
+  priorite  Priorite @default(NORMAL)
+  aMandat   Boolean  @default(false)
+
+  urlGoogleSheet  String?
+  urlGooglePhotos String?
+}
+
+model Papier {
+  id        Int           @id @default(autoincrement())
+  nom       String // Ex: "Acte", "Livret Foncier"
+  categorie String? // "Appartement", "Terrain"...
+  statut    PapierStatut?
+
+  bienId       Int
+  bien         BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)
+  dateCreation DateTime       @default(now())
+}
+
+model PieceJointe {
+  id         Int             @id @default(autoincrement())
+  type       TypePieceJointe
+  visibilite Visibilite      @default(INTERNE)
+  url        String
+  nom        String?
+
+  bienId       Int
+  bien         BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)
+  dateCreation DateTime       @default(now())
+}
+
+model Visite {
+  id        Int            @id @default(autoincrement())
+  date      DateTime
+  nomClient String
+  telClient String?
+  avis      String?
+  statut    String
+  bienId    Int
+  bien      BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)
+}
+
+// --- DETAILS ---
+
+model DetailAppartement {
+  id     Int            @id @default(autoincrement())
+  bienId Int            @unique
+  bien   BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)
+
+  typeAppart     String? // Studio, F2, F3...
+  surfaceTotal   Float?
+  surfaceSalon   Float?
+  surfaceChambre Float?
+  surfaceCuisine Float?
+  surfaceSDB     Float?
+
+  etage             Int?
+  finition          String?
+  anneeConstruction Int?
+
+  ascenseur      Boolean        @default(false)
+  chauffage      TypeChauffage?
+  climatisation  Boolean        @default(false)
+  cuisineEquipee Boolean        @default(false)
+  meuble         Boolean        @default(false)
+
+  parking   Boolean @default(false)
+  gardinage Boolean @default(false)
+
+  proximiteEcole     Boolean        @default(false)
+  proximiteTransport TypeTransport?
+  proximitePlage     Boolean        @default(false)
+  proximiteAeroport  Boolean        @default(false)
+}
+
+model DetailTerrain {
+  id     Int            @id @default(autoincrement())
+  bienId Int            @unique
+  bien   BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)
+
+  surface         Float
+  vocation        String? // Résidentiel, Commercial...
+  longueur        Float?
+  largeur         Float?
+  facades         Int?
+  viabilise       Boolean @default(false)
+  statutJuridique String?
+}
+
+model DetailVilla {
+  id     Int            @id @default(autoincrement())
+  bienId Int            @unique
+  bien   BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)
+
+  // Inclus Terrain
+  surface   Float
+  vocation  String?
+  longueur  Float?
+  largeur   Float?
+  facades   Int?
+  viabilise Boolean @default(false)
+
+  // Spécifique Villa
+  surfaceBatie Float?
+  etages       Int?
+  pieces       Int?
+  etat         EtatVilla?
+  composition  String? // Duplex, Appartements...
+
+  jardin  Boolean @default(false)
+  garage  Boolean @default(false)
+  piscine Boolean @default(false)
+}
+
+model DetailLocal {
+  id     Int            @id @default(autoincrement())
+  bienId Int            @unique
+  bien   BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)
+
+  surface      Float
+  typeActivite TypeLocal?
+  hauteur      Float?
+  facades      Int?
+}
+
+model DetailImmeuble {
+  id     Int            @id @default(autoincrement())
+  bienId Int            @unique
+  bien   BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)
+
+  // Inclus Villa (qui inclus Terrain)
+  surface   Float
+  vocation  String?
+  longueur  Float?
+  largeur   Float?
+  facades   Int?
+  viabilise Boolean @default(false)
+
+  surfaceBatie Float?
+  etages       Int?
+  pieces       Int?
+  etat         EtatVilla?
+
+  jardin  Boolean @default(false)
+  garage  Boolean @default(false)
+  piscine Boolean @default(false)
+
+  // Spécifique Immeuble
+  nbAppartements Int?
+  surfaceSol     Float?
+}
