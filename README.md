@@ -110,7 +110,7 @@ enum StatutBien {
   DISPONIBLE
   VENDU
   LOUE
-  SUSPENDU
+  
 }
 
 enum TypeTransaction {
