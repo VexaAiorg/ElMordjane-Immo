@@ -28,12 +28,12 @@ export const basicInfoSchema = z.object({
 
 // Page 2: Owner Information
 export const ownerInfoSchema = z.object({
+    isNewOwner: z.boolean().default(true),
     proprietaireId: z.number().optional(), // If selecting existing owner
-    // New owner fields
-    nom: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
-    prenom: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
-    telephone: z.string().min(10, 'Le numéro doit contenir au moins 10 chiffres')
-        .max(10, 'Le numéro doit contenir au maximum 10 chiffres'),
+    // New owner fields - made optional here, validated in superRefine
+    nom: z.string().optional(),
+    prenom: z.string().optional(),
+    telephone: z.string().optional(),
     email: z.string().email('Email invalide').optional().or(z.literal('')),
     adresse: z.string().optional(),
     // Identity
@@ -48,6 +48,38 @@ export const ownerInfoSchema = z.object({
     // Payment
     paiementVente: z.enum(['CREDIT', 'CACHE']).optional(),
     paiementLocation: z.enum(['ANNUEL', 'SEMESTRIEL', 'JOURNALIER']).optional(),
+}).superRefine((data, ctx) => {
+    if (data.isNewOwner) {
+        if (!data.nom || data.nom.length < 2) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Le nom doit contenir au moins 2 caractères',
+                path: ['nom'],
+            });
+        }
+        if (!data.prenom || data.prenom.length < 2) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Le prénom doit contenir au moins 2 caractères',
+                path: ['prenom'],
+            });
+        }
+        if (!data.telephone || data.telephone.length !== 10) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Le numéro doit contenir 10 chiffres',
+                path: ['telephone'],
+            });
+        }
+    } else {
+        if (!data.proprietaireId) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Veuillez sélectionner un propriétaire',
+                path: ['proprietaireId'],
+            });
+        }
+    }
 });
 
 // Page 3: Property Details (Dynamic based on type)

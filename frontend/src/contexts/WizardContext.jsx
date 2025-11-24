@@ -16,12 +16,12 @@ export const WizardProvider = ({ children }) => {
     // Initialize state from localStorage or defaults
     const getInitialState = () => {
         try {
-            const saved = localStorage.getItem(STORAGE_KEY);
+            const saved = sessionStorage.getItem(STORAGE_KEY);
             if (saved) {
                 return JSON.parse(saved);
             }
         } catch (error) {
-            console.error('Error loading wizard data from localStorage:', error);
+            console.error('Error loading wizard data from sessionStorage:', error);
         }
         return {
             currentStep: 1,
@@ -52,7 +52,7 @@ export const WizardProvider = ({ children }) => {
     });
     const [validatedPages, setValidatedPages] = useState(new Set(initialState.validatedPages));
 
-    // Save to localStorage whenever state changes
+    // Save to sessionStorage whenever state changes
     useEffect(() => {
         try {
             const dataToSave = {
@@ -60,9 +60,9 @@ export const WizardProvider = ({ children }) => {
                 formData,
                 validatedPages: Array.from(validatedPages),
             };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
         } catch (error) {
-            console.error('Error saving wizard data to localStorage:', error);
+            console.error('Error saving wizard data to sessionStorage:', error);
         }
     }, [currentStep, formData, validatedPages]);
 
@@ -124,8 +124,8 @@ export const WizardProvider = ({ children }) => {
             localisation: [],
         });
         setValidatedPages(new Set());
-        // Clear localStorage
-        localStorage.removeItem(STORAGE_KEY);
+        // Clear sessionStorage
+        sessionStorage.removeItem(STORAGE_KEY);
     };
 
     const value = {
