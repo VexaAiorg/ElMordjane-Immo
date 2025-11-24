@@ -32,7 +32,8 @@ export const ownerInfoSchema = z.object({
     // New owner fields
     nom: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
     prenom: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
-    telephone: z.string().min(10, 'Le numéro doit contenir au moins 10 chiffres'),
+    telephone: z.string().min(10, 'Le numéro doit contenir au moins 10 chiffres')
+        .max(10, 'Le numéro doit contenir au maximum 10 chiffres'),
     email: z.string().email('Email invalide').optional().or(z.literal('')),
     adresse: z.string().optional(),
     // Identity

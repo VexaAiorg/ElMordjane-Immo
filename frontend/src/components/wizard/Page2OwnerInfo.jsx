@@ -93,6 +93,7 @@ const Page2OwnerInfo = () => {
                                         type="tel"
                                         placeholder="Ex: 0555123456"
                                         {...register('telephone')}
+                                        maxLength={10}
                                         className={errors.telephone ? 'error' : ''}
                                     />
                                     {errors.telephone && <span className="error-message">{errors.telephone.message}</span>}
@@ -141,6 +142,7 @@ const Page2OwnerInfo = () => {
                                     <input
                                         id="numIdentite"
                                         type="text"
+                                        maxLength={20}
                                         placeholder="Ex: 123456789"
                                         {...register('numIdentite')}
                                     />
