@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const WizardContext = createContext();
+
+const STORAGE_KEY = 'wizardFormData';
 
 export const useWizard = () => {
     const context = useContext(WizardContext);
@@ -11,33 +13,58 @@ export const useWizard = () => {
 };
 
 export const WizardProvider = ({ children }) => {
-    const [currentStep, setCurrentStep] = useState(1);
-    const [formData, setFormData] = useState({
-        // Page 1: Basic Info
-        basicInfo: {},
-        // Page 2: Owner
-        owner: {},
-        // Page 3: Property Details (dynamic)
-        propertyDetails: {},
-        // Page 4: Documents
-        documents: { papiers: [] },
-        // Page 5: Tracking
-        tracking: {
-            estVisite: false,
-            priorite: 'NORMAL',
-            aMandat: false,
-        },
-        // Page 6: Attachments
-        attachments: { piecesJointes: [] },
-    });
+    // Initialize state from localStorage or defaults
+    const getInitialState = () => {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                return JSON.parse(saved);
+            }
+        } catch (error) {
+            console.error('Error loading wizard data from localStorage:', error);
+        }
+        return {
+            currentStep: 1,
+            formData: {
+                basicInfo: {},
+                owner: {},
+                propertyDetails: {},
+                documents: { papiers: [] },
+                tracking: {
+                    estVisite: false,
+                    priorite: 'NORMAL',
+                    aMandat: false,
+                },
+                attachments: { piecesJointes: [] },
+            },
+            validatedPages: [],
+        };
+    };
 
+    const initialState = getInitialState();
+
+    const [currentStep, setCurrentStep] = useState(initialState.currentStep);
+    const [formData, setFormData] = useState(initialState.formData);
     const [fileUploads, setFileUploads] = useState({
         documents: [],
         photos: [],
         localisation: [],
     });
+    const [validatedPages, setValidatedPages] = useState(new Set(initialState.validatedPages));
 
-    const [validatedPages, setValidatedPages] = useState(new Set());
+    // Save to localStorage whenever state changes
+    useEffect(() => {
+        try {
+            const dataToSave = {
+                currentStep,
+                formData,
+                validatedPages: Array.from(validatedPages),
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+        } catch (error) {
+            console.error('Error saving wizard data to localStorage:', error);
+        }
+    }, [currentStep, formData, validatedPages]);
 
     const updateFormData = (page, data) => {
         setFormData((prev) => ({
@@ -97,6 +124,8 @@ export const WizardProvider = ({ children }) => {
             localisation: [],
         });
         setValidatedPages(new Set());
+        // Clear localStorage
+        localStorage.removeItem(STORAGE_KEY);
     };
 
     const value = {
