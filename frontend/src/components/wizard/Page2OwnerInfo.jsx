@@ -171,7 +171,7 @@ const Page2OwnerInfo = () => {
                             {/* Quality Section */}
                             <div className="form-section">
                                 <h3 className="section-title">Qualité</h3>
-                                <div className="radio-group">
+                                <div className="radio-group horizontal">
                                     <label className="radio-label">
                                         <input type="radio" value="PROPRIETAIRE" {...register('qualite')} />
                                         <span>Propriétaire</span>
@@ -280,6 +280,7 @@ const Page2OwnerInfo = () => {
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
                         >
+                            {/* Existing Owner Selection - Allows adding a new property to an existing client */}
                             <div className="form-section">
                                 <div className="form-group">
                                     <label htmlFor="proprietaireId">
@@ -291,6 +292,9 @@ const Page2OwnerInfo = () => {
                                         <option value="1">Benali Ahmed - 0555123456</option>
                                         <option value="2">Mokhtar Sara - 0666789012</option>
                                     </select>
+                                </div>
+                                <div className="form-info">
+                                    <p>💡 Sélectionnez un client existant pour ajouter un nouveau bien à son portefeuille.</p>
                                 </div>
                             </div>
                         </motion.div>
