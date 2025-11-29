@@ -322,26 +322,36 @@
 }
 
 /* Modern Radio Button Styling */
+/* Modern Radio Button Styling */
 .radio-label,
 .checkbox-label {
     display: inline-flex;
     align-items: center;
     cursor: pointer;
-    padding: 0.875rem 1.25rem;
+    padding: 1rem 1.5rem;
     background: rgba(255, 255, 255, 0.03);
-    border: 1.5px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     user-select: none;
+    min-height: 56px;
 }
 
 .radio-label:hover,
 .checkbox-label:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(102, 126, 234, 0.6);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(102, 126, 234, 0.5);
+    transform: translateY(1px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Selected state for the whole label card */
+.radio-label:has(input:checked),
+.checkbox-label:has(input:checked) {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: #667eea;
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.15);
 }
 
 /* Hide default radio buttons */
@@ -359,86 +369,91 @@
 /* Radio button text */
 .radio-label span,
 .checkbox-label span {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.95rem;
-    font-weight: 400;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    font-weight: 500;
     line-height: 1.5;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    padding-left: 2rem;
+    padding-left: 3.5rem;
+    /* Increased space for the custom radio */
+    width: 100%;
 }
 
 /* Custom radio circle - outer ring */
 .radio-label span::before {
     content: '';
     position: absolute;
-    left: 1rem;
+    left: 1.25rem;
     top: 50%;
     transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.35);
-    background: rgba(255, 255, 255, 0.05);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease-out;
+    /* Simplified animation */
     box-sizing: border-box;
 }
 
-/* Custom radio circle - inner dot (checked state) */
+/* 
+Custom radio circle - inner dot (checked state) */
 .radio-label span::after {
     content: '';
     position: absolute;
-    left: 1rem;
+    left: 1.25rem;
     top: 50%;
-    transform: translateY(-50%) scale(0);
-    width: 20px;
-    height: 20px;
+    transform: translateY(-50%) scale(0.65);
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    background: transparent;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: #667eea;
+    transition: opacity 0.2s ease-out;
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.6);
+
+    opacity: 0;
 }
+
+*/
 
 /* Hover effect on radio circle */
 .radio-label:hover span::before {
-    border-color: rgba(102, 126, 234, 0.7);
-    background: rgba(102, 126, 234, 0.08);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.05);
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
-/* Checked state - outer circle */
+/* Checked state - outer circle animation */
 .radio-label input[type="radio"]:checked+span::before {
     border-color: #667eea;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+    background: transparent;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
-/* Checked state - inner dot */
+/* Checked state - inner dot animation */
+
 .radio-label input[type="radio"]:checked+span::after {
-    transform: translateY(-50%) scale(1);
-    background: white;
-    width: 8px;
-    height: 8px;
-    left: calc(1rem + 6px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    opacity: 1;
 }
+
+
 
 /* Checked state - text */
 .radio-label input[type="radio"]:checked+span {
     color: white;
-    font-weight: 500;
+    text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
 }
 
-/* Active/Focus state */
+/* Active/Focus state for accessibility */
 .radio-label:active {
-    transform: scale(0.98);
+    transform: scale(0.995);
+    /* Very subtle scale effect */
 }
 
 .radio-label input[type="radio"]:focus+span::before {
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.4);
+    border-color: #fff;
 }
 
 .radio-label-inline {
@@ -485,7 +500,7 @@
 
 .radio-label.priority input:checked+.priority-badge {
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    transform: scale(1.05);
+    transform: scale(1);
 }
 
 /* ===========================
@@ -1066,7 +1081,7 @@
 
 .btn-icon-danger:hover {
     background: rgba(255, 107, 107, 0.2);
-    transform: scale(1.05);
+    transform: scale(0.5);
 }
 
 .btn-outline {
