@@ -220,12 +220,7 @@ const Page4Documents = () => {
                     ))}
                 </div>
 
-                <div className="form-info">
-                    <p>
-                        💡 Les fichiers seront uploadés vers Cloudinary lors de la soumission finale.
-                        Formats acceptés: PDF, DOC, DOCX, Images
-                    </p>
-                </div>
+
 
                 <div className="wizard-actions">
                     <button type="button" className="btn-secondary" onClick={prevStep}>

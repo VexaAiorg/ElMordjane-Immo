@@ -410,14 +410,14 @@
 }
 
 /* Checked state - outer circle */
-.radio-label input[type="radio"]:checked + span::before {
+.radio-label input[type="radio"]:checked+span::before {
     border-color: #667eea;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
 }
 
 /* Checked state - inner dot */
-.radio-label input[type="radio"]:checked + span::after {
+.radio-label input[type="radio"]:checked+span::after {
     transform: translateY(-50%) scale(1);
     background: white;
     width: 8px;
@@ -427,7 +427,7 @@
 }
 
 /* Checked state - text */
-.radio-label input[type="radio"]:checked + span {
+.radio-label input[type="radio"]:checked+span {
     color: white;
     font-weight: 500;
 }
@@ -437,7 +437,7 @@
     transform: scale(0.98);
 }
 
-.radio-label input[type="radio"]:focus + span::before {
+.radio-label input[type="radio"]:focus+span::before {
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
 }
 
@@ -674,6 +674,11 @@
     padding: 0.5rem;
     color: white;
     font-size: 0.85rem;
+}
+
+.status-select option {
+    background: #1a1a2e;
+    color: white;
 }
 
 .document-upload {
