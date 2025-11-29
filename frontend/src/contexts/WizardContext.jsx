@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const WizardContext = createContext();
 
@@ -13,6 +14,9 @@ export const useWizard = () => {
 };
 
 export const WizardProvider = ({ children }) => {
+    const navigate = useNavigate();
+    const { step: urlStep } = useParams();
+
     // Initialize state from localStorage or defaults
     const getInitialState = () => {
         try {
@@ -43,7 +47,18 @@ export const WizardProvider = ({ children }) => {
 
     const initialState = getInitialState();
 
-    const [currentStep, setCurrentStep] = useState(initialState.currentStep);
+    // Initialize currentStep from URL if available, otherwise from saved state
+    const getInitialStep = () => {
+        if (urlStep) {
+            const stepNum = parseInt(urlStep, 10);
+            if (stepNum >= 1 && stepNum <= 7) {
+                return stepNum;
+            }
+        }
+        return initialState.currentStep;
+    };
+
+    const [currentStep, setCurrentStep] = useState(getInitialStep());
     const [formData, setFormData] = useState(initialState.formData);
     const [fileUploads, setFileUploads] = useState({
         documents: [],
@@ -51,6 +66,21 @@ export const WizardProvider = ({ children }) => {
         localisation: [],
     });
     const [validatedPages, setValidatedPages] = useState(new Set(initialState.validatedPages));
+
+    // Sync URL with currentStep
+    useEffect(() => {
+        navigate(`/dashboard/wizard/${currentStep}`, { replace: true });
+    }, [currentStep, navigate]);
+
+    // Sync currentStep with URL parameter changes (for browser back/forward)
+    useEffect(() => {
+        if (urlStep) {
+            const stepNum = parseInt(urlStep, 10);
+            if (stepNum >= 1 && stepNum <= 7 && stepNum !== currentStep) {
+                setCurrentStep(stepNum);
+            }
+        }
+    }, [urlStep]);
 
     // Save to sessionStorage whenever state changes
     useEffect(() => {

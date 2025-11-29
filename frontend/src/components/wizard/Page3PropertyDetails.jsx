@@ -291,13 +291,14 @@ const Page3PropertyDetails = () => {
                                     {...register('statutJuridique')}
                                 />
                             </div>
-                        </div>
 
-                        <div className="checkbox-grid">
-                            <label className="checkbox-label">
-                                <input type="checkbox" {...register('viabilise')} />
-                                <span>Viabilisé</span>
-                            </label>
+                            <div className="form-group">
+                                <label htmlFor="viabilise">Viabilisé</label>
+                                <select id="viabilise" {...register('viabilise', { setValueAs: v => v === 'true' })}>
+                                    <option value="false">Non</option>
+                                    <option value="true">Oui</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 )}

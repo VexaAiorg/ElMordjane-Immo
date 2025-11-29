@@ -41,6 +41,7 @@ function App() {
           <Route path="location" element={<RentedProperties />} />
           <Route path="archives" element={<Archives />} />
           <Route path="wizard" element={<PropertyWizard />} />
+          <Route path="wizard/:step" element={<PropertyWizard />} />
         </Route>
 
         {/* Catch all - redirect to auth */}

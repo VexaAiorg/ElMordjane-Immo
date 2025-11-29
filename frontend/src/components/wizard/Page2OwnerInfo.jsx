@@ -6,7 +6,7 @@ import { ownerInfoSchema } from '../../utils/wizardSchemas';
 import { useWizard } from '../../contexts/WizardContext';
 
 const Page2OwnerInfo = () => {
-    const { formData, updateFormData, markPageAsValidated, nextStep, prevStep } = useWizard();
+    const { formData, updateFormData, markPageAsValidated, nextStep, prevStep, currentStep } = useWizard();
     const [isNewOwner, setIsNewOwner] = useState(true);
 
     const {
