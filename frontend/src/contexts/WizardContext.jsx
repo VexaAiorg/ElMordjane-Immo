@@ -42,6 +42,11 @@ export const WizardProvider = ({ children }) => {
                 attachments: { piecesJointes: [] },
             },
             validatedPages: [],
+            uploadedFileUrls: {
+                documents: {},      // { documentName: { url, filename, originalname } }
+                photos: [],         // [{ url, filename, originalname }]
+                attachmentDocs: [], // [{ url, filename, originalname }]
+            },
         };
     };
 
@@ -65,6 +70,13 @@ export const WizardProvider = ({ children }) => {
         photos: [],
         localisation: [],
     });
+    const [uploadedFileUrls, setUploadedFileUrls] = useState(
+        initialState.uploadedFileUrls || {
+            documents: {},
+            photos: [],
+            attachmentDocs: [],
+        }
+    );
     const [validatedPages, setValidatedPages] = useState(new Set(initialState.validatedPages));
 
     // Sync URL with currentStep
@@ -80,21 +92,33 @@ export const WizardProvider = ({ children }) => {
                 setCurrentStep(stepNum);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [urlStep]);
 
     // Save to sessionStorage whenever state changes
+    // Note: We exclude File objects from serialization as they can't be stored in sessionStorage
     useEffect(() => {
         try {
+            // Deep clone formData but exclude File objects
+            const serializableFormData = JSON.parse(JSON.stringify(formData, (key, value) => {
+                // Skip File objects (they can't be serialized)
+                if (value instanceof File || value instanceof Blob) {
+                    return undefined;
+                }
+                return value;
+            }));
+
             const dataToSave = {
                 currentStep,
-                formData,
+                formData: serializableFormData,
                 validatedPages: Array.from(validatedPages),
+                uploadedFileUrls, // Save uploaded file URLs
             };
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
         } catch (error) {
             console.error('Error saving wizard data to sessionStorage:', error);
         }
-    }, [currentStep, formData, validatedPages]);
+    }, [currentStep, formData, validatedPages, uploadedFileUrls]);
 
     const updateFormData = (page, data) => {
         setFormData((prev) => ({
@@ -107,6 +131,13 @@ export const WizardProvider = ({ children }) => {
         setFileUploads((prev) => ({
             ...prev,
             [type]: files,
+        }));
+    };
+
+    const updateUploadedFileUrls = (type, data) => {
+        setUploadedFileUrls((prev) => ({
+            ...prev,
+            [type]: data,
         }));
     };
 
@@ -153,6 +184,11 @@ export const WizardProvider = ({ children }) => {
             photos: [],
             localisation: [],
         });
+        setUploadedFileUrls({
+            documents: {},
+            photos: [],
+            attachmentDocs: [],
+        });
         setValidatedPages(new Set());
         // Clear sessionStorage
         sessionStorage.removeItem(STORAGE_KEY);
@@ -162,9 +198,11 @@ export const WizardProvider = ({ children }) => {
         currentStep,
         formData,
         fileUploads,
+        uploadedFileUrls,
         validatedPages,
         updateFormData,
         updateFileUploads,
+        updateUploadedFileUrls,
         markPageAsValidated,
         goToStep,
         nextStep,

@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { isAuthenticated } from '../utils/api';
+import { isAuthenticated } from '../api/api';
 
 /**
  * PublicRoute component - Prevents authenticated users from accessing auth pages

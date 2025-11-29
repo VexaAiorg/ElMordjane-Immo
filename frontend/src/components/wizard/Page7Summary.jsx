@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, Edit2, Home, User, FileText, Package, Eye, Image } from 'lucide-react';
 import { useWizard } from '../../contexts/WizardContext';
+import { useNavigate } from 'react-router-dom';
+import { createProperty } from '../../api/api';
 
+
+// eslint-disable-next-line no-unused-vars
 const SummarySection = ({ title, icon: Icon, children, onEdit }) => (
     <div className="summary-section">
         <div className="summary-header">
@@ -28,18 +32,176 @@ const SummaryItem = ({ label, value }) => (
 );
 
 const Page7Summary = () => {
-    const { formData, goToStep, resetWizard } = useWizard();
+    const { formData, uploadedFileUrls, goToStep, resetWizard } = useWizard();
+    const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState(null);
 
     const handleSubmit = async () => {
-        // TODO: Submit to backend API
-        console.log('Submitting property data:', formData);
+        setIsSubmitting(true);
+        setError(null);
 
-        // For now, just show success message
-        alert('Bien immobilier ajouté avec succès! 🎉');
+        try {
+            // Prepare property data object matching backend expectations
+            const isNewOwner = !formData.owner?.proprietaireId;
+            
+            // Map specific details based on property type
+            const propertyType = formData.basicInfo?.type;
+            let specificDetail = {};
+            let specificDetailKey = '';
 
-        // Reset wizard and redirect
-        resetWizard();
-        // TODO: Navigate to dashboard
+            if (propertyType === 'APPARTEMENT') specificDetailKey = 'detailAppartement';
+            else if (propertyType === 'TERRAIN') specificDetailKey = 'detailTerrain';
+            else if (propertyType === 'VILLA') specificDetailKey = 'detailVilla';
+            else if (propertyType === 'LOCAL') specificDetailKey = 'detailLocal';
+            else if (propertyType === 'IMMEUBLE') specificDetailKey = 'detailImmeuble';
+
+            if (specificDetailKey && formData.propertyDetails) {
+                specificDetail = { [specificDetailKey]: formData.propertyDetails };
+            }
+
+            // Build piecesJointes array from uploaded file URLs
+            const piecesJointes = [];
+
+            // 1. Add documents from Page 4 (using uploadedFileUrls.documents)
+            if (uploadedFileUrls.documents) {
+                Object.entries(uploadedFileUrls.documents).forEach(([docName, fileData]) => {
+                    piecesJointes.push({
+                        type: 'DOCUMENT',
+                        visibilite: 'INTERNE',
+                        nom: fileData.originalname || docName,
+                        url: fileData.url,
+                    });
+                });
+            }
+
+            // 2. Add photos from Page 6 (using uploadedFileUrls.photos)
+            if (uploadedFileUrls.photos && uploadedFileUrls.photos.length > 0) {
+                uploadedFileUrls.photos.forEach((fileData) => {
+                    // Find matching attachment to get visibility setting
+                    const attachment = formData.attachments?.piecesJointes?.find(
+                        a => a.type === 'PHOTO' && a.file?.name === fileData.originalname
+                    );
+                    
+                    piecesJointes.push({
+                        type: 'PHOTO',
+                        visibilite: attachment?.visibilite || 'INTERNE',
+                        nom: fileData.originalname,
+                        url: fileData.url,
+                    });
+                });
+            }
+
+            // 3. Add attachment documents from Page 6 (using uploadedFileUrls.attachmentDocs)
+            if (uploadedFileUrls.attachmentDocs && uploadedFileUrls.attachmentDocs.length > 0) {
+                uploadedFileUrls.attachmentDocs.forEach((fileData) => {
+                    // Find matching attachment to get visibility setting
+                    const attachment = formData.attachments?.piecesJointes?.find(
+                        a => a.type === 'DOCUMENT' && a.file?.name === fileData.originalname
+                    );
+                    
+                    piecesJointes.push({
+                        type: 'DOCUMENT',
+                        visibilite: attachment?.visibilite || 'INTERNE',
+                        nom: fileData.originalname,
+                        url: fileData.url,
+                    });
+                });
+            }
+
+            // 4. Add localisation URLs (these are not files, just URLs)
+            if (formData.attachments?.piecesJointes) {
+                formData.attachments.piecesJointes
+                    .filter(a => a.type === 'LOCALISATION')
+                    .forEach(loc => {
+                        piecesJointes.push({
+                            type: 'LOCALISATION',
+                            visibilite: loc.visibilite || 'INTERNE',
+                            nom: loc.nom || 'Localisation',
+                            url: loc.url,
+                        });
+                    });
+            }
+
+            const propertyData = {
+                // Property Info
+                bienImmobilier: {
+                    titre: formData.basicInfo?.titre,
+                    type: formData.basicInfo?.type,
+                    transaction: formData.basicInfo?.transaction,
+                    statut: formData.basicInfo?.statut,
+                    adresse: formData.basicInfo?.adresse,
+                    description: formData.basicInfo?.description,
+                    prixVente: formData.basicInfo?.prixVente,
+                    prixLocation: formData.basicInfo?.prixLocation,
+                },
+
+                // Owner info - Flat structure with flag
+                proprietaire: isNewOwner ? {
+                    isNewOwner: true,
+                    nom: formData.owner?.nom,
+                    prenom: formData.owner?.prenom,
+                    telephone: formData.owner?.telephone,
+                    email: formData.owner?.email,
+                    adresse: formData.owner?.adresse,
+                    typeIdentite: formData.owner?.typeIdentite,
+                    numIdentite: formData.owner?.numIdentite,
+                    qualite: formData.owner?.qualite,
+                    prixType: formData.owner?.prixType,
+                    prixNature: formData.owner?.prixNature,
+                    paiementVente: formData.owner?.paiementVente,
+                    paiementLocation: formData.owner?.paiementLocation,
+                } : {
+                    isNewOwner: false,
+                    proprietaireId: parseInt(formData.owner?.proprietaireId),
+                },
+
+                // Specific Details (spread the key-value pair)
+                ...specificDetail,
+
+                // Documents (papiers) - Checklist status
+                papiers: formData.documents?.papiers?.map(doc => ({
+                    nom: doc.nom,
+                    statut: doc.statut,
+                    categorie: propertyType // Default category to property type
+                })) || [],
+
+                // Tracking
+                suivi: {
+                    estVisite: formData.tracking?.estVisite || false,
+                    priorite: formData.tracking?.priorite || 'NORMAL',
+                    aMandat: formData.tracking?.aMandat || false,
+                    urlGoogleSheet: formData.tracking?.urlGoogleSheet,
+                    urlGooglePhotos: formData.tracking?.urlGooglePhotos,
+                },
+
+                // Attachments with URLs (files already uploaded)
+                piecesJointes,
+            };
+
+            console.log('Creating property with data:', propertyData);
+            console.log('Total attachments:', piecesJointes.length);
+
+            // Call API with propertyData (no file uploads needed - files already on server!)
+            const response = await createProperty(propertyData, [], []); // Empty arrays for files
+
+            console.log('Property created successfully:', response);
+
+            // Show success message
+            alert('✅ Bien immobilier ajouté avec succès! 🎉');
+
+            // Reset wizard
+            resetWizard();
+
+            // Navigate to all properties page
+            navigate('/dashboard/menu');
+
+        } catch (err) {
+            console.error('Error creating property:', err);
+            setError(err.message || 'Une erreur est survenue lors de la création du bien');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const { basicInfo, owner, propertyDetails, documents, tracking, attachments } = formData;
@@ -190,11 +352,26 @@ const Page7Summary = () => {
                 </SummarySection>
             </div>
 
+            {/* Error Display */}
+            {error && (
+                <div className="error-message" style={{ 
+                    marginTop: '1rem', 
+                    padding: '1rem', 
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '8px',
+                    color: '#ef4444'
+                }}>
+                    ❌ {error}
+                </div>
+            )}
+
             <div className="wizard-actions">
                 <button
                     type="button"
                     className="btn-secondary"
                     onClick={() => goToStep(6)}
+                    disabled={isSubmitting}
                 >
                     Précédent
                 </button>
@@ -203,6 +380,7 @@ const Page7Summary = () => {
                         type="button"
                         className="btn-outline"
                         onClick={resetWizard}
+                        disabled={isSubmitting}
                     >
                         Recommencer
                     </button>
@@ -210,9 +388,10 @@ const Page7Summary = () => {
                         type="button"
                         className="btn-success"
                         onClick={handleSubmit}
+                        disabled={isSubmitting}
                     >
                         <Check size={18} />
-                        Confirmer et Ajouter
+                        {isSubmitting ? 'En cours...' : 'Confirmer et Ajouter'}
                     </button>
                 </div>
             </div>

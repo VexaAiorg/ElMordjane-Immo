@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { isAuthenticated } from '../utils/api';
+import { isAuthenticated } from '../api/api';
 
 /**
  * ProtectedRoute component - Protects routes that require authentication

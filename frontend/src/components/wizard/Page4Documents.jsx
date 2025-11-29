@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, FileText, Check } from 'lucide-react';
+import { Upload, X, FileText, Check, Loader } from 'lucide-react';
 import { useWizard } from '../../contexts/WizardContext';
+import { uploadFilesImmediately } from '../../services/uploadService';
 
 // Document templates based on property type
 const getDocumentTemplates = (propertyType) => {
@@ -65,7 +66,7 @@ const getDocumentTemplates = (propertyType) => {
     return templates[propertyType] || [];
 };
 
-const FileUploadZone = ({ onFilesAccepted, documentName }) => {
+const FileUploadZone = ({ onFilesAccepted, documentName, isUploading }) => {
     const onDrop = useCallback((acceptedFiles) => {
         onFilesAccepted(acceptedFiles);
     }, [onFilesAccepted]);
@@ -79,26 +80,36 @@ const FileUploadZone = ({ onFilesAccepted, documentName }) => {
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
         },
         multiple: false,
+        disabled: isUploading,
     });
 
     return (
         <div
             {...getRootProps()}
-            className={`file-upload-zone ${isDragActive ? 'active' : ''}`}
+            className={`file-upload-zone ${isDragActive ? 'active' : ''} ${isUploading ? 'uploading' : ''}`}
         >
             <input {...getInputProps()} />
-            <Upload size={24} />
-            {isDragActive ? (
-                <p>Déposez le fichier ici...</p>
+            {isUploading ? (
+                <>
+                    <Loader size={24} className="spinner" />
+                    <p>Téléchargement...</p>
+                </>
             ) : (
-                <p>Glissez-déposez ou cliquez pour sélectionner</p>
+                <>
+                    <Upload size={24} />
+                    {isDragActive ? (
+                        <p>Déposez le fichier ici...</p>
+                    ) : (
+                        <p>Glissez-déposez ou cliquez pour sélectionner</p>
+                    )}
+                </>
             )}
         </div>
     );
 };
 
 const Page4Documents = () => {
-    const { formData, updateFormData, markPageAsValidated, nextStep, prevStep, updateFileUploads, fileUploads } = useWizard();
+    const { formData, updateFormData, markPageAsValidated, nextStep, prevStep, uploadedFileUrls, updateUploadedFileUrls } = useWizard();
 
     const propertyType = formData.basicInfo?.type;
     const documentTemplates = getDocumentTemplates(propertyType);
@@ -112,6 +123,7 @@ const Page4Documents = () => {
                 file: null,
             }))
     );
+    const [uploadingIndex, setUploadingIndex] = useState(null);
 
     const handleStatusChange = (index, statut) => {
         const updated = [...documents];
@@ -119,12 +131,34 @@ const Page4Documents = () => {
         setDocuments(updated);
     };
 
-    const handleFileUpload = (index, files) => {
+    const handleFileUpload = async (index, files) => {
         if (files.length > 0) {
-            const updated = [...documents];
-            updated[index].file = files[0];
-            updated[index].statut = 'DISPONIBLE';
-            setDocuments(updated);
+            setUploadingIndex(index);
+            try {
+                // Upload file immediately to server
+                const uploadedFiles = await uploadFilesImmediately(files, propertyType);
+                const uploadedFile = uploadedFiles[0];
+
+                // Update documents state
+                const updated = [...documents];
+                updated[index].file = files[0];
+                updated[index].statut = 'DISPONIBLE';
+                setDocuments(updated);
+
+                // Store URL in context (keyed by document name)
+                const updatedUrls = {
+                    ...uploadedFileUrls.documents,
+                    [documents[index].nom]: uploadedFile,
+                };
+                updateUploadedFileUrls('documents', updatedUrls);
+
+                console.log(`✅ Uploaded ${documents[index].nom} to server:`, uploadedFile.url);
+            } catch (error) {
+                console.error('Upload failed:', error);
+                alert('Échec du téléchargement. Veuillez réessayer.');
+            } finally {
+                setUploadingIndex(null);
+            }
         }
     };
 
@@ -133,16 +167,16 @@ const Page4Documents = () => {
         updated[index].file = null;
         updated[index].statut = 'MANQUANT';
         setDocuments(updated);
+
+        // Remove URL from context
+        const updatedUrls = { ...uploadedFileUrls.documents };
+        delete updatedUrls[documents[index].nom];
+        updateUploadedFileUrls('documents', updatedUrls);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         updateFormData('documents', { papiers: documents });
-
-        // Store files separately for later upload to Cloudinary
-        const documentFiles = documents.filter(doc => doc.file).map(doc => doc.file);
-        updateFileUploads('documents', documentFiles);
-
         markPageAsValidated(4);
         nextStep();
     };
@@ -213,6 +247,7 @@ const Page4Documents = () => {
                                     <FileUploadZone
                                         documentName={doc.nom}
                                         onFilesAccepted={(files) => handleFileUpload(index, files)}
+                                        isUploading={uploadingIndex === index}
                                     />
                                 )}
                             </div>

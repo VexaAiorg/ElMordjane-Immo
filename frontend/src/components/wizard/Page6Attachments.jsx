@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Image, FileText, MapPin } from 'lucide-react';
+import { Upload, X, Image, FileText, MapPin, Loader } from 'lucide-react';
 import { useWizard } from '../../contexts/WizardContext';
+import { uploadFilesImmediately } from '../../services/uploadService';
 
-const AttachmentUploadZone = ({ onFilesAccepted, accept, label }) => {
+const AttachmentUploadZone = ({ onFilesAccepted, accept, label, isUploading }) => {
     const onDrop = useCallback((acceptedFiles) => {
         onFilesAccepted(acceptedFiles);
     }, [onFilesAccepted]);
@@ -12,19 +13,29 @@ const AttachmentUploadZone = ({ onFilesAccepted, accept, label }) => {
         onDrop,
         accept,
         multiple: true,
+        disabled: isUploading,
     });
 
     return (
         <div
             {...getRootProps()}
-            className={`file-upload-zone attachment ${isDragActive ? 'active' : ''}`}
+            className={`file-upload-zone attachment ${isDragActive ? 'active' : ''} ${isUploading ? 'uploading' : ''}`}
         >
             <input {...getInputProps()} />
-            <Upload size={24} />
-            {isDragActive ? (
-                <p>Déposez les fichiers ici...</p>
+            {isUploading ? (
+                <>
+                    <Loader size={24} className="spinner" />
+                    <p>Téléchargement...</p>
+                </>
             ) : (
-                <p>{label}</p>
+                <>
+                    <Upload size={24} />
+                    {isDragActive ? (
+                        <p>Déposez les fichiers ici...</p>
+                    ) : (
+                        <p>{label}</p>
+                    )}
+                </>
             )}
         </div>
     );
@@ -110,33 +121,73 @@ const AttachmentItem = ({ attachment, onRemove, onVisibilityChange }) => {
 };
 
 const Page6Attachments = () => {
-    const { formData, updateFormData, markPageAsValidated, nextStep, prevStep, updateFileUploads } = useWizard();
+    const { formData, updateFormData, markPageAsValidated, nextStep, prevStep, uploadedFileUrls, updateUploadedFileUrls } = useWizard();
 
     const [attachments, setAttachments] = useState(
         formData.attachments?.piecesJointes || []
     );
     const [localisationUrl, setLocalisationUrl] = useState('');
+    const [uploadingPhotos, setUploadingPhotos] = useState(false);
+    const [uploadingDocs, setUploadingDocs] = useState(false);
 
-    const handleDocumentUpload = (files) => {
-        const newAttachments = files.map((file, index) => ({
-            id: Date.now() + index,
-            type: 'DOCUMENT',
-            visibilite: 'INTERNE',
-            file,
-            nom: file.name,
-        }));
-        setAttachments([...attachments, ...newAttachments]);
+    const propertyType = formData.basicInfo?.type || 'TEMP';
+
+    const handleDocumentUpload = async (files) => {
+        setUploadingDocs(true);
+        try {
+            // Upload files immediately to server
+            const uploadedFiles = await uploadFilesImmediately(files, propertyType);
+
+            const newAttachments = files.map((file, index) => ({
+                id: Date.now() + index,
+                type: 'DOCUMENT',
+                visibilite: 'INTERNE',
+                file,
+                nom: file.name,
+                serverUrl: uploadedFiles[index],
+            }));
+            setAttachments([...attachments, ...newAttachments]);
+
+            // Store URLs in context
+            const currentDocs = uploadedFileUrls.attachmentDocs || [];
+            updateUploadedFileUrls('attachmentDocs', [...currentDocs, ...uploadedFiles]);
+
+            console.log(`✅ Uploaded ${files.length} documents to server`);
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Échec du téléchargement des documents. Veuillez réessayer.');
+        } finally {
+            setUploadingDocs(false);
+        }
     };
 
-    const handlePhotoUpload = (files) => {
-        const newAttachments = files.map((file, index) => ({
-            id: Date.now() + index,
-            type: 'PHOTO',
-            visibilite: 'INTERNE',
-            file,
-            nom: file.name,
-        }));
-        setAttachments([...attachments, ...newAttachments]);
+    const handlePhotoUpload = async (files) => {
+        setUploadingPhotos(true);
+        try {
+            // Upload files immediately to server
+            const uploadedFiles = await uploadFilesImmediately(files, propertyType);
+
+            const newAttachments = files.map((file, index) => ({
+                id: Date.now() + index,
+                type: 'PHOTO',
+                visibilite: 'INTERNE',
+                file,
+                nom: file.name,
+                serverUrl: uploadedFiles[index],
+            }));
+            setAttachments([...attachments, ...newAttachments]);
+
+            // Store URLs in context
+            const currentPhotos = uploadedFileUrls.photos || [];
+            updateUploadedFileUrls('photos', [...currentPhotos, ...uploadedFiles]);
+
+            console.log(`✅ Uploaded ${files.length} photos to server`);
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Échec du téléchargement des photos. Veuillez réessayer.');
+        } finally {
+            setUploadingPhotos(false);
+        }
     };
 
     const handleLocalisationAdd = () => {
@@ -166,11 +217,6 @@ const Page6Attachments = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         updateFormData('attachments', { piecesJointes: attachments });
-
-        // Store photos separately for easier access
-        const photos = attachments.filter(a => a.type === 'PHOTO' && a.file).map(a => a.file);
-        updateFileUploads('photos', photos);
-
         markPageAsValidated(6);
         nextStep();
     };
@@ -195,6 +241,7 @@ const Page6Attachments = () => {
                         onFilesAccepted={handlePhotoUpload}
                         accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] }}
                         label="Glissez-déposez des photos ou cliquez pour sélectionner"
+                        isUploading={uploadingPhotos}
                     />
                     <div className="attachments-grid">
                         {photosOnly.map((attachment) => (
@@ -223,6 +270,7 @@ const Page6Attachments = () => {
                             'image/*': ['.png', '.jpg', '.jpeg'],
                         }}
                         label="Glissez-déposez des documents ou cliquez pour sélectionner"
+                        isUploading={uploadingDocs}
                     />
                     <div className="attachments-list">
                         {documentsOnly.map((attachment) => (

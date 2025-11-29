@@ -8,7 +8,7 @@ import {
     PlusCircle,
     LogOut
 } from 'lucide-react';
-import { logout } from '../utils/api';
+import { logout } from '../api/api';
 import '../styles/Dashboard.css';
 
 const Sidebar = () => {

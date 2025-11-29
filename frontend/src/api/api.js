@@ -197,6 +197,97 @@ export const getCurrentUser = async () => {
 };
 
 // ============================================================================
+// Property Management API
+// ============================================================================
+
+/**
+ * Create a new property
+ * Note: Files are uploaded to the server using Multer middleware
+ * The backend will process files and store them in the local filesystem
+ * @param {Object} propertyData - Property information
+ * @param {Array<File>} documents - Array of document files to upload
+ * @param {Array<File>} photos - Array of photo files to upload
+ * @returns {Promise<Object>} Response with created property data
+ */
+export const createProperty = async (propertyData, documents = [], photos = []) => {
+    const token = getAuthToken();
+    const url = `${API_BASE_URL}/api/properties`;
+
+    const formData = new FormData();
+    // Append data first so backend can parse it for folder naming
+    formData.append('data', JSON.stringify(propertyData));
+
+    // Append files
+    if (documents && documents.length > 0) {
+        documents.forEach(file => formData.append('documents', file));
+    }
+    
+    if (photos && photos.length > 0) {
+        photos.forEach(file => formData.append('photos', file));
+    }
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT * 6); // 60 seconds for uploads
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                // Content-Type is automatically set by browser with boundary for FormData
+            },
+            body: formData,
+            signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return data;
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('Request timeout. Please try again.');
+        }
+        if (error instanceof TypeError) {
+            throw new Error('Network error. Please check your connection.');
+        }
+        throw error;
+    }
+};
+
+/**
+ * Get all properties
+ * @returns {Promise<Object>} Response with properties list
+ */
+export const getAllProperties = async () => {
+    const data = await apiRequest('/api/properties', {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+
+    return data;
+};
+
+/**
+ * Get a single property by ID
+ * @param {string} propertyId - Property ID
+ * @returns {Promise<Object>} Response with property data
+ */
+export const getPropertyById = async (propertyId) => {
+    const data = await apiRequest(`/api/properties/${propertyId}`, {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+
+    return data;
+};
+
+// ============================================================================
 // Export Token Management Functions (for advanced use cases)
 // ============================================================================
 

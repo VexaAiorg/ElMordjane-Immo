@@ -733,6 +733,26 @@ Custom radio circle - inner dot (checked state) */
     padding: 1.5rem;
 }
 
+.file-upload-zone.uploading {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.file-upload-zone .spinner {
+    animation: spin 1s linear infinite;
+    color: #667eea;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* ===========================
    DOCUMENTS LIST
    =========================== */
