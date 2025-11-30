@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, FileText, Package, Image } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, FileText, Package, Image, ChevronDown } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
 import { getAllProperties, getPropertyById, deleteProperty, apiConfig } from '../../api/api';
 
@@ -302,6 +302,10 @@ const AllProperties = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
+    const [filterType, setFilterType] = useState('ALL');
+    const [sortDate, setSortDate] = useState('NEWEST');
+    const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+    const [showDateDropdown, setShowDateDropdown] = useState(false);
 
     useEffect(() => {
         fetchProperties();
@@ -334,13 +338,25 @@ const AllProperties = () => {
     const soldRented = properties.filter(p => ['VENDU', 'LOUE'].includes(p.statut)).length;
 
     // Filter properties based on search
+    // Filter properties based on search and type, then sort by date
     const filteredProperties = properties.filter(property => {
         const query = searchQuery.toLowerCase();
-        return (
+        const matchesSearch = (
             property.titre?.toLowerCase().includes(query) ||
             property.adresse?.toLowerCase().includes(query) ||
             property.type?.toLowerCase().includes(query)
         );
+        
+        const matchesType = filterType === 'ALL' || property.type === filterType;
+        
+        return matchesSearch && matchesType;
+    }).sort((a, b) => {
+        const dateA = new Date(a.dateCreation).getTime();
+        const dateB = new Date(b.dateCreation).getTime();
+        
+        if (sortDate === 'NEWEST') return dateB - dateA;
+        if (sortDate === 'OLDEST') return dateA - dateB;
+        return 0;
     });
 
     const handleDeleteProperty = async (propertyId) => {
@@ -462,14 +478,32 @@ const AllProperties = () => {
                         />
                     </div>
 
-                    <div className="filter-dropdown">
+                    <div className={`filter-dropdown ${showTypeDropdown ? 'open' : ''}`} onClick={() => setShowTypeDropdown(!showTypeDropdown)}>
                         <Filter size={18} />
-                        <span>Type de bien</span>
+                        <span>{filterType === 'ALL' ? 'Type de bien' : filterType}</span>
+                        <ChevronDown size={16} className="dropdown-arrow" />
+                        {showTypeDropdown && (
+                            <div className="dropdown-menu">
+                                <div className={`dropdown-item ${filterType === 'ALL' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setFilterType('ALL'); setShowTypeDropdown(false); }}>Tous les types</div>
+                                <div className={`dropdown-item ${filterType === 'APPARTEMENT' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setFilterType('APPARTEMENT'); setShowTypeDropdown(false); }}>Appartement</div>
+                                <div className={`dropdown-item ${filterType === 'VILLA' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setFilterType('VILLA'); setShowTypeDropdown(false); }}>Villa</div>
+                                <div className={`dropdown-item ${filterType === 'TERRAIN' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setFilterType('TERRAIN'); setShowTypeDropdown(false); }}>Terrain</div>
+                                <div className={`dropdown-item ${filterType === 'LOCAL' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setFilterType('LOCAL'); setShowTypeDropdown(false); }}>Local</div>
+                                <div className={`dropdown-item ${filterType === 'IMMEUBLE' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setFilterType('IMMEUBLE'); setShowTypeDropdown(false); }}>Immeuble</div>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="filter-dropdown">
+                    <div className={`filter-dropdown ${showDateDropdown ? 'open' : ''}`} onClick={() => setShowDateDropdown(!showDateDropdown)}>
                         <Calendar size={18} />
-                        <span>Date d'ajout</span>
+                        <span>{sortDate === 'NEWEST' ? 'Plus récents' : 'Plus anciens'}</span>
+                        <ChevronDown size={16} className="dropdown-arrow" />
+                        {showDateDropdown && (
+                            <div className="dropdown-menu">
+                                <div className={`dropdown-item ${sortDate === 'NEWEST' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setSortDate('NEWEST'); setShowDateDropdown(false); }}>Plus récents</div>
+                                <div className={`dropdown-item ${sortDate === 'OLDEST' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setSortDate('OLDEST'); setShowDateDropdown(false); }}>Plus anciens</div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

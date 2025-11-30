@@ -114,6 +114,7 @@
   font-weight: 700;
   margin-bottom: 0.5rem;
   background: linear-gradient(to right, #fff, #94a3b8);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -133,6 +134,8 @@
   border-radius: 12px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 20;
 }
 
 .search-wrapper {
@@ -156,6 +159,7 @@
 }
 
 .filter-dropdown {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -170,6 +174,54 @@
 
 .filter-dropdown:hover {
   background: rgba(255, 255, 255, 0.15);
+}
+
+.dropdown-arrow {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+  color: #94a3b8;
+}
+
+.filter-dropdown.open .dropdown-arrow {
+  transform: rotate(180deg);
+  color: white;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem;
+  min-width: 180px;
+  z-index: 100;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  color: #e2e8f0;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.dropdown-item.active {
+  background: #3b82f6;
+  color: white;
 }
 
 /* Stats Grid */
