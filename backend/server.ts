@@ -1,7 +1,5 @@
 import app from './app.ts';
 import dotenv from 'dotenv';
-// import { verifyCloudinaryConfig } from './config/cloudinary.js';
-
 // Load environment variables
 dotenv.config();
 
@@ -13,9 +11,6 @@ if (!DATABASE_URL) {
   console.error('Error: DATABASE_URL environment variable is required');
   process.exit(1);
 }
-
-// Verify Cloudinary configuration (uncomment when cloudinary config is ready)
-// verifyCloudinaryConfig();
 
 // Start the server
 app.listen(PORT, () => {

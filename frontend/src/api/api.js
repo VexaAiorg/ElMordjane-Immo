@@ -287,6 +287,20 @@ export const getPropertyById = async (propertyId) => {
     return data;
 };
 
+/**
+ * Delete a property by ID
+ * @param {string|number} propertyId - Property ID
+ * @returns {Promise<Object>} Response confirming deletion
+ */
+export const deleteProperty = async (propertyId) => {
+    const data = await apiRequest(`/api/properties/${propertyId}`, {
+        method: 'DELETE',
+        headers: createHeaders(true),
+    });
+
+    return data;
+};
+
 // ============================================================================
 // Export Token Management Functions (for advanced use cases)
 // ============================================================================

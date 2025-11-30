@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, FileText, Package, Image } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
-import { getAllProperties, getPropertyById } from '../../api/api';
+import { getAllProperties, getPropertyById, deleteProperty, apiConfig } from '../../api/api';
 
 const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
     if (!property && !isLoading) return null;
+
+    const getFileUrl = (url) => {
+        if (!url) return '#';
+        if (url.startsWith('http')) return url;
+        const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+        return `${apiConfig.baseUrl}${cleanUrl}`;
+    };
 
     const formatPrice = (price) => {
         if (!price) return '-';
@@ -225,7 +232,7 @@ const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
                                                 {property.piecesJointes.filter(pj => pj.type === 'PHOTO').map((pj, index) => (
                                                     <a 
                                                         key={index} 
-                                                        href={pj.url} 
+                                                        href={getFileUrl(pj.url)} 
                                                         target="_blank" 
                                                         rel="noopener noreferrer"
                                                         style={{
@@ -237,7 +244,7 @@ const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
                                                         }}
                                                     >
                                                         <img 
-                                                            src={pj.url} 
+                                                            src={getFileUrl(pj.url)} 
                                                             alt={pj.nom || 'Photo'} 
                                                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                         />
@@ -255,7 +262,7 @@ const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
                                                 {property.piecesJointes.filter(pj => pj.type === 'DOCUMENT').map((pj, index) => (
                                                     <a 
                                                         key={index} 
-                                                        href={pj.url} 
+                                                        href={getFileUrl(pj.url)} 
                                                         target="_blank" 
                                                         rel="noopener noreferrer"
                                                         style={{
@@ -335,6 +342,31 @@ const AllProperties = () => {
             property.type?.toLowerCase().includes(query)
         );
     });
+
+    const handleDeleteProperty = async (propertyId) => {
+        console.log('handleDeleteProperty called with ID:', propertyId);
+        
+        if (!propertyId) {
+            console.error('Error: propertyId is undefined or null');
+            alert('Erreur: ID du bien introuvable');
+            return;
+        }
+
+        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce bien ? Cette action est irréversible.')) {
+            try {
+                console.log('Sending delete request...');
+                await deleteProperty(propertyId);
+                console.log('Delete request successful');
+                // Refresh properties list
+                fetchProperties();
+            } catch (err) {
+                console.error('Error deleting property:', err);
+                alert('Erreur lors de la suppression du bien: ' + err.message);
+            }
+        } else {
+            console.log('Delete cancelled by user');
+        }
+    };
 
     const formatPrice = (price) => {
         if (!price) return '-';
@@ -557,6 +589,7 @@ const AllProperties = () => {
                                                 <button 
                                                     className="btn-icon" 
                                                     title="Supprimer"
+                                                    onClick={() => handleDeleteProperty(property.id)}
                                                     style={{
                                                         background: 'rgba(239, 68, 68, 0.1)',
                                                         border: '1px solid rgba(239, 68, 68, 0.3)',

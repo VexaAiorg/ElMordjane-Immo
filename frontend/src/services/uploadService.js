@@ -12,13 +12,13 @@ export const uploadFilesImmediately = async (files, type = 'TEMP') => {
     try {
         const formData = new FormData();
         
+        // Add type to FormData first (crucial for Multer to read it before files)
+        formData.append('type', type);
+        
         // Add all files to FormData
         files.forEach(file => {
             formData.append('files', file);
         });
-        
-        // Add type to FormData
-        formData.append('type', type);
 
         const token = localStorage.getItem('authToken');
         
