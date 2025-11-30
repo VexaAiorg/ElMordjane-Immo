@@ -301,6 +301,63 @@ export const deleteProperty = async (propertyId) => {
     return data;
 };
 
+/**
+ * Update a property by ID
+ * @param {string|number} propertyId - Property ID
+ * @param {Object} propertyData - Property information
+ * @param {Array<File>} documents - Array of document files to upload
+ * @param {Array<File>} photos - Array of photo files to upload
+ * @returns {Promise<Object>} Response with updated property data
+ */
+export const updateProperty = async (propertyId, propertyData, documents = [], photos = []) => {
+    const token = getAuthToken();
+    const url = `${API_BASE_URL}/api/properties/${propertyId}`;
+
+    const formData = new FormData();
+    formData.append('data', JSON.stringify(propertyData));
+
+    // Append files
+    if (documents && documents.length > 0) {
+        documents.forEach(file => formData.append('documents', file));
+    }
+    
+    if (photos && photos.length > 0) {
+        photos.forEach(file => formData.append('photos', file));
+    }
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT * 6); // 60 seconds for uploads
+
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            body: formData,
+            signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return data;
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('Request timeout. Please try again.');
+        }
+        if (error instanceof TypeError) {
+            throw new Error('Network error. Please check your connection.');
+        }
+        throw error;
+    }
+};
+
 // ============================================================================
 // Export Token Management Functions (for advanced use cases)
 // ============================================================================

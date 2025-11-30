@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, FileText, Package, Image, ChevronDown } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
-import { getAllProperties, getPropertyById, deleteProperty, apiConfig } from '../../api/api';
+import { getAllProperties, getPropertyById, deleteProperty, updateProperty, apiConfig } from '../../api/api';
 
 const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
     if (!property && !isLoading) return null;
@@ -174,45 +174,117 @@ const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
                                     </div>
                                 </div>
                             )}
-                                   {property.papiers && property.papiers.length > 0 && (
+                           {property.papiers && property.papiers.length > 0 && (
                                 <div className="modal-section">
                                     <h3><FileText size={18} /> Documents Juridiques</h3>
-                                    <div className="info-grid">
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         {property.papiers.map((papier, index) => {
-                                            // Try to find a matching attachment
+                                            // Find matching attachment using categorie field
                                             const matchingAttachment = property.piecesJointes?.find(pj => 
-                                                pj.type === 'DOCUMENT' && 
-                                                (pj.nom?.toLowerCase() === papier.nom?.toLowerCase() || 
-                                                 pj.nom?.toLowerCase().includes(papier.nom?.toLowerCase()))
+                                                pj.type === 'DOCUMENT' && pj.categorie === papier.nom
                                             );
 
-                                            return (
-                                                <div className="info-item" key={index}>
-                                                    <span className="label">{papier.nom}</span>
-                                                    {matchingAttachment ? (
-                                                        <a 
-                                                            href={matchingAttachment.url} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer"
-                                                            className="value"
-                                                            style={{
-                                                                color: '#3b82f6',
-                                                                textDecoration: 'underline',
-                                                                cursor: 'pointer',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '0.25rem'
-                                                            }}
-                                                        >
-                                                            {papier.statut} <Eye size={14} />
-                                                        </a>
-                                                    ) : (
-                                                        <span className="value" style={{
+                                            const CardContent = () => (
+                                                <>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ 
+                                                            display: 'flex', 
+                                                            alignItems: 'center', 
+                                                            gap: '0.75rem',
+                                                            marginBottom: '0.5rem'
+                                                        }}>
+                                                            <FileText size={20} style={{ 
+                                                                color: papier.statut === 'DISPONIBLE' ? '#34d399' : '#f87171' 
+                                                            }} />
+                                                            <span style={{ 
+                                                                color: 'white', 
+                                                                fontWeight: '600',
+                                                                fontSize: '1rem'
+                                                            }}>
+                                                                {papier.nom}
+                                                            </span>
+                                                        </div>
+                                                        {matchingAttachment && (
+                                                            <div style={{ 
+                                                                fontSize: '0.85rem', 
+                                                                color: '#94a3b8',
+                                                                marginLeft: '2rem'
+                                                            }}>
+                                                                📎 Fichier: <span style={{ color: '#cbd5e1' }}>{matchingAttachment.nom || 'Document attaché'}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        alignItems: 'center', 
+                                                        gap: '1rem' 
+                                                    }}>
+                                                        <span style={{
+                                                            padding: '0.4rem 0.9rem',
+                                                            borderRadius: '20px',
+                                                            fontSize: '0.8rem',
+                                                            fontWeight: '600',
+                                                            background: papier.statut === 'DISPONIBLE' 
+                                                                ? 'rgba(16, 185, 129, 0.2)' 
+                                                                : 'rgba(239, 68, 68, 0.2)',
                                                             color: papier.statut === 'DISPONIBLE' ? '#34d399' : '#f87171'
                                                         }}>
                                                             {papier.statut}
                                                         </span>
-                                                    )}
+                                                        {matchingAttachment && (
+                                                            <div style={{
+                                                                padding: '0.4rem 0.8rem',
+                                                                background: 'rgba(59, 130, 246, 0.15)',
+                                                                borderRadius: '6px',
+                                                                fontSize: '0.8rem',
+                                                                color: '#3b82f6',
+                                                                fontWeight: '500'
+                                                            }}>
+                                                                Ouvrir
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            );
+
+                                            const cardStyle = {
+                                                background: 'rgba(0, 0, 0, 0.2)',
+                                                padding: '1rem 1.25rem',
+                                                borderRadius: '10px',
+                                                border: `1px solid ${papier.statut === 'DISPONIBLE' ? 'rgba(52, 211, 153, 0.3)' : 'rgba(248, 113, 113, 0.3)'}`,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: '1rem',
+                                                textDecoration: 'none',
+                                                transition: 'all 0.2s'
+                                            };
+
+                                            return matchingAttachment ? (
+                                                <a
+                                                    key={index}
+                                                    href={getFileUrl(matchingAttachment.url)}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={cardStyle}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)';
+                                                        e.currentTarget.style.borderColor = papier.statut === 'DISPONIBLE' 
+                                                            ? 'rgba(52, 211, 153, 0.5)' 
+                                                            : 'rgba(248, 113, 113, 0.5)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.2)';
+                                                        e.currentTarget.style.borderColor = papier.statut === 'DISPONIBLE' 
+                                                            ? 'rgba(52, 211, 153, 0.3)' 
+                                                            : 'rgba(248, 113, 113, 0.3)';
+                                                    }}
+                                                >
+                                                    <CardContent />
+                                                </a>
+                                            ) : (
+                                                <div key={index} style={cardStyle}>
+                                                    <CardContent />
                                                 </div>
                                             );
                                         })}
@@ -255,41 +327,424 @@ const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
                                     )}
 
                                     {/* Documents */}
-                                    {property.piecesJointes.filter(pj => pj.type === 'DOCUMENT').length > 0 && (
-                                        <div>
-                                            <h4 style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.75rem' }}>Autres Documents</h4>
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                                                {property.piecesJointes.filter(pj => pj.type === 'DOCUMENT').map((pj, index) => (
-                                                    <a 
-                                                        key={index} 
-                                                        href={getFileUrl(pj.url)} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '0.5rem',
-                                                            padding: '0.75rem 1rem',
-                                                            background: 'rgba(255,255,255,0.05)',
-                                                            borderRadius: '8px',
-                                                            textDecoration: 'none',
-                                                            color: 'white',
-                                                            border: '1px solid rgba(255,255,255,0.1)',
-                                                            fontSize: '0.9rem'
-                                                        }}
-                                                    >
-                                                        <FileText size={18} style={{ color: '#3b82f6' }} />
-                                                        <span>{pj.nom || 'Document'}</span>
-                                                    </a>
-                                                ))}
+                                    {(() => {
+                                        // Filter out documents that have a categorie (juridical documents)
+                                        const otherDocuments = property.piecesJointes.filter(pj => 
+                                            pj.type === 'DOCUMENT' && !pj.categorie
+                                        );
+
+                                        return otherDocuments.length > 0 && (
+                                            <div>
+                                                <h4 style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.75rem' }}>Autres Documents</h4>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                    {otherDocuments.map((pj, index) => (
+                                                        <a 
+                                                            key={index} 
+                                                            href={getFileUrl(pj.url)} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'space-between',
+                                                                gap: '1rem',
+                                                                padding: '1rem 1.25rem',
+                                                                background: 'rgba(255,255,255,0.05)',
+                                                                borderRadius: '10px',
+                                                                textDecoration: 'none',
+                                                                color: 'white',
+                                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                                                                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                                                            }}
+                                                        >
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+                                                                <div style={{
+                                                                    width: '40px',
+                                                                    height: '40px',
+                                                                    borderRadius: '8px',
+                                                                    background: 'rgba(59, 130, 246, 0.2)',
+                                                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center'
+                                                                }}>
+                                                                    <FileText size={20} style={{ color: '#3b82f6' }} />
+                                                                </div>
+                                                                <div style={{ flex: 1 }}>
+                                                                    <div style={{ 
+                                                                        fontWeight: '500',
+                                                                        fontSize: '0.95rem',
+                                                                        marginBottom: '0.25rem'
+                                                                    }}>
+                                                                        {pj.nom || 'Document'}
+                                                                    </div>
+                                                                    <div style={{ 
+                                                                        fontSize: '0.8rem',
+                                                                        color: '#94a3b8'
+                                                                    }}>
+                                                                        {pj.visibilite === 'PUBLIABLE' ? '🌐 Public' : '🔒 Interne'}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div style={{
+                                                                padding: '0.4rem 0.8rem',
+                                                                background: 'rgba(59, 130, 246, 0.15)',
+                                                                borderRadius: '6px',
+                                                                fontSize: '0.8rem',
+                                                                color: '#3b82f6',
+                                                                fontWeight: '500'
+                                                            }}>
+                                                                Ouvrir
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
                                 </div>
                             )}            </div>
 
                     </>
                 )}
+            </div>
+        </div>
+    );
+};
+
+const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
+    const [formData, setFormData] = useState({
+        titre: property?.titre || '',
+        description: property?.description || '',
+        type: property?.type || 'APPARTEMENT',
+        statut: property?.statut || 'DISPONIBLE',
+        transaction: property?.transaction || 'VENTE',
+        prixVente: property?.prixVente || '',
+        prixLocation: property?.prixLocation || '',
+        adresse: property?.adresse || '',
+    });
+    const [newPhotos, setNewPhotos] = useState([]);
+    const [newDocuments, setNewDocuments] = useState([]);
+    const [saving, setSaving] = useState(false);
+
+    if (!property && !isLoading) return null;
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = (e, type) => {
+        const files = Array.from(e.target.files);
+        if (type === 'photos') {
+            setNewPhotos(prev => [...prev, ...files]);
+        } else {
+            setNewDocuments(prev => [...prev, ...files]);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+
+        try {
+            const propertyData = {
+                bienImmobilier: formData,
+                proprietaire: {
+                    id: property.proprietaire?.id,
+                    nom: property.proprietaire?.nom,
+                    prenom: property.proprietaire?.prenom,
+                    telephone: property.proprietaire?.telephone,
+                    email: property.proprietaire?.email,
+                },
+                piecesJointes: property.piecesJointes || [],
+            };
+
+            await updateProperty(property.id, propertyData, newDocuments, newPhotos);
+            onUpdate();
+            onClose();
+        } catch (error) {
+            console.error('Error updating property:', error);
+            alert('Erreur lors de la mise à jour: ' + error.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+                <button className="modal-close" onClick={onClose}>
+                    <X size={24} />
+                </button>
+                
+                <div className="modal-header">
+                    <h2>Modifier le Bien</h2>
+                </div>
+
+                <div className="modal-body">
+                    <form onSubmit={handleSubmit}>
+                        <div style={{ display: 'grid', gap: '1.5rem' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Titre</label>
+                                <input
+                                    type="text"
+                                    name="titre"
+                                    value={formData.titre}
+                                    onChange={handleChange}
+                                    required
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '8px',
+                                        color: 'white',
+                                        fontSize: '1rem'
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Description</label>
+                                <textarea
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '8px',
+                                        color: 'white',
+                                        fontSize: '1rem',
+                                        resize: 'vertical'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Type</label>
+                                    <select
+                                        name="type"
+                                        value={formData.type}
+                                        onChange={handleChange}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '8px',
+                                            color: 'white',
+                                            fontSize: '1rem'
+                                        }}
+                                    >
+                                        <option value="APPARTEMENT">Appartement</option>
+                                        <option value="VILLA">Villa</option>
+                                        <option value="TERRAIN">Terrain</option>
+                                        <option value="LOCAL">Local</option>
+                                        <option value="IMMEUBLE">Immeuble</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Statut</label>
+                                    <select
+                                        name="statut"
+                                        value={formData.statut}
+                                        onChange={handleChange}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '8px',
+                                            color: 'white',
+                                            fontSize: '1rem'
+                                        }}
+                                    >
+                                        <option value="DISPONIBLE">Disponible</option>
+                                        <option value="EN_COURS">En cours</option>
+                                        <option value="VENDU">Vendu</option>
+                                        <option value="LOUE">Loué</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Transaction</label>
+                                    <select
+                                        name="transaction"
+                                        value={formData.transaction}
+                                        onChange={handleChange}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '8px',
+                                            color: 'white',
+                                            fontSize: '1rem'
+                                        }}
+                                    >
+                                        <option value="VENTE">Vente</option>
+                                        <option value="LOCATION">Location</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Prix Vente (DA)</label>
+                                    <input
+                                        type="number"
+                                        name="prixVente"
+                                        value={formData.prixVente}
+                                        onChange={handleChange}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '8px',
+                                            color: 'white',
+                                            fontSize: '1rem'
+                                        }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Prix Location (DA)</label>
+                                    <input
+                                        type="number"
+                                        name="prixLocation"
+                                        value={formData.prixLocation}
+                                        onChange={handleChange}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '8px',
+                                            color: 'white',
+                                            fontSize: '1rem'
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Adresse</label>
+                                <input
+                                    type="text"
+                                    name="adresse"
+                                    value={formData.adresse}
+                                    onChange={handleChange}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '8px',
+                                        color: 'white',
+                                        fontSize: '1rem'
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Ajouter Photos</label>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    onChange={(e) => handleFileChange(e, 'photos')}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '8px',
+                                        color: 'white',
+                                        fontSize: '1rem'
+                                    }}
+                                />
+                                {newPhotos.length > 0 && (
+                                    <p style={{ marginTop: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
+                                        {newPhotos.length} photo(s) sélectionnée(s)
+                                    </p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Ajouter Documents</label>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept=".pdf,.doc,.docx"
+                                    onChange={(e) => handleFileChange(e, 'documents')}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '8px',
+                                        color: 'white',
+                                        fontSize: '1rem'
+                                    }}
+                                />
+                                {newDocuments.length > 0 && (
+                                    <p style={{ marginTop: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
+                                        {newDocuments.length} document(s) sélectionné(s)
+                                    </p>
+                                )}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '8px',
+                                        color: 'white',
+                                        cursor: 'pointer',
+                                        fontSize: '1rem'
+                                    }}
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        background: saving ? 'rgba(59, 130, 246, 0.5)' : 'rgba(59, 130, 246, 0.8)',
+                                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                                        borderRadius: '8px',
+                                        color: 'white',
+                                        cursor: saving ? 'not-allowed' : 'pointer',
+                                        fontSize: '1rem'
+                                    }}
+                                >
+                                    {saving ? 'Enregistrement...' : 'Enregistrer'}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );
@@ -306,6 +761,7 @@ const AllProperties = () => {
     const [sortDate, setSortDate] = useState('NEWEST');
     const [showTypeDropdown, setShowTypeDropdown] = useState(false);
     const [showDateDropdown, setShowDateDropdown] = useState(false);
+    const [editingProperty, setEditingProperty] = useState(null);
 
     useEffect(() => {
         fetchProperties();
@@ -448,6 +904,31 @@ const AllProperties = () => {
         setLoadingDetails(false);
     };
 
+    const handleEditProperty = async (property) => {
+        setEditingProperty(property);
+        setLoadingDetails(true);
+        
+        try {
+            const response = await getPropertyById(property.id);
+            if (response.data) {
+                setEditingProperty(response.data);
+            }
+        } catch (err) {
+            console.error('Error fetching property details:', err);
+        } finally {
+            setLoadingDetails(false);
+        }
+    };
+
+    const handleCloseEditModal = () => {
+        setEditingProperty(null);
+        setLoadingDetails(false);
+    };
+
+    const handleUpdateSuccess = () => {
+        fetchProperties();
+    };
+
     return (
         <PageTransition>
             <div className="page-container">
@@ -455,7 +936,16 @@ const AllProperties = () => {
                     <PropertyDetailsModal 
                         property={selectedProperty} 
                         onClose={handleCloseModal}
-                        isLoading={loadingDetails && !selectedProperty.detailAppartement} // Only show loading if we don't have details yet
+                        isLoading={loadingDetails && !selectedProperty.detailAppartement}
+                    />
+                )}
+                
+                {editingProperty && (
+                    <PropertyEditModal 
+                        property={editingProperty} 
+                        onClose={handleCloseEditModal}
+                        onUpdate={handleUpdateSuccess}
+                        isLoading={loadingDetails && !editingProperty.detailAppartement}
                     />
                 )}
                 
@@ -609,6 +1099,7 @@ const AllProperties = () => {
                                                 <button 
                                                     className="btn-icon" 
                                                     title="Modifier"
+                                                    onClick={() => handleEditProperty(property)}
                                                     style={{
                                                         background: 'rgba(245, 158, 11, 0.1)',
                                                         border: '1px solid rgba(245, 158, 11, 0.3)',

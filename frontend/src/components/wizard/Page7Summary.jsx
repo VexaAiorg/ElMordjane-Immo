@@ -71,6 +71,7 @@ const Page7Summary = () => {
                         visibilite: 'INTERNE',
                         nom: fileData.originalname || docName,
                         url: fileData.url,
+                        categorie: docName, // Link to the juridical document name (e.g., "Acte (Livret Foncier)")
                     });
                 });
             }
