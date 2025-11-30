@@ -403,3 +403,186 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
         });
     }
 };
+
+/**
+ * Update a property by ID
+ * PUT /api/properties/:id
+ * Protected: Admin only
+ */
+export const updateProperty = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        if (!id || isNaN(parseInt(id))) {
+            res.status(400).json({
+                status: 'error',
+                message: 'Invalid property ID'
+            });
+            return;
+        }
+
+        const propertyId = parseInt(id);
+
+        // Parse the JSON data from the form-data
+        const data = JSON.parse(req.body.data);
+
+        console.log('Updating property:', propertyId, data.bienImmobilier?.titre);
+
+        // Access uploaded files from Multer
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        const documentFiles = files?.documents || [];
+        const photoFiles = files?.photos || [];
+
+        // Base URL for images
+        const baseUrl = process.env.APP_BASE_URL || '';
+        
+        const getFileUrl = (file: Express.Multer.File, type: string) => {
+             return `${baseUrl}/uploads/${type}/${file.filename}`;
+        };
+
+        const propertyType = data.bienImmobilier.type || 'AUTRE';
+
+        // Use Prisma transaction
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Update Property Basic Info
+            const property = await tx.bienImmobilier.update({
+                where: { id: propertyId },
+                data: {
+                    titre: data.bienImmobilier.titre,
+                    description: data.bienImmobilier.description || null,
+                    type: data.bienImmobilier.type,
+                    statut: data.bienImmobilier.statut,
+                    transaction: data.bienImmobilier.transaction,
+                    prixVente: data.bienImmobilier.prixVente || null,
+                    prixLocation: data.bienImmobilier.prixLocation || null,
+                    adresse: data.bienImmobilier.adresse || null,
+                }
+            });
+
+            // 2. Update Owner
+            if (data.proprietaire) {
+                // If it's an existing owner update
+                if (data.proprietaire.id) {
+                     await tx.proprietaire.update({
+                        where: { id: data.proprietaire.id },
+                        data: {
+                            nom: data.proprietaire.nom,
+                            prenom: data.proprietaire.prenom,
+                            telephone: data.proprietaire.telephone,
+                            email: data.proprietaire.email || null,
+                            adresse: data.proprietaire.adresse || null,
+                        }
+                    });
+                }
+            }
+
+            // 3. Update Details
+            if (propertyType === 'APPARTEMENT' && data.detailAppartement) {
+                const { id, bienId, ...detailData } = data.detailAppartement;
+                await tx.detailAppartement.upsert({
+                    where: { bienId: propertyId },
+                    create: { bienId: propertyId, ...detailData },
+                    update: detailData
+                });
+            } else if (propertyType === 'TERRAIN' && data.detailTerrain) {
+                const { id, bienId, ...detailData } = data.detailTerrain;
+                await tx.detailTerrain.upsert({
+                    where: { bienId: propertyId },
+                    create: { bienId: propertyId, ...detailData },
+                    update: detailData
+                });
+            } else if (propertyType === 'VILLA' && data.detailVilla) {
+                const { id, bienId, ...detailData } = data.detailVilla;
+                await tx.detailVilla.upsert({
+                    where: { bienId: propertyId },
+                    create: { bienId: propertyId, ...detailData },
+                    update: detailData
+                });
+            } else if (propertyType === 'LOCAL' && data.detailLocal) {
+                const { id, bienId, ...detailData } = data.detailLocal;
+                await tx.detailLocal.upsert({
+                    where: { bienId: propertyId },
+                    create: { bienId: propertyId, ...detailData },
+                    update: detailData
+                });
+            } else if (propertyType === 'IMMEUBLE' && data.detailImmeuble) {
+                const { id, bienId, ...detailData } = data.detailImmeuble;
+                await tx.detailImmeuble.upsert({
+                    where: { bienId: propertyId },
+                    create: { bienId: propertyId, ...detailData },
+                    update: detailData
+                });
+            }
+
+            // 4. Handle Attachments (Add new ones)
+            const uploadedFilesMap = new Map<string, Express.Multer.File>();
+            [...photoFiles, ...documentFiles].forEach(f => uploadedFilesMap.set(f.originalname, f));
+
+            if (data.piecesJointes && Array.isArray(data.piecesJointes)) {
+                for (const piece of data.piecesJointes) {
+                    const uploadedFile = uploadedFilesMap.get(piece.nom);
+
+                    if (uploadedFile) {
+                        // It's a NEW file we just uploaded
+                        await tx.pieceJointe.create({
+                            data: {
+                                bienId: property.id,
+                                type: piece.type,
+                                visibilite: piece.visibilite || 'INTERNE',
+                                url: getFileUrl(uploadedFile, propertyType),
+                                nom: piece.nom
+                            }
+                        });
+                    } 
+                    // If it's an existing file (has URL and ID), update visibility
+                    else if (piece.id && piece.visibilite) {
+                         await tx.pieceJointe.update({
+                            where: { id: piece.id },
+                            data: { visibilite: piece.visibilite }
+                        });
+                    }
+                }
+            }
+
+            // 5. Update Suivi
+            if (data.suivi) {
+                const { id, bienId, ...suiviData } = data.suivi;
+                await tx.suivi.upsert({
+                    where: { bienId: propertyId },
+                    create: { bienId: propertyId, ...suiviData },
+                    update: suiviData
+                });
+            }
+
+            // Return the updated property
+            return await tx.bienImmobilier.findUnique({
+                where: { id: propertyId },
+                include: {
+                    proprietaire: true,
+                    detailAppartement: true,
+                    detailTerrain: true,
+                    detailVilla: true,
+                    detailLocal: true,
+                    detailImmeuble: true,
+                    papiers: true,
+                    piecesJointes: true,
+                    suivi: true
+                }
+            });
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Property updated successfully',
+            data: result
+        });
+
+    } catch (error: any) {
+        console.error('Property update error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to update property',
+            error: error.message
+        });
+    }
+};

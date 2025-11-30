@@ -1,7 +1,5 @@
 import { Router } from 'express';
-import { createProperty, getAllProperties,    getPropertyById,
-    deleteProperty
-} from '../controllers/propertyController.js';
+import { createProperty, getAllProperties, getPropertyById, deleteProperty, updateProperty } from '../controllers/propertyController.js';
 import { authenticateToken, isAdmin } from '../middleware/authMiddleware.js';
 
 import { uploadPropertyFiles } from '../middleware/uploadMiddleware.js';
@@ -59,6 +57,19 @@ router.delete(
     authenticateToken,
     isAdmin,
     deleteProperty
+);
+
+/**
+ * @route   PUT /api/properties/:id
+ * @desc    Update a property by ID
+ * @access  Private (Admin only)
+ */
+router.put(
+    '/:id',
+    authenticateToken,
+    isAdmin,
+    uploadPropertyFiles,
+    updateProperty
 );
 
 export default router;
