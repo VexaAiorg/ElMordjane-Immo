@@ -256,6 +256,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
  * GET /api/properties
  * Protected: Admin only
  */
+//
 export const getAllProperties = async (req: Request, res: Response): Promise<void> => {
     try {
         const properties = await prisma.bienImmobilier.findMany({
