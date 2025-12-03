@@ -1,8 +1,21 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, FileText, Check, Loader } from 'lucide-react';
+import { Upload, X, FileText, Check, Loader, AlertTriangle } from 'lucide-react';
 import { useWizard } from '../../contexts/WizardContext';
 import { uploadFilesImmediately } from '../../services/uploadService';
+
+// Documents mutually exclusive - only one can be uploaded at a time
+const MUTUALLY_EXCLUSIVE_DOCS = ['Acte', 'Acte Indivision', 'Papier Timbre'];
+
+// Messages for mutual exclusivity
+const getExclusivityMessage = (uploadedDoc) => {
+    const messages = {
+        'Acte': 'Vous avez déjà téléchargé "Acte". Vous ne pouvez pas télécharger "Acte Indivision" ou "Papier Timbre".',
+        'Acte Indivision': 'Vous avez déjà téléchargé "Acte Indivision". Vous ne pouvez pas télécharger "Acte" ou "Papier Timbre".',
+        'Papier Timbre': 'Vous avez déjà téléchargé "Papier Timbre". Vous ne pouvez pas télécharger "Acte" ou "Acte Indivision".',
+    };
+    return messages[uploadedDoc] || '';
+};
 
 // Document templates based on property type
 const getDocumentTemplates = (propertyType) => {
@@ -69,10 +82,12 @@ const getDocumentTemplates = (propertyType) => {
     return templates[propertyType] || [];
 };
 
-const FileUploadZone = ({ onFilesAccepted, documentName, isUploading }) => {
+const FileUploadZone = ({ onFilesAccepted, documentName, isUploading, isDisabled, disabledMessage }) => {
     const onDrop = useCallback((acceptedFiles) => {
-        onFilesAccepted(acceptedFiles);
-    }, [onFilesAccepted]);
+        if (!isDisabled) {
+            onFilesAccepted(acceptedFiles);
+        }
+    }, [onFilesAccepted, isDisabled]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
@@ -83,8 +98,24 @@ const FileUploadZone = ({ onFilesAccepted, documentName, isUploading }) => {
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
         },
         multiple: false,
-        disabled: isUploading,
+        disabled: isUploading || isDisabled,
     });
+
+    if (isDisabled) {
+        return (
+            <div className="file-upload-zone disabled" style={{ 
+                opacity: 0.5, 
+                cursor: 'not-allowed',
+                backgroundColor: 'rgba(100, 100, 100, 0.1)',
+                border: '2px dashed rgba(100, 100, 100, 0.3)'
+            }}>
+                <AlertTriangle size={24} style={{ color: '#f59e0b' }} />
+                <p style={{ fontSize: '0.85rem', color: '#9ca3af', textAlign: 'center' }}>
+                    {disabledMessage || 'Non disponible'}
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -127,6 +158,30 @@ const Page4Documents = () => {
             }))
     );
     const [uploadingIndex, setUploadingIndex] = useState(null);
+
+    // Check which mutually exclusive document has been uploaded
+    const getUploadedExclusiveDoc = () => {
+        for (const doc of documents) {
+            if (MUTUALLY_EXCLUSIVE_DOCS.includes(doc.nom) && doc.file) {
+                return doc.nom;
+            }
+        }
+        return null;
+    };
+
+    const uploadedExclusiveDoc = getUploadedExclusiveDoc();
+
+    // Check if a document should be disabled due to mutual exclusivity
+    const isDocumentDisabled = (docName) => {
+        if (!MUTUALLY_EXCLUSIVE_DOCS.includes(docName)) {
+            return false;
+        }
+        // If another exclusive doc is uploaded, disable this one
+        if (uploadedExclusiveDoc && uploadedExclusiveDoc !== docName) {
+            return true;
+        }
+        return false;
+    };
 
     const handleStatusChange = (index, statut) => {
         const updated = [...documents];
@@ -206,12 +261,57 @@ const Page4Documents = () => {
 
             <form onSubmit={handleSubmit} className="wizard-form">
                 <div className="documents-list">
-                    {documents.map((doc, index) => (
-                        <div key={index} className="document-item">
+                    {/* Show info message about mutually exclusive documents if applicable */}
+                    {documentTemplates.some(doc => MUTUALLY_EXCLUSIVE_DOCS.includes(doc)) && (
+                        <div className="info-banner" style={{
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '8px',
+                            padding: '1rem',
+                            marginBottom: '1rem',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '0.75rem'
+                        }}>
+                            <AlertTriangle size={20} style={{ color: '#3b82f6', flexShrink: 0, marginTop: '2px' }} />
+                            <div>
+                                <p style={{ color: '#93c5fd', fontWeight: '600', marginBottom: '0.25rem' }}>
+                                    Information importante
+                                </p>
+                                <p style={{ color: '#9ca3af', fontSize: '0.9rem', margin: 0 }}>
+                                    Les documents "Acte", "Acte Indivision" et "Papier Timbre" sont mutuellement exclusifs. 
+                                    Vous ne pouvez télécharger qu'un seul de ces trois documents.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {documents.map((doc, index) => {
+                        const isExclusiveDoc = MUTUALLY_EXCLUSIVE_DOCS.includes(doc.nom);
+                        const isDisabled = isDocumentDisabled(doc.nom);
+                        
+                        return (
+                        <div 
+                            key={index} 
+                            className="document-item"
+                            style={isDisabled ? { opacity: 0.6 } : {}}
+                        >
                             <div className="document-info">
                                 <div className="document-name">
                                     <FileText size={20} />
                                     <span>{doc.nom}</span>
+                                    {isExclusiveDoc && (
+                                        <span style={{
+                                            fontSize: '0.7rem',
+                                            padding: '0.15rem 0.4rem',
+                                            backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                                            color: '#fbbf24',
+                                            borderRadius: '4px',
+                                            marginLeft: '0.5rem'
+                                        }}>
+                                            Exclusif
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="document-status">
@@ -219,6 +319,7 @@ const Page4Documents = () => {
                                         value={doc.statut}
                                         onChange={(e) => handleStatusChange(index, e.target.value)}
                                         className="status-select"
+                                        disabled={isDisabled}
                                     >
                                         <option value="DISPONIBLE">Disponible</option>
                                         <option value="MANQUANT">Manquant</option>
@@ -251,11 +352,14 @@ const Page4Documents = () => {
                                         documentName={doc.nom}
                                         onFilesAccepted={(files) => handleFileUpload(index, files)}
                                         isUploading={uploadingIndex === index}
+                                        isDisabled={isDocumentDisabled(doc.nom)}
+                                        disabledMessage={uploadedExclusiveDoc ? getExclusivityMessage(uploadedExclusiveDoc) : ''}
                                     />
                                 )}
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
 
