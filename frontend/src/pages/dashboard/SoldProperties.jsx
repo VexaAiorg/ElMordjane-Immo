@@ -8,7 +8,7 @@ const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
 
     const getFileUrl = (url) => {
         if (!url) return '#';
-        if (url.startsWith('http')) return url;
+        if (url.startsWith('http')) return url; // ffuture we gonna added ssl 
         const cleanUrl = url.startsWith('/') ? url : `/${url}`;
         return `${apiConfig.baseUrl}${cleanUrl}`;
     };

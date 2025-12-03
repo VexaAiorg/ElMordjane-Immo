@@ -63,7 +63,7 @@ const Page7Summary = () => {
             // Build piecesJointes array from uploaded file URLs
             const piecesJointes = [];
 
-            // 1. Add documents from Page 4 (using uploadedFileUrls.documents)
+            // 1. Add documents from Page 4 (using uploadedFileUrls.documents) - INTERNE
             if (uploadedFileUrls.documents) {
                 Object.entries(uploadedFileUrls.documents).forEach(([docName, fileData]) => {
                     piecesJointes.push({
@@ -71,12 +71,60 @@ const Page7Summary = () => {
                         visibilite: 'INTERNE',
                         nom: fileData.originalname || docName,
                         url: fileData.url,
-                        categorie: docName, // Link to the juridical document name (e.g., "Acte (Livret Foncier)")
+                        categorie: docName, // Link to the juridical document name (e.g., "Acte", "Livret Foncier")
                     });
                 });
             }
 
-            // 2. Add photos from Page 6 (using uploadedFileUrls.photos)
+            // 2. Add photos from Page 5 - Fichiers liés au bien (PUBLIABLE by default)
+            if (uploadedFileUrls.trackingPhotos && uploadedFileUrls.trackingPhotos.length > 0) {
+                uploadedFileUrls.trackingPhotos.forEach((fileData) => {
+                    // Find matching attachment to get visibility setting
+                    const attachment = formData.trackingAttachments?.piecesJointes?.find(
+                        a => a.type === 'PHOTO' && a.file?.name === fileData.originalname
+                    );
+                    
+                    piecesJointes.push({
+                        type: 'PHOTO',
+                        visibilite: attachment?.visibilite || 'PUBLIABLE',
+                        nom: fileData.originalname,
+                        url: fileData.url,
+                    });
+                });
+            }
+
+            // 3. Add documents from Page 5 - Fichiers liés au bien (PUBLIABLE by default)
+            if (uploadedFileUrls.trackingDocs && uploadedFileUrls.trackingDocs.length > 0) {
+                uploadedFileUrls.trackingDocs.forEach((fileData) => {
+                    // Find matching attachment to get visibility setting
+                    const attachment = formData.trackingAttachments?.piecesJointes?.find(
+                        a => a.type === 'DOCUMENT' && a.file?.name === fileData.originalname
+                    );
+                    
+                    piecesJointes.push({
+                        type: 'DOCUMENT',
+                        visibilite: attachment?.visibilite || 'PUBLIABLE',
+                        nom: fileData.originalname,
+                        url: fileData.url,
+                    });
+                });
+            }
+
+            // 4. Add localisation URLs from Page 5 (PUBLIABLE by default)
+            if (formData.trackingAttachments?.piecesJointes) {
+                formData.trackingAttachments.piecesJointes
+                    .filter(a => a.type === 'LOCALISATION')
+                    .forEach(loc => {
+                        piecesJointes.push({
+                            type: 'LOCALISATION',
+                            visibilite: loc.visibilite || 'PUBLIABLE',
+                            nom: loc.nom || 'Localisation',
+                            url: loc.url,
+                        });
+                    });
+            }
+
+            // 5. Add photos from Page 6 - Pièces Jointes (INTERNE by default)
             if (uploadedFileUrls.photos && uploadedFileUrls.photos.length > 0) {
                 uploadedFileUrls.photos.forEach((fileData) => {
                     // Find matching attachment to get visibility setting
@@ -93,7 +141,7 @@ const Page7Summary = () => {
                 });
             }
 
-            // 3. Add attachment documents from Page 6 (using uploadedFileUrls.attachmentDocs)
+            // 6. Add documents from Page 6 - Pièces Jointes (INTERNE by default)
             if (uploadedFileUrls.attachmentDocs && uploadedFileUrls.attachmentDocs.length > 0) {
                 uploadedFileUrls.attachmentDocs.forEach((fileData) => {
                     // Find matching attachment to get visibility setting
@@ -110,7 +158,7 @@ const Page7Summary = () => {
                 });
             }
 
-            // 4. Add localisation URLs (these are not files, just URLs)
+            // 7. Add localisation URLs from Page 6 (INTERNE by default)
             if (formData.attachments?.piecesJointes) {
                 formData.attachments.piecesJointes
                     .filter(a => a.type === 'LOCALISATION')
@@ -205,7 +253,7 @@ const Page7Summary = () => {
         }
     };
 
-    const { basicInfo, owner, propertyDetails, documents, tracking, attachments } = formData;
+    const { basicInfo, owner, propertyDetails, documents, tracking, trackingAttachments, attachments } = formData;
 
     return (
         <div className="wizard-page">
@@ -327,16 +375,28 @@ const Page7Summary = () => {
                     {tracking?.urlGooglePhotos && (
                         <SummaryItem label="Google Photos" value={tracking.urlGooglePhotos} />
                     )}
+                    {/* Page 5 Fichiers liés au bien (PUBLIABLE) */}
+                    {trackingAttachments?.piecesJointes && trackingAttachments.piecesJointes.length > 0 && (
+                        <div className="attachments-summary" style={{ marginTop: '1rem' }}>
+                            <p style={{ fontWeight: '600', marginBottom: '0.5rem' }}>Fichiers liés au bien (Publiables):</p>
+                            <div className="attachment-count">
+                                <span>Photos: {trackingAttachments.piecesJointes.filter(a => a.type === 'PHOTO').length}</span>
+                                <span>Documents: {trackingAttachments.piecesJointes.filter(a => a.type === 'DOCUMENT').length}</span>
+                                <span>Localisations: {trackingAttachments.piecesJointes.filter(a => a.type === 'LOCALISATION').length}</span>
+                            </div>
+                        </div>
+                    )}
                 </SummarySection>
 
-                {/* Attachments */}
+                {/* Attachments - Page 6 */}
                 <SummarySection
-                    title="Pièces Jointes"
+                    title="Pièces Jointes Supplémentaires"
                     icon={Image}
                     onEdit={() => goToStep(6)}
                 >
                     {attachments?.piecesJointes && attachments.piecesJointes.length > 0 ? (
                         <div className="attachments-summary">
+                            <p style={{ fontWeight: '600', marginBottom: '0.5rem' }}>Fichiers internes:</p>
                             <div className="attachment-count">
                                 <span>Photos: {attachments.piecesJointes.filter(a => a.type === 'PHOTO').length}</span>
                                 <span>Documents: {attachments.piecesJointes.filter(a => a.type === 'DOCUMENT').length}</span>
@@ -348,7 +408,7 @@ const Page7Summary = () => {
                             </div>
                         </div>
                     ) : (
-                        <p className="no-data">Aucune pièce jointe</p>
+                        <p className="no-data">Aucune pièce jointe supplémentaire</p>
                     )}
                 </SummarySection>
             </div>

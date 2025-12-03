@@ -2,11 +2,12 @@ import React, { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Upload, X, Image, FileText, MapPin } from 'lucide-react';
+import { Upload, X, Image, FileText, MapPin, Loader } from 'lucide-react';
 import { trackingSchema } from '../../utils/wizardSchemas';
 import { useWizard } from '../../contexts/WizardContext';
+import { uploadFilesImmediately } from '../../services/uploadService';
 
-const AttachmentUploadZone = ({ onFilesAccepted, accept, label }) => {
+const AttachmentUploadZone = ({ onFilesAccepted, accept, label, isUploading }) => {
     const onDrop = useCallback((acceptedFiles) => {
         onFilesAccepted(acceptedFiles);
     }, [onFilesAccepted]);
@@ -15,19 +16,29 @@ const AttachmentUploadZone = ({ onFilesAccepted, accept, label }) => {
         onDrop,
         accept,
         multiple: true,
+        disabled: isUploading,
     });
 
     return (
         <div
             {...getRootProps()}
-            className={`file-upload-zone attachment ${isDragActive ? 'active' : ''}`}
+            className={`file-upload-zone attachment ${isDragActive ? 'active' : ''} ${isUploading ? 'uploading' : ''}`}
         >
             <input {...getInputProps()} />
-            <Upload size={24} />
-            {isDragActive ? (
-                <p>Déposez les fichiers ici...</p>
+            {isUploading ? (
+                <>
+                    <Loader size={24} className="spinner" />
+                    <p>Téléchargement...</p>
+                </>
             ) : (
-                <p>{label}</p>
+                <>
+                    <Upload size={24} />
+                    {isDragActive ? (
+                        <p>Déposez les fichiers ici...</p>
+                    ) : (
+                        <p>{label}</p>
+                    )}
+                </>
             )}
         </div>
     );
@@ -113,7 +124,7 @@ const AttachmentItem = ({ attachment, onRemove, onVisibilityChange }) => {
 };
 
 const Page5Tracking = () => {
-    const { formData, updateFormData, markPageAsValidated, nextStep, prevStep, updateFileUploads } = useWizard();
+    const { formData, updateFormData, markPageAsValidated, nextStep, prevStep, uploadedFileUrls, updateUploadedFileUrls } = useWizard();
 
     const {
         register,
@@ -124,40 +135,83 @@ const Page5Tracking = () => {
         defaultValues: formData.tracking,
     });
 
-    // Attachments State
+    // Attachments State - use trackingAttachments for Page 5 (default: PUBLIABLE)
     const [attachments, setAttachments] = useState(
-        formData.attachments?.piecesJointes || []
+        formData.trackingAttachments?.piecesJointes || []
     );
     const [localisationUrl, setLocalisationUrl] = useState('');
+    const [uploadingPhotos, setUploadingPhotos] = useState(false);
+    const [uploadingDocs, setUploadingDocs] = useState(false);
 
-    const handleDocumentUpload = (files) => {
-        const newAttachments = files.map((file, index) => ({
-            id: Date.now() + index,
-            type: 'DOCUMENT',
-            visibilite: 'INTERNE',
-            file,
-            nom: file.name,
-        }));
-        setAttachments([...attachments, ...newAttachments]);
+    const propertyType = formData.basicInfo?.type || 'TEMP';
+
+    const handleDocumentUpload = async (files) => {
+        setUploadingDocs(true);
+        try {
+            // Upload files immediately to server
+            const uploadedFiles = await uploadFilesImmediately(files, propertyType);
+
+            // Default visibility is PUBLIABLE for Page 5 (Fichiers liés au bien)
+            const newAttachments = files.map((file, index) => ({
+                id: Date.now() + index,
+                type: 'DOCUMENT',
+                visibilite: 'PUBLIABLE',
+                file,
+                nom: file.name,
+                serverUrl: uploadedFiles[index],
+            }));
+            setAttachments([...attachments, ...newAttachments]);
+
+            // Store URLs in context (trackingDocs for Page 5)
+            const currentDocs = uploadedFileUrls.trackingDocs || [];
+            updateUploadedFileUrls('trackingDocs', [...currentDocs, ...uploadedFiles]);
+
+            console.log(`✅ [Page 5] Uploaded ${files.length} documents (PUBLIABLE)`);
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Échec du téléchargement des documents. Veuillez réessayer.');
+        } finally {
+            setUploadingDocs(false);
+        }
     };
 
-    const handlePhotoUpload = (files) => {
-        const newAttachments = files.map((file, index) => ({
-            id: Date.now() + index,
-            type: 'PHOTO',
-            visibilite: 'INTERNE',
-            file,
-            nom: file.name,
-        }));
-        setAttachments([...attachments, ...newAttachments]);
+    const handlePhotoUpload = async (files) => {
+        setUploadingPhotos(true);
+        try {
+            // Upload files immediately to server
+            const uploadedFiles = await uploadFilesImmediately(files, propertyType);
+
+            // Default visibility is PUBLIABLE for Page 5 (Fichiers liés au bien)
+            const newAttachments = files.map((file, index) => ({
+                id: Date.now() + index,
+                type: 'PHOTO',
+                visibilite: 'PUBLIABLE',
+                file,
+                nom: file.name,
+                serverUrl: uploadedFiles[index],
+            }));
+            setAttachments([...attachments, ...newAttachments]);
+
+            // Store URLs in context (trackingPhotos for Page 5)
+            const currentPhotos = uploadedFileUrls.trackingPhotos || [];
+            updateUploadedFileUrls('trackingPhotos', [...currentPhotos, ...uploadedFiles]);
+
+            console.log(`✅ [Page 5] Uploaded ${files.length} photos (PUBLIABLE)`);
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Échec du téléchargement des photos. Veuillez réessayer.');
+        } finally {
+            setUploadingPhotos(false);
+        }
     };
 
     const handleLocalisationAdd = () => {
         if (localisationUrl.trim()) {
+            // Default visibility is PUBLIABLE for Page 5
             const newAttachment = {
                 id: Date.now(),
                 type: 'LOCALISATION',
-                visibilite: 'INTERNE',
+                visibilite: 'PUBLIABLE',
                 url: localisationUrl,
                 nom: 'Localisation',
             };
@@ -180,12 +234,8 @@ const Page5Tracking = () => {
         // Save tracking data
         updateFormData('tracking', data);
 
-        // Save attachments data
-        updateFormData('attachments', { piecesJointes: attachments });
-
-        // Store photos separately for easier access
-        const photos = attachments.filter(a => a.type === 'PHOTO' && a.file).map(a => a.file);
-        updateFileUploads('photos', photos);
+        // Save attachments data to trackingAttachments (Page 5 - PUBLIABLE)
+        updateFormData('trackingAttachments', { piecesJointes: attachments });
 
         markPageAsValidated(5);
         nextStep();
@@ -291,6 +341,7 @@ const Page5Tracking = () => {
                             onFilesAccepted={handlePhotoUpload}
                             accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] }}
                             label="Glissez-déposez des photos ou cliquez pour sélectionner"
+                            isUploading={uploadingPhotos}
                         />
                         <div className="attachments-grid">
                             {photosOnly.map((attachment) => (
@@ -318,6 +369,7 @@ const Page5Tracking = () => {
                                 'image/*': ['.png', '.jpg', '.jpeg'],
                             }}
                             label="Glissez-déposez des documents ou cliquez pour sélectionner"
+                            isUploading={uploadingDocs}
                         />
                         <div className="attachments-list">
                             {documentsOnly.map((attachment) => (

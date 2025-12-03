@@ -39,13 +39,18 @@ export const WizardProvider = ({ children }) => {
                     priorite: 'NORMAL',
                     aMandat: false,
                 },
+                // Page 5: Fichiers liés au bien (default: PUBLIABLE)
+                trackingAttachments: { piecesJointes: [] },
+                // Page 6: Pièces jointes supplémentaires (default: INTERNE)
                 attachments: { piecesJointes: [] },
             },
             validatedPages: [],
             uploadedFileUrls: {
-                documents: {},      // { documentName: { url, filename, originalname } }
-                photos: [],         // [{ url, filename, originalname }]
-                attachmentDocs: [], // [{ url, filename, originalname }]
+                documents: {},           // { documentName: { url, filename, originalname } } - Page 4
+                trackingPhotos: [],      // [{ url, filename, originalname }] - Page 5 (PUBLIABLE)
+                trackingDocs: [],        // [{ url, filename, originalname }] - Page 5 (PUBLIABLE)
+                photos: [],              // [{ url, filename, originalname }] - Page 6 (INTERNE)
+                attachmentDocs: [],      // [{ url, filename, originalname }] - Page 6 (INTERNE)
             },
         };
     };
@@ -73,6 +78,8 @@ export const WizardProvider = ({ children }) => {
     const [uploadedFileUrls, setUploadedFileUrls] = useState(
         initialState.uploadedFileUrls || {
             documents: {},
+            trackingPhotos: [],
+            trackingDocs: [],
             photos: [],
             attachmentDocs: [],
         }
@@ -177,6 +184,7 @@ export const WizardProvider = ({ children }) => {
                 priorite: 'NORMAL',
                 aMandat: false,
             },
+            trackingAttachments: { piecesJointes: [] },
             attachments: { piecesJointes: [] },
         });
         setFileUploads({
@@ -186,6 +194,8 @@ export const WizardProvider = ({ children }) => {
         });
         setUploadedFileUrls({
             documents: {},
+            trackingPhotos: [],
+            trackingDocs: [],
             photos: [],
             attachmentDocs: [],
         });

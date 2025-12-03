@@ -26,7 +26,8 @@ app.use(cors({
   origin: true // Allow all origins
 })); // Configure CORS properly
 
-// Health check endpoint
+// Health check endpoint 
+
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'success',

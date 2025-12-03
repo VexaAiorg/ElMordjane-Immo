@@ -17,7 +17,8 @@ const getDocumentTemplates = (propertyType) => {
             'Attestation de remise de clé',
         ],
         TERRAIN: [
-            'Acte (Livret Foncier)',
+            'Acte',
+            'Livret Foncier',
             'Extrait Cadastral',
             'Permis',
             'Certificat d\'Urbanisme',
@@ -27,7 +28,8 @@ const getDocumentTemplates = (propertyType) => {
             'CC12',
         ],
         VILLA: [
-            'Acte (Livret Foncier)',
+            'Acte',
+            'Livret Foncier',
             'Extrait Cadastral',
             'Permis',
             'Certificat d\'Urbanisme',
@@ -49,7 +51,8 @@ const getDocumentTemplates = (propertyType) => {
             'Désistement OPGI',
         ],
         IMMEUBLE: [
-            'Acte (Livret Foncier)',
+            'Acte',
+            'Livret Foncier',
             'Extrait Cadastral',
             'Permis',
             'Certificat d\'Urbanisme',

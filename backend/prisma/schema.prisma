@@ -225,6 +225,7 @@ model PieceJointe {
   visibilite Visibilite      @default(INTERNE)
   url        String
   nom        String?
+  categorie  String? // Links to Papier.nom for juridical documents
 
   bienId       Int
   bien         BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Cascade)

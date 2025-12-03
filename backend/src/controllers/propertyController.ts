@@ -176,7 +176,8 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
                                 type: piece.type,
                                 visibilite: piece.visibilite || 'INTERNE',
                                 url: getFileUrl(uploadedFile, propertyType),
-                                nom: piece.nom
+                                nom: piece.nom,
+                                categorie: piece.categorie || null // Link to juridical document type
                             }
                         });
                     } else if (piece.url) {
@@ -187,7 +188,8 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
                                 type: piece.type,
                                 visibilite: piece.visibilite || 'INTERNE',
                                 url: piece.url,
-                                nom: piece.nom
+                                nom: piece.nom,
+                                categorie: piece.categorie || null
                             }
                         });
                     }
@@ -372,9 +374,12 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
 
         const propertyId = parseInt(id);
 
-        // Check if property exists
+        // Check if property exists and get all file attachments
         const existingProperty = await prisma.bienImmobilier.findUnique({
-            where: { id: propertyId }
+            where: { id: propertyId },
+            include: {
+                piecesJointes: true
+            }
         });
 
         if (!existingProperty) {
@@ -385,14 +390,41 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        // Delete property
+        // Delete physical files from uploads folder
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        
+        for (const piece of existingProperty.piecesJointes) {
+            // Only delete local files (not external URLs like Google Maps)
+            if (piece.url && piece.url.startsWith('/uploads/')) {
+                try {
+                    // Extract file path from URL (e.g., /uploads/APPARTEMENT/filename.jpg)
+                    const filePath = path.join(process.cwd(), piece.url);
+                    
+                    // Check if file exists before attempting to delete
+                    try {
+                        await fs.access(filePath);
+                        await fs.unlink(filePath);
+                        console.log(`Deleted file: ${filePath}`);
+                    } catch (err) {
+                        // File doesn't exist, skip
+                        console.log(`File not found (already deleted?): ${filePath}`);
+                    }
+                } catch (error) {
+                    console.error(`Error deleting file ${piece.url}:`, error);
+                    // Continue with deletion even if file deletion fails
+                }
+            }
+        }
+
+        // Delete property (cascade will delete related records)
         await prisma.bienImmobilier.delete({
             where: { id: propertyId }
         });
 
         res.status(200).json({
             status: 'success',
-            message: 'Property deleted successfully'
+            message: 'Property and associated files deleted successfully'
         });
     } catch (error: any) {
         console.error('Delete property error:', error);
