@@ -475,6 +475,30 @@
   border-color: #3b82f6;
 }
 
+/* Fix select dropdown options background */
+.form-group select option {
+  background: #1e293b;
+  color: white;
+  padding: 0.5rem;
+}
+
+/* Ensure select elements have proper styling */
+select {
+  background: rgba(0, 0, 0, 0.3) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+select option {
+  background: #1e293b !important;
+  color: white !important;
+  padding: 0.75rem !important;
+}
+
+select option:hover {
+  background: #334155 !important;
+}
+
 /* Wizard Actions */
 .wizard-actions {
   display: flex;
