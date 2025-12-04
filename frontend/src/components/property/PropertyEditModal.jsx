@@ -33,14 +33,14 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
             telephone: property?.proprietaire?.telephone || '',
             email: property?.proprietaire?.email || '',
             adresse: property?.proprietaire?.adresse || '',
-            typeIdentite: property?.proprietaire?.typeIdentite || null,
+            typeIdentite: property?.proprietaire?.typeIdentite || '',
             numIdentite: property?.proprietaire?.numIdentite || '',
-            qualite: property?.proprietaire?.qualite || null,
-            prixType: property?.proprietaire?.prixType || null,
-            prixNature: property?.proprietaire?.prixNature || null,
-            prixSource: property?.proprietaire?.prixSource || null,
-            paiementVente: property?.proprietaire?.paiementVente || null,
-            paiementLocation: property?.proprietaire?.paiementLocation || null,
+            qualite: property?.proprietaire?.qualite || '',
+            prixType: property?.proprietaire?.prixType || '',
+            prixNature: property?.proprietaire?.prixNature || '',
+            prixSource: property?.proprietaire?.prixSource || '',
+            paiementVente: property?.proprietaire?.paiementVente || '',
+            paiementLocation: property?.proprietaire?.paiementLocation || '',
         },
         propertyDetails: getInitialPropertyDetails(property),
         suivi: {
@@ -67,6 +67,55 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
         internalDocuments: [],
         internalLocalisations: [],
     });
+
+    // Reload form data when property changes (e.g., when full data loads from API)
+    React.useEffect(() => {
+        if (property) {
+            console.log('Loading property data:', property);
+            console.log('Proprietaire data:', property.proprietaire);
+            console.log('Detail Appartement:', property.detailAppartement);
+            
+            // Update all form data with fresh property data
+            setFormData({
+                bienImmobilier: {
+                    titre: property?.titre || '',
+                    description: property?.description || '',
+                    type: property?.type || 'APPARTEMENT',
+                    statut: property?.statut || 'DISPONIBLE',
+                    transaction: property?.transaction || 'VENTE',
+                    prixVente: property?.prixVente || '',
+                    prixLocation: property?.prixLocation || '',
+                    adresse: property?.adresse || '',
+                },
+                proprietaire: {
+                    id: property?.proprietaire?.id || null,
+                    nom: property?.proprietaire?.nom || '',
+                    prenom: property?.proprietaire?.prenom || '',
+                    telephone: property?.proprietaire?.telephone || '',
+                    email: property?.proprietaire?.email || '',
+                    adresse: property?.proprietaire?.adresse || '',
+                    typeIdentite: property?.proprietaire?.typeIdentite || '',
+                    numIdentite: property?.proprietaire?.numIdentite || '',
+                    qualite: property?.proprietaire?.qualite || '',
+                    prixType: property?.proprietaire?.prixType || '',
+                    prixNature: property?.proprietaire?.prixNature || '',
+                    prixSource: property?.proprietaire?.prixSource || '',
+                    paiementVente: property?.proprietaire?.paiementVente || '',
+                    paiementLocation: property?.proprietaire?.paiementLocation || '',
+                },
+                propertyDetails: getInitialPropertyDetails(property),
+                suivi: {
+                    estVisite: property?.suivi?.estVisite || false,
+                    priorite: property?.suivi?.priorite || 'NORMAL',
+                    aMandat: property?.suivi?.aMandat || false,
+                    urlGoogleSheet: property?.suivi?.urlGoogleSheet || '',
+                    urlGooglePhotos: property?.suivi?.urlGooglePhotos || '',
+                },
+                papiers: property?.papiers || [],
+                piecesJointes: property?.piecesJointes || [],
+            });
+        }
+    }, [property]); // Re-run when property changes
 
     if (!property && !isLoading) return null;
 
@@ -123,6 +172,12 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
 
             // Add property-specific details based on type
             const type = formData.bienImmobilier.type;
+            
+            // IMPORTANT: Always include the property details, even if they're empty
+            // This ensures the backend receives the details structure
+            console.log('Property Details before sending:', formData.propertyDetails);
+            console.log('Property Type:', type);
+            
             if (type === 'APPARTEMENT') {
                 propertyData.detailAppartement = formData.propertyDetails;
             } else if (type === 'VILLA') {
@@ -134,6 +189,8 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
             } else if (type === 'IMMEUBLE') {
                 propertyData.detailImmeuble = formData.propertyDetails;
             }
+
+            console.log('Full payload being sent:', JSON.stringify(propertyData, null, 2));
 
             // Collect all new files
             const allNewDocuments = [

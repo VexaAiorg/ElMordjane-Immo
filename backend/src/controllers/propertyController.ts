@@ -519,6 +519,17 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
             // 3. Update Details
             const parseNum = (val: any) => (val !== undefined && val !== null && val !== '') ? parseFloat(val.toString()) : null;
             const parseIntNum = (val: any) => (val !== undefined && val !== null && val !== '') ? parseInt(val.toString()) : null;
+            
+            // Helper function to remove null/undefined values from update object
+            const cleanUpdateData = (obj: any) => {
+                const cleaned: any = {};
+                for (const key in obj) {
+                    if (obj[key] !== null && obj[key] !== undefined) {
+                        cleaned[key] = obj[key];
+                    }
+                }
+                return cleaned;
+            };
 
             if (propertyType === 'APPARTEMENT' && data.detailAppartement) {
                 const { id, bienId, ...rawDetail } = data.detailAppartement;
@@ -532,10 +543,14 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     etage: parseIntNum(rawDetail.etage),
                     anneeConstruction: parseIntNum(rawDetail.anneeConstruction),
                 };
+                
+                // Remove null values to prevent overwriting existing data
+                const updateData = cleanUpdateData(detailData);
+                
                 await tx.detailAppartement.upsert({
                     where: { bienId: propertyId },
                     create: { bienId: propertyId, ...detailData },
-                    update: detailData
+                    update: updateData
                 });
             } else if (propertyType === 'TERRAIN' && data.detailTerrain) {
                 const { id, bienId, ...rawDetail } = data.detailTerrain;
@@ -548,15 +563,16 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     facades: parseIntNum(rawDetail.facades),
                 };
                 
+                const updateData = cleanUpdateData(detailData);
+                
                 if (surface !== null) {
                     await tx.detailTerrain.upsert({
                         where: { bienId: propertyId },
                         create: { bienId: propertyId, ...detailData },
-                        update: detailData
+                        update: updateData
                     });
                 } else {
-                    // If surface is missing, we can't create. Try update only.
-                    const { surface, ...updateData } = detailData;
+                    // If surface is missing, try update only
                     try {
                         await tx.detailTerrain.update({
                             where: { bienId: propertyId },
@@ -577,15 +593,16 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     etages: parseIntNum(rawDetail.etages),
                     pieces: parseIntNum(rawDetail.pieces),
                 };
+                
+                const updateData = cleanUpdateData(detailData);
 
                 if (surface !== null) {
                     await tx.detailVilla.upsert({
                         where: { bienId: propertyId },
                         create: { bienId: propertyId, ...detailData },
-                        update: detailData
+                        update: updateData
                     });
                 } else {
-                    const { surface, ...updateData } = detailData;
                     try {
                         await tx.detailVilla.update({
                             where: { bienId: propertyId },
@@ -602,15 +619,16 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     hauteur: parseNum(rawDetail.hauteur),
                     facades: parseIntNum(rawDetail.facades),
                 };
+                
+                const updateData = cleanUpdateData(detailData);
 
                 if (surface !== null) {
                     await tx.detailLocal.upsert({
                         where: { bienId: propertyId },
                         create: { bienId: propertyId, ...detailData },
-                        update: detailData
+                        update: updateData
                     });
                 } else {
-                    const { surface, ...updateData } = detailData;
                     try {
                         await tx.detailLocal.update({
                             where: { bienId: propertyId },
@@ -633,15 +651,16 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     nbAppartements: parseIntNum(rawDetail.nbAppartements),
                     surfaceSol: parseNum(rawDetail.surfaceSol),
                 };
+                
+                const updateData = cleanUpdateData(detailData);
 
                 if (surface !== null) {
                     await tx.detailImmeuble.upsert({
                         where: { bienId: propertyId },
                         create: { bienId: propertyId, ...detailData },
-                        update: detailData
+                        update: updateData
                     });
                 } else {
-                    const { surface, ...updateData } = detailData;
                     try {
                         await tx.detailImmeuble.update({
                             where: { bienId: propertyId },
