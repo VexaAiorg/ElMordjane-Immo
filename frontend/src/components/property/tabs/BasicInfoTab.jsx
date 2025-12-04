@@ -3,7 +3,23 @@ import React from 'react';
 const BasicInfoTab = ({ formData, onChange }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
-        onChange({ [name]: value });
+        
+        // Auto-sync transaction when statut changes
+        if (name === 'statut') {
+            const updates = { [name]: value };
+            
+            // Synchronize transaction based on statut
+            if (value === 'VENDU') {
+                updates.transaction = 'VENTE';
+            } else if (value === 'LOUE') {
+                updates.transaction = 'LOCATION';
+            }
+            // For DISPONIBLE, keep current transaction (user can choose)
+            
+            onChange(updates);
+        } else {
+            onChange({ [name]: value });
+        }
     };
 
     const inputStyle = {
@@ -102,11 +118,21 @@ const BasicInfoTab = ({ formData, onChange }) => {
                         name="transaction"
                         value={formData.transaction}
                         onChange={handleChange}
-                        style={inputStyle}
+                        disabled={formData.statut === 'VENDU' || formData.statut === 'LOUE'}
+                        style={{
+                            ...inputStyle,
+                            opacity: (formData.statut === 'VENDU' || formData.statut === 'LOUE') ? 0.6 : 1,
+                            cursor: (formData.statut === 'VENDU' || formData.statut === 'LOUE') ? 'not-allowed' : 'pointer'
+                        }}
                     >
                         <option value="VENTE">Vente</option>
                         <option value="LOCATION">Location</option>
                     </select>
+                    {(formData.statut === 'VENDU' || formData.statut === 'LOUE') && (
+                        <p style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: '0.25rem' }}>
+                            ✓ Synchronisé automatiquement avec le statut
+                        </p>
+                    )}
                 </div>
 
                 <div>

@@ -453,6 +453,16 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Confirmation before saving
+        const confirmed = window.confirm(
+            '⚠️ Êtes-vous sûr de vouloir enregistrer ces modifications ?\n\nCette action modifiera les informations du bien immobilier.'
+        );
+        
+        if (!confirmed) {
+            return; // User cancelled
+        }
+        
         setSaving(true);
 
         try {
@@ -826,7 +836,7 @@ const SoldProperties = () => {
     const handleDeleteProperty = async (propertyId) => {
         if (!propertyId) return;
 
-        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce bien ? Cette action est irréversible.')) {
+        if (window.confirm('🗑️ Êtes-vous sûr de vouloir supprimer ce bien ?\n\n⚠️ ATTENTION : Cette action est IRRÉVERSIBLE !\nToutes les données associées (documents, photos, etc.) seront définitivement supprimées.')) {
             try {
                 await deleteProperty(propertyId);
                 fetchProperties();

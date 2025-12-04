@@ -149,6 +149,16 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Confirmation before saving
+        const confirmed = window.confirm(
+            '⚠️ Êtes-vous sûr de vouloir enregistrer ces modifications ?\n\nCette action modifiera les informations du bien immobilier.'
+        );
+        
+        if (!confirmed) {
+            return; // User cancelled
+        }
+        
         setSaving(true);
 
         try {

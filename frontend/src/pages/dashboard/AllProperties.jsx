@@ -80,7 +80,7 @@ const AllProperties = () => {
             return;
         }
 
-        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce bien ? Cette action est irréversible.')) {
+        if (window.confirm('🗑️ Êtes-vous sûr de vouloir supprimer ce bien ?\n\n⚠️ ATTENTION : Cette action est IRRÉVERSIBLE !\nToutes les données associées (documents, photos, etc.) seront définitivement supprimées.')) {
             try {
                 console.log('Sending delete request...');
                 await deleteProperty(propertyId);
