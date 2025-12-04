@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import BasicInfoTab from './tabs/BasicInfoTab';
 import OwnerInfoTab from './tabs/OwnerInfoTab';
@@ -108,12 +108,17 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                 bienImmobilier: formData.bienImmobilier,
                 proprietaire: formData.proprietaire,
                 suivi: formData.suivi,
-                papiers: formData.papiers.map(p => ({ id: p.id, statut: p.statut })),
+                papiers: formData.papiers.map(p => ({ 
+                    id: p.id, 
+                    statut: p.statut,
+                    nom: p.nom // Include name for new papiers and updates
+                })),
                 piecesJointes: formData.piecesJointes.map(pj => ({ 
                     id: pj.id, 
-                    visibilite: pj.visibilite 
+                    visibilite: pj.visibilite,
+                    categorie: pj.categorie
                 })),
-                piecesJointesToDelete: filesToDelete,
+                filesToDelete: filesToDelete, // Match backend expectation
             };
 
             // Add property-specific details based on type

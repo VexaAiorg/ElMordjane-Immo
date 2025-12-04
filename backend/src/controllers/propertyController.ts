@@ -86,8 +86,8 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
                     type: data.bienImmobilier.type,
                     statut: data.bienImmobilier.statut,
                     transaction: data.bienImmobilier.transaction,
-                    prixVente: data.bienImmobilier.prixVente || null,
-                    prixLocation: data.bienImmobilier.prixLocation || null,
+                    prixVente: data.bienImmobilier.prixVente ? parseFloat(data.bienImmobilier.prixVente.toString()) : null,
+                    prixLocation: data.bienImmobilier.prixLocation ? parseFloat(data.bienImmobilier.prixLocation.toString()) : null,
                     adresse: data.bienImmobilier.adresse || null,
                     proprietaireId,
                 }
@@ -485,8 +485,8 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     type: data.bienImmobilier.type,
                     statut: data.bienImmobilier.statut,
                     transaction: data.bienImmobilier.transaction,
-                    prixVente: data.bienImmobilier.prixVente || null,
-                    prixLocation: data.bienImmobilier.prixLocation || null,
+                    prixVente: data.bienImmobilier.prixVente ? parseFloat(data.bienImmobilier.prixVente.toString()) : null,
+                    prixLocation: data.bienImmobilier.prixLocation ? parseFloat(data.bienImmobilier.prixLocation.toString()) : null,
                     adresse: data.bienImmobilier.adresse || null,
                 }
             });
@@ -503,50 +503,220 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                             telephone: data.proprietaire.telephone,
                             email: data.proprietaire.email || null,
                             adresse: data.proprietaire.adresse || null,
+                            typeIdentite: data.proprietaire.typeIdentite || null,
+                            numIdentite: data.proprietaire.numIdentite || null,
+                            qualite: data.proprietaire.qualite || null,
+                            prixType: data.proprietaire.prixType || null,
+                            prixNature: data.proprietaire.prixNature || null,
+                            prixSource: data.proprietaire.prixSource || null,
+                            paiementVente: data.proprietaire.paiementVente || null,
+                            paiementLocation: data.proprietaire.paiementLocation || null,
                         }
                     });
                 }
             }
 
             // 3. Update Details
+            const parseNum = (val: any) => (val !== undefined && val !== null && val !== '') ? parseFloat(val.toString()) : null;
+            const parseIntNum = (val: any) => (val !== undefined && val !== null && val !== '') ? parseInt(val.toString()) : null;
+
             if (propertyType === 'APPARTEMENT' && data.detailAppartement) {
-                const { id, bienId, ...detailData } = data.detailAppartement;
+                const { id, bienId, ...rawDetail } = data.detailAppartement;
+                const detailData = {
+                    ...rawDetail,
+                    surfaceTotal: parseNum(rawDetail.surfaceTotal),
+                    surfaceSalon: parseNum(rawDetail.surfaceSalon),
+                    surfaceChambre: parseNum(rawDetail.surfaceChambre),
+                    surfaceCuisine: parseNum(rawDetail.surfaceCuisine),
+                    surfaceSDB: parseNum(rawDetail.surfaceSDB),
+                    etage: parseIntNum(rawDetail.etage),
+                    anneeConstruction: parseIntNum(rawDetail.anneeConstruction),
+                };
                 await tx.detailAppartement.upsert({
                     where: { bienId: propertyId },
                     create: { bienId: propertyId, ...detailData },
                     update: detailData
                 });
             } else if (propertyType === 'TERRAIN' && data.detailTerrain) {
-                const { id, bienId, ...detailData } = data.detailTerrain;
-                await tx.detailTerrain.upsert({
-                    where: { bienId: propertyId },
-                    create: { bienId: propertyId, ...detailData },
-                    update: detailData
-                });
+                const { id, bienId, ...rawDetail } = data.detailTerrain;
+                const surface = parseNum(rawDetail.surface);
+                const detailData = {
+                    ...rawDetail,
+                    surface,
+                    longueur: parseNum(rawDetail.longueur),
+                    largeur: parseNum(rawDetail.largeur),
+                    facades: parseIntNum(rawDetail.facades),
+                };
+                
+                if (surface !== null) {
+                    await tx.detailTerrain.upsert({
+                        where: { bienId: propertyId },
+                        create: { bienId: propertyId, ...detailData },
+                        update: detailData
+                    });
+                } else {
+                    // If surface is missing, we can't create. Try update only.
+                    const { surface, ...updateData } = detailData;
+                    try {
+                        await tx.detailTerrain.update({
+                            where: { bienId: propertyId },
+                            data: updateData
+                        });
+                    } catch (e) { /* Ignore if record doesn't exist */ }
+                }
             } else if (propertyType === 'VILLA' && data.detailVilla) {
-                const { id, bienId, ...detailData } = data.detailVilla;
-                await tx.detailVilla.upsert({
-                    where: { bienId: propertyId },
-                    create: { bienId: propertyId, ...detailData },
-                    update: detailData
-                });
+                const { id, bienId, ...rawDetail } = data.detailVilla;
+                const surface = parseNum(rawDetail.surface);
+                const detailData = {
+                    ...rawDetail,
+                    surface,
+                    longueur: parseNum(rawDetail.longueur),
+                    largeur: parseNum(rawDetail.largeur),
+                    facades: parseIntNum(rawDetail.facades),
+                    surfaceBatie: parseNum(rawDetail.surfaceBatie),
+                    etages: parseIntNum(rawDetail.etages),
+                    pieces: parseIntNum(rawDetail.pieces),
+                };
+
+                if (surface !== null) {
+                    await tx.detailVilla.upsert({
+                        where: { bienId: propertyId },
+                        create: { bienId: propertyId, ...detailData },
+                        update: detailData
+                    });
+                } else {
+                    const { surface, ...updateData } = detailData;
+                    try {
+                        await tx.detailVilla.update({
+                            where: { bienId: propertyId },
+                            data: updateData
+                        });
+                    } catch (e) { /* Ignore */ }
+                }
             } else if (propertyType === 'LOCAL' && data.detailLocal) {
-                const { id, bienId, ...detailData } = data.detailLocal;
-                await tx.detailLocal.upsert({
-                    where: { bienId: propertyId },
-                    create: { bienId: propertyId, ...detailData },
-                    update: detailData
-                });
+                const { id, bienId, ...rawDetail } = data.detailLocal;
+                const surface = parseNum(rawDetail.surface);
+                const detailData = {
+                    ...rawDetail,
+                    surface,
+                    hauteur: parseNum(rawDetail.hauteur),
+                    facades: parseIntNum(rawDetail.facades),
+                };
+
+                if (surface !== null) {
+                    await tx.detailLocal.upsert({
+                        where: { bienId: propertyId },
+                        create: { bienId: propertyId, ...detailData },
+                        update: detailData
+                    });
+                } else {
+                    const { surface, ...updateData } = detailData;
+                    try {
+                        await tx.detailLocal.update({
+                            where: { bienId: propertyId },
+                            data: updateData
+                        });
+                    } catch (e) { /* Ignore */ }
+                }
             } else if (propertyType === 'IMMEUBLE' && data.detailImmeuble) {
-                const { id, bienId, ...detailData } = data.detailImmeuble;
-                await tx.detailImmeuble.upsert({
-                    where: { bienId: propertyId },
-                    create: { bienId: propertyId, ...detailData },
-                    update: detailData
-                });
+                const { id, bienId, ...rawDetail } = data.detailImmeuble;
+                const surface = parseNum(rawDetail.surface);
+                const detailData = {
+                    ...rawDetail,
+                    surface,
+                    longueur: parseNum(rawDetail.longueur),
+                    largeur: parseNum(rawDetail.largeur),
+                    facades: parseIntNum(rawDetail.facades),
+                    surfaceBatie: parseNum(rawDetail.surfaceBatie),
+                    etages: parseIntNum(rawDetail.etages),
+                    pieces: parseIntNum(rawDetail.pieces),
+                    nbAppartements: parseIntNum(rawDetail.nbAppartements),
+                    surfaceSol: parseNum(rawDetail.surfaceSol),
+                };
+
+                if (surface !== null) {
+                    await tx.detailImmeuble.upsert({
+                        where: { bienId: propertyId },
+                        create: { bienId: propertyId, ...detailData },
+                        update: detailData
+                    });
+                } else {
+                    const { surface, ...updateData } = detailData;
+                    try {
+                        await tx.detailImmeuble.update({
+                            where: { bienId: propertyId },
+                            data: updateData
+                        });
+                    } catch (e) { /* Ignore */ }
+                }
             }
 
-            // 4. Handle Attachments (Add new ones)
+            // 3.5 Handle Papiers (Juridical Documents) - Create, Update, Delete
+            if (data.papiers && Array.isArray(data.papiers)) {
+                // Get IDs of papiers that should remain
+                const papiersToKeepIds = data.papiers
+                    .filter((p: any) => p.id && !p.id.toString().startsWith('temp-'))
+                    .map((p: any) => p.id);
+
+                // Delete removed papiers
+                await tx.papier.deleteMany({
+                    where: {
+                        bienId: propertyId,
+                        id: { notIn: papiersToKeepIds }
+                    }
+                });
+
+                // Upsert papiers (Update existing or Create new)
+                for (const papier of data.papiers) {
+                    if (papier.id && !papier.id.toString().startsWith('temp-')) {
+                        // Update existing
+                        await tx.papier.update({
+                            where: { id: papier.id },
+                            data: {
+                                nom: papier.nom,
+                                statut: papier.statut,
+                                categorie: papier.categorie || propertyType
+                            }
+                        });
+                    } else {
+                        // Create new
+                        await tx.papier.create({
+                            data: {
+                                bienId: propertyId,
+                                nom: papier.nom,
+                                statut: papier.statut,
+                                categorie: papier.categorie || propertyType
+                            }
+                        });
+                    }
+                }
+            }
+
+            // 3.6 Handle File Deletion (Physical and Database)
+            if (data.filesToDelete && Array.isArray(data.filesToDelete) && data.filesToDelete.length > 0) {
+                const fs = await import('fs/promises');
+                const path = await import('path');
+
+                for (const fileId of data.filesToDelete) {
+                    const file = await tx.pieceJointe.findUnique({ where: { id: fileId } });
+                    
+                    if (file) {
+                        // Delete physical file if it exists and is local
+                        if (file.url && file.url.startsWith('/uploads/')) {
+                            try {
+                                const filePath = path.join(process.cwd(), file.url);
+                                await fs.unlink(filePath).catch(() => console.log(`File not found: ${filePath}`));
+                            } catch (err) {
+                                console.error(`Error deleting file ${file.url}:`, err);
+                            }
+                        }
+                        // Delete database record
+                        await tx.pieceJointe.delete({ where: { id: fileId } });
+                    }
+                }
+            }
+
+            // 4. Handle Attachments (Add new ones and update visibility)
             const uploadedFilesMap = new Map<string, Express.Multer.File>();
             [...photoFiles, ...documentFiles].forEach(f => uploadedFilesMap.set(f.originalname, f));
 
@@ -562,15 +732,19 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                                 type: piece.type,
                                 visibilite: piece.visibilite || 'INTERNE',
                                 url: getFileUrl(uploadedFile, propertyType),
-                                nom: piece.nom
+                                nom: piece.nom,
+                                categorie: piece.categorie || null
                             }
                         });
                     } 
-                    // If it's an existing file (has URL and ID), update visibility
-                    else if (piece.id && piece.visibilite) {
+                    // If it's an existing file (has ID), update visibility and category
+                    else if (piece.id) {
                          await tx.pieceJointe.update({
                             where: { id: piece.id },
-                            data: { visibilite: piece.visibilite }
+                            data: { 
+                                visibilite: piece.visibilite,
+                                categorie: piece.categorie || null
+                            }
                         });
                     }
                 }
