@@ -1,764 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, FileText, Package, Image, ChevronDown, User } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
-import { getAllProperties, getPropertyById, deleteProperty, updateProperty, apiConfig } from '../../api/api';
+import PropertyDetailsModal from '../../components/property/PropertyDetailsModal';
+import PropertyEditModal from '../../components/property/PropertyEditModal';
+import { getAllProperties, getPropertyById, deleteProperty, apiConfig } from '../../api/api';
+import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 
-const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
-    if (!property && !isLoading) return null;
-
-    const getFileUrl = (url) => {
-        if (!url) return '#';
-        if (url.startsWith('http')) return url; // ffuture we gonna added ssl 
-        const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-        return `${apiConfig.baseUrl}${cleanUrl}`;
-    };
-
-    const formatPrice = (price) => {
-        if (!price) return '-';
-        return new Intl.NumberFormat('fr-DZ', {
-            style: 'decimal',
-            minimumFractionDigits: 0,
-        }).format(price) + ' DA';
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        });
-    };
-
-    const renderSpecificDetails = () => {
-        let details = null;
-        let title = '';
-
-        if (property.type === 'APPARTEMENT' && property.detailAppartement) {
-            details = property.detailAppartement;
-            title = 'Détails Appartement';
-        } else if (property.type === 'VILLA' && property.detailVilla) {
-            details = property.detailVilla;
-            title = 'Détails Villa';
-        } else if (property.type === 'TERRAIN' && property.detailTerrain) {
-            details = property.detailTerrain;
-            title = 'Détails Terrain';
-        } else if (property.type === 'LOCAL' && property.detailLocal) {
-            details = property.detailLocal;
-            title = 'Détails Local';
-        } else if (property.type === 'IMMEUBLE' && property.detailImmeuble) {
-            details = property.detailImmeuble;
-            title = 'Détails Immeuble';
-        }
-
-        if (!details) return null;
-
-        const displayKeys = Object.keys(details).filter(key => !['id', 'bienId'].includes(key));
-
-        return (
-            <div className="modal-section">
-                <h3><Package size={18} /> {title}</h3>
-                <div className="info-grid">
-                    {displayKeys.map(key => (
-                        <div className="info-item" key={key}>
-                            <span className="label">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                            <span className="value">
-                                {typeof details[key] === 'boolean' 
-                                    ? (details[key] ? 'Oui' : 'Non')
-                                    : (details[key] || '-')}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    };
-
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <button className="modal-close" onClick={onClose}>
-                    <X size={24} />
-                </button>
-                
-                {isLoading ? (
-                    <div style={{ padding: '3rem', textAlign: 'center', color: 'white' }}>
-                        Chargement des détails...
-                    </div>
-                ) : (
-                    <>
-                        <div className="modal-header">
-                            <h2>{property.titre}</h2>
-                            <span className={`status-badge ${property.statut === 'DISPONIBLE' ? 'available' : 'pending'}`}>
-                                {property.statut}
-                            </span>
-                        </div>
-
-                        <div className="modal-body">
-                            <div className="modal-section">
-                                <h3><Home size={18} /> Informations Générales</h3>
-                                <div className="info-grid">
-                                    <div className="info-item">
-                                        <span className="label">Type</span>
-                                        <span className="value">{property.type}</span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="label">Transaction</span>
-                                        <span className="value">{property.transaction}</span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="label">Prix</span>
-                                        <span className="value">
-                                            {property.transaction === 'VENTE' 
-                                                ? formatPrice(property.prixVente)
-                                                : formatPrice(property.prixLocation)}
-                                        </span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="label">Date d'ajout</span>
-                                        <span className="value">{formatDate(property.dateCreation)}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {renderSpecificDetails()}
-
-                            <div className="modal-section">
-                                <h3><MapPin size={18} /> Localisation</h3>
-                                <p className="address-text">{property.adresse}</p>
-                            </div>
-
-                            {property.description && (
-                                <div className="modal-section">
-                                    <h3><FileText size={18} /> Description</h3>
-                                    <p className="description-text">{property.description}</p>
-                                </div>
-                            )}
-
-                            {property.proprietaire && (
-                                <div className="modal-section">
-                                    <h3><DollarSign size={18} /> Propriétaire</h3>
-                                    <div className="info-grid">
-                                        <div className="info-item">
-                                            <span className="label">Nom complet</span>
-                                            <span className="value">{property.proprietaire.nom} {property.proprietaire.prenom}</span>
-                                        </div>
-                                        <div className="info-item">
-                                            <span className="label">Téléphone</span>
-                                            <span className="value">{property.proprietaire.telephone}</span>
-                                        </div>
-                                        <div className="info-item">
-                                            <span className="label">Email</span>
-                                            <span className="value">{property.proprietaire.email || '-'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {property.suivi && (
-                                <div className="modal-section">
-                                    <h3><Eye size={18} /> Suivi & Mandat</h3>
-                                    <div className="info-grid">
-                                        <div className="info-item">
-                                            <span className="label">Visité ?</span>
-                                            <span className="value">{property.suivi.estVisite ? 'Oui' : 'Non'}</span>
-                                        </div>
-                                        <div className="info-item">
-                                            <span className="label">Priorité</span>
-                                            <span className="value">{property.suivi.priorite}</span>
-                                        </div>
-                                        <div className="info-item">
-                                            <span className="label">Mandat ?</span>
-                                            <span className="value">{property.suivi.aMandat ? 'Oui' : 'Non'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                           {property.papiers && property.papiers.length > 0 && (
-                                <div className="modal-section">
-                                    <h3><FileText size={18} /> Documents Juridiques</h3>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                        {property.papiers.map((papier, index) => {
-                                            // Find matching attachment using categorie field
-                                            const matchingAttachment = property.piecesJointes?.find(pj => 
-                                                pj.type === 'DOCUMENT' && pj.categorie === papier.nom
-                                            );
-
-                                            const CardContent = () => (
-                                                <>
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ 
-                                                            display: 'flex', 
-                                                            alignItems: 'center', 
-                                                            gap: '0.75rem',
-                                                            marginBottom: '0.5rem'
-                                                        }}>
-                                                            <FileText size={20} style={{ 
-                                                                color: papier.statut === 'DISPONIBLE' ? '#34d399' : '#f87171' 
-                                                            }} />
-                                                            <span style={{ 
-                                                                color: 'white', 
-                                                                fontWeight: '600',
-                                                                fontSize: '1rem'
-                                                            }}>
-                                                                {papier.nom}
-                                                            </span>
-                                                        </div>
-                                                        {matchingAttachment && (
-                                                            <div style={{ 
-                                                                fontSize: '0.85rem', 
-                                                                color: '#94a3b8',
-                                                                marginLeft: '2rem'
-                                                            }}>
-                                                                📎 Fichier: <span style={{ color: '#cbd5e1' }}>{matchingAttachment.nom || 'Document attaché'}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div style={{ 
-                                                        display: 'flex', 
-                                                        alignItems: 'center', 
-                                                        gap: '1rem' 
-                                                    }}>
-                                                        <span style={{
-                                                            padding: '0.4rem 0.9rem',
-                                                            borderRadius: '20px',
-                                                            fontSize: '0.8rem',
-                                                            fontWeight: '600',
-                                                            background: papier.statut === 'DISPONIBLE' 
-                                                                ? 'rgba(16, 185, 129, 0.2)' 
-                                                                : 'rgba(239, 68, 68, 0.2)',
-                                                            color: papier.statut === 'DISPONIBLE' ? '#34d399' : '#f87171'
-                                                        }}>
-                                                            {papier.statut}
-                                                        </span>
-                                                        {matchingAttachment && (
-                                                            <div style={{
-                                                                padding: '0.4rem 0.8rem',
-                                                                background: 'rgba(59, 130, 246, 0.15)',
-                                                                borderRadius: '6px',
-                                                                fontSize: '0.8rem',
-                                                                color: '#3b82f6',
-                                                                fontWeight: '500'
-                                                            }}>
-                                                                Ouvrir
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </>
-                                            );
-
-                                            const cardStyle = {
-                                                background: 'rgba(0, 0, 0, 0.2)',
-                                                padding: '1rem 1.25rem',
-                                                borderRadius: '10px',
-                                                border: `1px solid ${papier.statut === 'DISPONIBLE' ? 'rgba(52, 211, 153, 0.3)' : 'rgba(248, 113, 113, 0.3)'}`,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                gap: '1rem',
-                                                textDecoration: 'none',
-                                                transition: 'all 0.2s'
-                                            };
-
-                                            return matchingAttachment ? (
-                                                <a
-                                                    key={index}
-                                                    href={getFileUrl(matchingAttachment.url)}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    style={cardStyle}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)';
-                                                        e.currentTarget.style.borderColor = papier.statut === 'DISPONIBLE' 
-                                                            ? 'rgba(52, 211, 153, 0.5)' 
-                                                            : 'rgba(248, 113, 113, 0.5)';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.2)';
-                                                        e.currentTarget.style.borderColor = papier.statut === 'DISPONIBLE' 
-                                                            ? 'rgba(52, 211, 153, 0.3)' 
-                                                            : 'rgba(248, 113, 113, 0.3)';
-                                                    }}
-                                                >
-                                                    <CardContent />
-                                                </a>
-                                            ) : (
-                                                <div key={index} style={cardStyle}>
-                                                    <CardContent />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
-                            {property.piecesJointes && property.piecesJointes.length > 0 && (
-                                <div className="modal-section">
-                                    <h3><Image size={18} /> Galerie & Fichiers</h3>
-                                    
-                                    {/* Photos */}
-                                    {property.piecesJointes.filter(pj => pj.type === 'PHOTO').length > 0 && (
-                                        <div style={{ marginBottom: '1.5rem' }}>
-                                            <h4 style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.75rem' }}>Photos</h4>
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '1rem' }}>
-                                                {property.piecesJointes.filter(pj => pj.type === 'PHOTO').map((pj, index) => (
-                                                    <a 
-                                                        key={index} 
-                                                        href={getFileUrl(pj.url)} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        style={{
-                                                            position: 'relative',
-                                                            aspectRatio: '1',
-                                                            borderRadius: '8px',
-                                                            overflow: 'hidden',
-                                                            border: '1px solid rgba(255,255,255,0.1)'
-                                                        }}
-                                                    >
-                                                        <img 
-                                                            src={getFileUrl(pj.url)} 
-                                                            alt={pj.nom || 'Photo'} 
-                                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                        />
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Documents */}
-                                    {(() => {
-                                        // Filter out documents that have a categorie (juridical documents)
-                                        const otherDocuments = property.piecesJointes.filter(pj => 
-                                            pj.type === 'DOCUMENT' && !pj.categorie
-                                        );
-
-                                        return otherDocuments.length > 0 && (
-                                            <div>
-                                                <h4 style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.75rem' }}>Autres Documents</h4>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                                    {otherDocuments.map((pj, index) => (
-                                                        <a 
-                                                            key={index} 
-                                                            href={getFileUrl(pj.url)} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer"
-                                                            style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'space-between',
-                                                                gap: '1rem',
-                                                                padding: '1rem 1.25rem',
-                                                                background: 'rgba(255,255,255,0.05)',
-                                                                borderRadius: '10px',
-                                                                textDecoration: 'none',
-                                                                color: 'white',
-                                                                border: '1px solid rgba(255,255,255,0.1)',
-                                                                transition: 'all 0.2s'
-                                                            }}
-                                                            onMouseEnter={(e) => {
-                                                                e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                                                                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)';
-                                                            }}
-                                                            onMouseLeave={(e) => {
-                                                                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                                                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                                                            }}
-                                                        >
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                                                                <div style={{
-                                                                    width: '40px',
-                                                                    height: '40px',
-                                                                    borderRadius: '8px',
-                                                                    background: 'rgba(59, 130, 246, 0.2)',
-                                                                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center'
-                                                                }}>
-                                                                    <FileText size={20} style={{ color: '#3b82f6' }} />
-                                                                </div>
-                                                                <div style={{ flex: 1 }}>
-                                                                    <div style={{ 
-                                                                        fontWeight: '500',
-                                                                        fontSize: '0.95rem',
-                                                                        marginBottom: '0.25rem'
-                                                                    }}>
-                                                                        {pj.nom || 'Document'}
-                                                                    </div>
-                                                                    <div style={{ 
-                                                                        fontSize: '0.8rem',
-                                                                        color: '#94a3b8'
-                                                                    }}>
-                                                                        {pj.visibilite === 'PUBLIABLE' ? '🌐 Public' : '🔒 Interne'}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div style={{
-                                                                padding: '0.4rem 0.8rem',
-                                                                background: 'rgba(59, 130, 246, 0.15)',
-                                                                borderRadius: '6px',
-                                                                fontSize: '0.8rem',
-                                                                color: '#3b82f6',
-                                                                fontWeight: '500'
-                                                            }}>
-                                                                Ouvrir
-                                                            </div>
-                                                        </a>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
-                            )}            </div>
-
-                    </>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
-    const [formData, setFormData] = useState({
-        titre: property?.titre || '',
-        description: property?.description || '',
-        type: property?.type || 'APPARTEMENT',
-        statut: property?.statut || 'DISPONIBLE',
-        transaction: property?.transaction || 'VENTE',
-        prixVente: property?.prixVente || '',
-        prixLocation: property?.prixLocation || '',
-        adresse: property?.adresse || '',
-    });
-    const [newPhotos, setNewPhotos] = useState([]);
-    const [newDocuments, setNewDocuments] = useState([]);
-    const [saving, setSaving] = useState(false);
-
-    if (!property && !isLoading) return null;
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleFileChange = (e, type) => {
-        const files = Array.from(e.target.files);
-        if (type === 'photos') {
-            setNewPhotos(prev => [...prev, ...files]);
-        } else {
-            setNewDocuments(prev => [...prev, ...files]);
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        // Confirmation before saving
-        const confirmed = window.confirm(
-            '⚠️ Êtes-vous sûr de vouloir enregistrer ces modifications ?\n\nCette action modifiera les informations du bien immobilier.'
-        );
-        
-        if (!confirmed) {
-            return; // User cancelled
-        }
-        
-        setSaving(true);
-
-        try {
-            const propertyData = {
-                bienImmobilier: formData,
-                proprietaire: {
-                    id: property.proprietaire?.id,
-                    nom: property.proprietaire?.nom,
-                    prenom: property.proprietaire?.prenom,
-                    telephone: property.proprietaire?.telephone,
-                    email: property.proprietaire?.email,
-                },
-                piecesJointes: property.piecesJointes || [],
-            };
-
-            await updateProperty(property.id, propertyData, newDocuments, newPhotos);
-            onUpdate();
-            onClose();
-        } catch (error) {
-            console.error('Error updating property:', error);
-            alert('Erreur lors de la mise à jour: ' + error.message);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
-                <button className="modal-close" onClick={onClose}>
-                    <X size={24} />
-                </button>
-                
-                <div className="modal-header">
-                    <h2>Modifier le Bien</h2>
-                </div>
-
-                <div className="modal-body">
-                    <form onSubmit={handleSubmit}>
-                        <div style={{ display: 'grid', gap: '1.5rem' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Titre</label>
-                                <input
-                                    type="text"
-                                    name="titre"
-                                    value={formData.titre}
-                                    onChange={handleChange}
-                                    required
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '8px',
-                                        color: 'white',
-                                        fontSize: '1rem'
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Description</label>
-                                <textarea
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    rows={4}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '8px',
-                                        color: 'white',
-                                        fontSize: '1rem',
-                                        resize: 'vertical'
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Type</label>
-                                    <select
-                                        name="type"
-                                        value={formData.type}
-                                        onChange={handleChange}
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.75rem',
-                                            background: 'rgba(255,255,255,0.05)',
-                                            border: '1px solid rgba(255,255,255,0.1)',
-                                            borderRadius: '8px',
-                                            color: 'white',
-                                            fontSize: '1rem'
-                                        }}
-                                    >
-                                        <option value="APPARTEMENT">Appartement</option>
-                                        <option value="VILLA">Villa</option>
-                                        <option value="TERRAIN">Terrain</option>
-                                        <option value="LOCAL">Local</option>
-                                        <option value="IMMEUBLE">Immeuble</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Statut</label>
-                                    <select
-                                        name="statut"
-                                        value={formData.statut}
-                                        onChange={handleChange}
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.75rem',
-                                            background: 'rgba(255,255,255,0.05)',
-                                            border: '1px solid rgba(255,255,255,0.1)',
-                                            borderRadius: '8px',
-                                            color: 'white',
-                                            fontSize: '1rem'
-                                        }}
-                                    >
-                                        <option value="DISPONIBLE">Disponible</option>
-                                        <option value="EN_COURS">En cours</option>
-                                        <option value="VENDU">Vendu</option>
-                                        <option value="LOUE">Loué</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Transaction</label>
-                                    <select
-                                        name="transaction"
-                                        value={formData.transaction}
-                                        onChange={handleChange}
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.75rem',
-                                            background: 'rgba(255,255,255,0.05)',
-                                            border: '1px solid rgba(255,255,255,0.1)',
-                                            borderRadius: '8px',
-                                            color: 'white',
-                                            fontSize: '1rem'
-                                        }}
-                                    >
-                                        <option value="VENTE">Vente</option>
-                                        <option value="LOCATION">Location</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Prix Vente (DA)</label>
-                                    <input
-                                        type="number"
-                                        name="prixVente"
-                                        value={formData.prixVente}
-                                        onChange={handleChange}
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.75rem',
-                                            background: 'rgba(255,255,255,0.05)',
-                                            border: '1px solid rgba(255,255,255,0.1)',
-                                            borderRadius: '8px',
-                                            color: 'white',
-                                            fontSize: '1rem'
-                                        }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Prix Location (DA)</label>
-                                    <input
-                                        type="number"
-                                        name="prixLocation"
-                                        value={formData.prixLocation}
-                                        onChange={handleChange}
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.75rem',
-                                            background: 'rgba(255,255,255,0.05)',
-                                            border: '1px solid rgba(255,255,255,0.1)',
-                                            borderRadius: '8px',
-                                            color: 'white',
-                                            fontSize: '1rem'
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Adresse</label>
-                                <input
-                                    type="text"
-                                    name="adresse"
-                                    value={formData.adresse}
-                                    onChange={handleChange}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '8px',
-                                        color: 'white',
-                                        fontSize: '1rem'
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Ajouter Photos</label>
-                                <input
-                                    type="file"
-                                    multiple
-                                    accept="image/*"
-                                    onChange={(e) => handleFileChange(e, 'photos')}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '8px',
-                                        color: 'white',
-                                        fontSize: '1rem'
-                                    }}
-                                />
-                                {newPhotos.length > 0 && (
-                                    <p style={{ marginTop: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
-                                        {newPhotos.length} photo(s) sélectionnée(s)
-                                    </p>
-                                )}
-                            </div>
-
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Ajouter Documents</label>
-                                <input
-                                    type="file"
-                                    multiple
-                                    accept=".pdf,.doc,.docx"
-                                    onChange={(e) => handleFileChange(e, 'documents')}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '8px',
-                                        color: 'white',
-                                        fontSize: '1rem'
-                                    }}
-                                />
-                                {newDocuments.length > 0 && (
-                                    <p style={{ marginTop: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
-                                        {newDocuments.length} document(s) sélectionné(s)
-                                    </p>
-                                )}
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '8px',
-                                        color: 'white',
-                                        cursor: 'pointer',
-                                        fontSize: '1rem'
-                                    }}
-                                >
-                                    Annuler
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        background: saving ? 'rgba(59, 130, 246, 0.5)' : 'rgba(59, 130, 246, 0.8)',
-                                        border: '1px solid rgba(59, 130, 246, 0.3)',
-                                        borderRadius: '8px',
-                                        color: 'white',
-                                        cursor: saving ? 'not-allowed' : 'pointer',
-                                        fontSize: '1rem'
-                                    }}
-                                >
-                                    {saving ? 'Enregistrement...' : 'Enregistrer'}
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 const SoldProperties = () => {
     const [properties, setProperties] = useState([]);
@@ -772,8 +19,7 @@ const SoldProperties = () => {
     const [showTypeDropdown, setShowTypeDropdown] = useState(false);
     const [showDateDropdown, setShowDateDropdown] = useState(false);
     const [editingProperty, setEditingProperty] = useState(null);
-    const [selectedOwner, setSelectedOwner] = useState('ALL');
-    const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
     useEffect(() => {
         fetchProperties();
@@ -785,8 +31,12 @@ const SoldProperties = () => {
             setError(null);
             const response = await getAllProperties();
             
-            // Filter only sales properties
+            console.log('Fetched properties:', response);
+            
+            // Extract properties from response
+            // Backend returns { status: 'success', data: [...], count: N }
             const propertiesData = response.data || [];
+            // Filter only sales properties
             const salesProperties = propertiesData.filter(p => p.transaction === 'VENTE');
             setProperties(salesProperties);
         } catch (err) {
@@ -797,19 +47,14 @@ const SoldProperties = () => {
         }
     };
 
-    // Get unique owners for filter
-    const owners = [...new Set(properties.map(p => {
-        if (!p.proprietaire) return null;
-        return `${p.proprietaire.nom} ${p.proprietaire.prenom}`;
-    }).filter(Boolean))];
-
     // Calculate stats
     const totalProperties = properties.length;
     const availableProperties = properties.filter(p => p.statut === 'DISPONIBLE').length;
     const inNegotiation = properties.filter(p => p.statut === 'EN_COURS').length;
     const soldProperties = properties.filter(p => p.statut === 'VENDU').length;
 
-    // Filter properties
+    // Filter properties based on search
+    // Filter properties based on search and type, then sort by date
     const filteredProperties = properties.filter(property => {
         const query = searchQuery.toLowerCase();
         const matchesSearch = (
@@ -820,10 +65,7 @@ const SoldProperties = () => {
         
         const matchesType = filterType === 'ALL' || property.type === filterType;
         
-        const matchesOwner = selectedOwner === 'ALL' || 
-            (property.proprietaire && `${property.proprietaire.nom} ${property.proprietaire.prenom}` === selectedOwner);
-        
-        return matchesSearch && matchesType && matchesOwner;
+        return matchesSearch && matchesType;
     }).sort((a, b) => {
         const dateA = new Date(a.dateCreation).getTime();
         const dateB = new Date(b.dateCreation).getTime();
@@ -834,16 +76,27 @@ const SoldProperties = () => {
     });
 
     const handleDeleteProperty = async (propertyId) => {
-        if (!propertyId) return;
+        console.log('handleDeleteProperty called with ID:', propertyId);
+        
+        if (!propertyId) {
+            console.error('Error: propertyId is undefined or null');
+            alert('Erreur: ID du bien introuvable');
+            return;
+        }
 
         if (window.confirm('🗑️ Êtes-vous sûr de vouloir supprimer ce bien ?\n\n⚠️ ATTENTION : Cette action est IRRÉVERSIBLE !\nToutes les données associées (documents, photos, etc.) seront définitivement supprimées.')) {
             try {
+                console.log('Sending delete request...');
                 await deleteProperty(propertyId);
+                console.log('Delete request successful');
+                // Refresh properties list
                 fetchProperties();
             } catch (err) {
                 console.error('Error deleting property:', err);
                 alert('Erreur lors de la suppression du bien: ' + err.message);
             }
+        } else {
+            console.log('Delete cancelled by user');
         }
     };
 
@@ -867,10 +120,15 @@ const SoldProperties = () => {
 
     const getStatusBadgeClass = (statut) => {
         switch (statut) {
-            case 'DISPONIBLE': return 'available';
-            case 'EN_COURS': return 'pending';
-            case 'VENDU': return 'sold';
-            default: return '';
+            case 'DISPONIBLE':
+                return 'available';
+            case 'EN_COURS':
+                return 'pending';
+            case 'VENDU':
+            case 'LOUE':
+                return 'sold';
+            default:
+                return '';
         }
     };
 
@@ -884,14 +142,55 @@ const SoldProperties = () => {
         return labels[statut] || statut;
     };
 
+    const getFileUrl = (url) => {
+        if (!url) return '#';
+        if (url.startsWith('http')) return url;
+        const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+        return `${apiConfig.baseUrl}${cleanUrl}`;
+    };
+
+    const getFirstPhoto = (property) => {
+        if (!property.piecesJointes) return null;
+        const photo = property.piecesJointes.find(pj => pj.type === 'PHOTO' && pj.visibilite === 'PUBLIABLE');
+        return photo ? getFileUrl(photo.url) : null;
+    };
+
+    const getPropertySpecs = (property) => {
+        let specs = [];
+        
+        // Surface
+        let surface = null;
+        if (property.detailAppartement?.surfaceTotal) surface = property.detailAppartement.surfaceTotal;
+        else if (property.detailVilla?.surface) surface = property.detailVilla.surface;
+        else if (property.detailTerrain?.surface) surface = property.detailTerrain.surface;
+        else if (property.detailLocal?.surface) surface = property.detailLocal.surface;
+        else if (property.detailImmeuble?.surface) surface = property.detailImmeuble.surface;
+        
+        if (surface) specs.push(`${surface} m²`);
+
+        // Rooms / Pieces / Type
+        let pieces = null;
+        if (property.detailAppartement?.typeAppart) pieces = property.detailAppartement.typeAppart;
+        else if (property.detailVilla?.pieces) pieces = `${property.detailVilla.pieces} Pièces`;
+        else if (property.detailImmeuble?.nbAppartements) pieces = `${property.detailImmeuble.nbAppartements} Appts`;
+        
+        if (pieces) specs.push(pieces);
+
+        return specs;
+    };
+
     const handleViewProperty = async (property) => {
-        setSelectedProperty(property);
+        setSelectedProperty(property); // Show modal immediately with basic info
         setLoadingDetails(true);
+        
         try {
             const response = await getPropertyById(property.id);
-            if (response.data) setSelectedProperty(response.data);
+            if (response.data) {
+                setSelectedProperty(response.data); // Update with full details
+            }
         } catch (err) {
             console.error('Error fetching property details:', err);
+            // Optionally show error in modal or toast
         } finally {
             setLoadingDetails(false);
         }
@@ -905,9 +204,12 @@ const SoldProperties = () => {
     const handleEditProperty = async (property) => {
         setEditingProperty(property);
         setLoadingDetails(true);
+        
         try {
             const response = await getPropertyById(property.id);
-            if (response.data) setEditingProperty(response.data);
+            if (response.data) {
+                setEditingProperty(response.data);
+            }
         } catch (err) {
             console.error('Error fetching property details:', err);
         } finally {
@@ -946,8 +248,8 @@ const SoldProperties = () => {
                 
                 <header className="page-header">
                     <div>
-                        <h1 className="page-title">Biens en Vente</h1>
-                        <p className="page-subtitle">Gérez les biens immobiliers destinés à la vente</p>
+                        <h1 className="page-title">Ventes</h1>
+                        <p className="page-subtitle">Gérez et suivez les biens à la vente</p>
                     </div>
                 </header>
 
@@ -956,7 +258,7 @@ const SoldProperties = () => {
                         <Search size={18} className="search-icon" />
                         <input 
                             type="text" 
-                            placeholder="Rechercher..." 
+                            placeholder="Rechercher un bien..." 
                             className="search-input"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -979,26 +281,6 @@ const SoldProperties = () => {
                         )}
                     </div>
 
-                    <div className={`filter-dropdown ${showOwnerDropdown ? 'open' : ''}`} onClick={() => setShowOwnerDropdown(!showOwnerDropdown)}>
-                        <User size={18} />
-                        <span>{selectedOwner === 'ALL' ? 'Propriétaire' : selectedOwner}</span>
-                        <ChevronDown size={16} className="dropdown-arrow" />
-                        {showOwnerDropdown && (
-                            <div className="dropdown-menu">
-                                <div className={`dropdown-item ${selectedOwner === 'ALL' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setSelectedOwner('ALL'); setShowOwnerDropdown(false); }}>Tous les propriétaires</div>
-                                {owners.map((owner, index) => (
-                                    <div 
-                                        key={index}
-                                        className={`dropdown-item ${selectedOwner === owner ? 'active' : ''}`} 
-                                        onClick={(e) => { e.stopPropagation(); setSelectedOwner(owner); setShowOwnerDropdown(false); }}
-                                    >
-                                        {owner}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
                     <div className={`filter-dropdown ${showDateDropdown ? 'open' : ''}`} onClick={() => setShowDateDropdown(!showDateDropdown)}>
                         <Calendar size={18} />
                         <span>{sortDate === 'NEWEST' ? 'Plus récents' : 'Plus anciens'}</span>
@@ -1009,6 +291,55 @@ const SoldProperties = () => {
                                 <div className={`dropdown-item ${sortDate === 'OLDEST' ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setSortDate('OLDEST'); setShowDateDropdown(false); }}>Plus anciens</div>
                             </div>
                         )}
+                    </div>
+
+                    <div className="view-toggles" style={{ 
+                        marginLeft: 'auto', 
+                        display: 'flex', 
+                        gap: '0.5rem', 
+                        background: 'rgba(0,0,0,0.2)', 
+                        padding: '0.25rem', 
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>
+                        <button 
+                            onClick={() => setViewMode('list')}
+                            title="Vue liste"
+                            className={viewMode === 'list' ? 'active' : ''}
+                            style={{
+                                background: viewMode === 'list' ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                                color: viewMode === 'list' ? '#3b82f6' : '#94a3b8',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '0.4rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <List size={20} />
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('grid')}
+                            title="Vue grille"
+                            className={viewMode === 'grid' ? 'active' : ''}
+                            style={{
+                                background: viewMode === 'grid' ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                                color: viewMode === 'grid' ? '#3b82f6' : '#94a3b8',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '0.4rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <LayoutGrid size={20} />
+                        </button>
                     </div>
                 </div>
 
@@ -1033,27 +364,52 @@ const SoldProperties = () => {
 
                 <div className="content-table-container">
                     {loading ? (
-                        <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
-                            Chargement des biens...
+                        <div style={{ 
+                            padding: '3rem', 
+                            textAlign: 'center', 
+                            color: 'rgba(255, 255, 255, 0.6)' 
+                        }}>
+                            Chargement des biens immobiliers...
                         </div>
                     ) : error ? (
-                        <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>
+                        <div style={{ 
+                            padding: '2rem', 
+                            textAlign: 'center',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '8px',
+                            color: '#ef4444'
+                        }}>
                             ❌ {error}
                         </div>
                     ) : filteredProperties.length === 0 ? (
-                        <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
-                            Aucun bien trouvé.
+                        <div style={{ 
+                            padding: '3rem', 
+                            textAlign: 'center', 
+                            color: 'rgba(255, 255, 255, 0.6)' 
+                        }}>
+                            {searchQuery 
+                                ? `Aucun bien trouvé pour "${searchQuery}"`
+                                : 'Aucun bien à la vente.'}
                         </div>
                     ) : (
-                        <table className="glass-table">
+                        <AnimatePresence mode="wait">
+                            {viewMode === 'list' ? (
+                                <motion.table
+                                    key="list"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="glass-table"
+                                >
                             <thead>
                                 <tr>
                                     <th>Bien</th>
                                     <th>Type</th>
                                     <th>Prix</th>
-                                    <th>Propriétaire</th>
                                     <th>Statut</th>
-                                    <th>Date</th>
+                                    <th>Date d'ajout</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -1067,11 +423,8 @@ const SoldProperties = () => {
                                             </div>
                                         </td>
                                         <td>{property.type}</td>
-                                        <td>{formatPrice(property.prixVente)}</td>
                                         <td>
-                                            {property.proprietaire 
-                                                ? `${property.proprietaire.nom} ${property.proprietaire.prenom}`
-                                                : '-'}
+                                            {formatPrice(property.prixVente)}
                                         </td>
                                         <td>
                                             <span className={`status-badge ${getStatusBadgeClass(property.statut)}`}>
@@ -1083,22 +436,46 @@ const SoldProperties = () => {
                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                 <button 
                                                     className="btn-icon" 
+                                                    title="Voir"
                                                     onClick={() => handleViewProperty(property)}
-                                                    style={{ color: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)' }}
+                                                    style={{
+                                                        background: 'rgba(59, 130, 246, 0.1)',
+                                                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                        borderRadius: '6px',
+                                                        padding: '0.4rem',
+                                                        cursor: 'pointer',
+                                                        color: '#3b82f6'
+                                                    }}
                                                 >
                                                     <Eye size={16} />
                                                 </button>
                                                 <button 
                                                     className="btn-icon" 
+                                                    title="Modifier"
                                                     onClick={() => handleEditProperty(property)}
-                                                    style={{ color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}
+                                                    style={{
+                                                        background: 'rgba(245, 158, 11, 0.1)',
+                                                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                        borderRadius: '6px',
+                                                        padding: '0.4rem',
+                                                        cursor: 'pointer',
+                                                        color: '#f59e0b'
+                                                    }}
                                                 >
                                                     <Edit size={16} />
                                                 </button>
                                                 <button 
                                                     className="btn-icon" 
+                                                    title="Supprimer"
                                                     onClick={() => handleDeleteProperty(property.id)}
-                                                    style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                                                    style={{
+                                                        background: 'rgba(239, 68, 68, 0.1)',
+                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                        borderRadius: '6px',
+                                                        padding: '0.4rem',
+                                                        cursor: 'pointer',
+                                                        color: '#ef4444'
+                                                    }}
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
@@ -1107,7 +484,203 @@ const SoldProperties = () => {
                                     </tr>
                                 ))}
                             </tbody>
-                        </table>
+                                </motion.table>
+                            ) : (
+                                <motion.div
+                                    key="grid"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="properties-grid-view"
+                                    style={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: 'repeat(2, 1fr)', 
+                            gap: '1.5rem' 
+                        }}>
+                            {filteredProperties.map((property) => {
+                                const photoUrl = getFirstPhoto(property);
+                                return (
+                                <div key={property.id} style={{
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    padding: '1rem',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '1rem',
+                                    transition: 'transform 0.2s',
+                                    cursor: 'default',
+                                    overflow: 'hidden'
+                                }}>
+                                    <div style={{ 
+                                        height: '200px', 
+                                        width: '100%',
+                                        background: '#1e293b', 
+                                        borderRadius: '12px', 
+                                        overflow: 'hidden',
+                                        position: 'relative'
+                                    }}>
+                                        {photoUrl ? (
+                                            <img src={photoUrl} alt={property.titre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', flexDirection: 'column', gap: '0.5rem' }}>
+                                                {property.type === 'APPARTEMENT' ? <Home size={48} /> :
+                                                 property.type === 'VILLA' ? <Home size={48} /> :
+                                                 property.type === 'TERRAIN' ? <MapPin size={48} /> :
+                                                 property.type === 'LOCAL' ? <DollarSign size={48} /> :
+                                                 <Package size={48} />}
+                                                 <span style={{ fontSize: '0.9rem' }}>Pas de photo</span>
+                                            </div>
+                                        )}
+                                        <span className={`status-badge ${getStatusBadgeClass(property.statut)}`} style={{ position: 'absolute', top: '1rem', right: '1rem', backdropFilter: 'blur(4px)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                                            {getStatusLabel(property.statut)}
+                                        </span>
+                                        <div style={{ 
+                                            position: 'absolute', 
+                                            bottom: '1rem', 
+                                            left: '1rem', 
+                                            background: 'rgba(0,0,0,0.6)', 
+                                            backdropFilter: 'blur(4px)',
+                                            padding: '0.25rem 0.75rem', 
+                                            borderRadius: '20px', 
+                                            color: 'white', 
+                                            fontSize: '0.8rem', 
+                                            fontWeight: '500',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem'
+                                        }}>
+                                            {property.type === 'APPARTEMENT' ? <Home size={14} /> :
+                                             property.type === 'VILLA' ? <Home size={14} /> :
+                                             property.type === 'TERRAIN' ? <MapPin size={14} /> :
+                                             property.type === 'LOCAL' ? <DollarSign size={14} /> :
+                                             <Package size={14} />}
+                                            {property.type}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ padding: '0 0.5rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                                            <div>
+                                                <h3 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                                                    {property.titre}
+                                                </h3>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+                                                    <MapPin size={14} />
+                                                    {property.adresse}
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ color: '#3b82f6', fontWeight: '700', fontSize: '1.1rem' }}>
+                                                    {formatPrice(property.prixVente)}
+                                                </div>
+                                                <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>
+                                                    {property.transaction}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Owner & Specs Section */}
+                                        <div style={{ 
+                                            padding: '0.75rem', 
+                                            background: 'rgba(0,0,0,0.2)', 
+                                            borderRadius: '8px',
+                                            marginBottom: '1rem',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '0.5rem'
+                                        }}>
+                                            {/* Owner Info */}
+                                            {property.proprietaire && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#e2e8f0' }}>
+                                                    <User size={14} style={{ color: '#94a3b8' }} />
+                                                    <span style={{ fontWeight: '500' }}>
+                                                        {property.proprietaire.nom} {property.proprietaire.prenom}
+                                                    </span>
+                                                    {property.proprietaire.telephone && (
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>• {property.proprietaire.telephone}</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                            
+                                            {/* Specs */}
+                                            {getPropertySpecs(property).length > 0 && (
+                                                <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.85rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.5rem' }}>
+                                                    {getPropertySpecs(property).map((spec, i) => (
+                                                        <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                            {i === 0 ? <Maximize size={14} /> : <LayoutDashboard size={14} />}
+                                                            {spec}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <button 
+                                            onClick={() => handleViewProperty(property)}
+                                            style={{
+                                                flex: 1,
+                                                background: 'rgba(59, 130, 246, 0.1)',
+                                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                borderRadius: '8px',
+                                                padding: '0.75rem',
+                                                cursor: 'pointer',
+                                                color: '#3b82f6',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '0.5rem',
+                                                fontSize: '0.9rem',
+                                                fontWeight: '600',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <Eye size={18} /> Détails
+                                        </button>
+                                        <button 
+                                            onClick={() => handleEditProperty(property)}
+                                            style={{
+                                                background: 'rgba(245, 158, 11, 0.1)',
+                                                border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                borderRadius: '8px',
+                                                padding: '0.75rem',
+                                                cursor: 'pointer',
+                                                color: '#f59e0b',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeleteProperty(property.id)}
+                                            style={{
+                                                background: 'rgba(239, 68, 68, 0.1)',
+                                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                borderRadius: '8px',
+                                                padding: '0.75rem',
+                                                cursor: 'pointer',
+                                                color: '#ef4444',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                                );
+                            })}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     )}
                 </div>
             </div>
