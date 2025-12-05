@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import BasicInfoTab from './tabs/BasicInfoTab';
 import OwnerInfoTab from './tabs/OwnerInfoTab';
 import PropertyDetailsTab from './tabs/PropertyDetailsTab';
@@ -252,45 +252,130 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                     <h2>Modifier le Bien</h2>
                 </div>
 
-                {/* Tabs Navigation */}
+                {/* Enhanced Tab Navigation with Arrows */}
                 <div style={{
                     display: 'flex',
-                    gap: '0.5rem',
-                    padding: '0 2rem',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '1rem 2rem',
                     borderBottom: '1px solid rgba(255,255,255,0.1)',
-                    overflowX: 'auto',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    background: 'rgba(30, 41, 59, 0.5)'
                 }}>
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            style={{
-                                padding: '0.75rem 1rem',
-                                background: activeTab === tab.id ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                                border: 'none',
-                                borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
-                                color: activeTab === tab.id ? '#3b82f6' : '#94a3b8',
-                                cursor: 'pointer',
-                                fontSize: '0.9rem',
-                                fontWeight: activeTab === tab.id ? '600' : '400',
-                                transition: 'all 0.2s',
-                                whiteSpace: 'nowrap'
-                            }}
-                            onMouseEnter={(e) => {
-                                if (activeTab !== tab.id) {
-                                    e.currentTarget.style.color = '#cbd5e1';
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (activeTab !== tab.id) {
-                                    e.currentTarget.style.color = '#94a3b8';
-                                }
-                            }}
-                        >
-                            {tab.icon} {tab.label}
-                        </button>
-                    ))}
+                    {/* Previous Button */}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const currentIndex = tabs.findIndex(t => t.id === activeTab);
+                            if (currentIndex > 0) {
+                                setActiveTab(tabs[currentIndex - 1].id);
+                            }
+                        }}
+                        disabled={tabs.findIndex(t => t.id === activeTab) === 0}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem 1rem',
+                            background: 'transparent',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '8px',
+                            color: tabs.findIndex(t => t.id === activeTab) === 0 ? '#64748b' : '#94a3b8',
+                            cursor: tabs.findIndex(t => t.id === activeTab) === 0 ? 'not-allowed' : 'pointer',
+                            fontSize: '0.9rem',
+                            fontWeight: '500',
+                            opacity: tabs.findIndex(t => t.id === activeTab) === 0 ? 0.4 : 1,
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (tabs.findIndex(t => t.id === activeTab) !== 0) {
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                                e.currentTarget.style.color = '#3b82f6';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                            e.currentTarget.style.color = '#94a3b8';
+                        }}
+                    >
+                        <ChevronLeft size={18} />
+                        <span>Précédent</span>
+                    </button>
+
+                    {/* Current Tab Display */}
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        flex: 1,
+                        margin: '0 2rem'
+                    }}>
+                        <div style={{
+                            fontSize: '1.1rem',
+                            fontWeight: '600',
+                            color: '#3b82f6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                        }}>
+                            <span style={{ fontSize: '1.3rem' }}>
+                                {tabs.find(t => t.id === activeTab)?.icon}
+                            </span>
+                            {tabs.find(t => t.id === activeTab)?.label}
+                        </div>
+                        <div style={{
+                            fontSize: '0.75rem',
+                            color: '#64748b',
+                            fontWeight: '500'
+                        }}>
+                            {tabs.findIndex(t => t.id === activeTab) + 1} / {tabs.length}
+                        </div>
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const currentIndex = tabs.findIndex(t => t.id === activeTab);
+                            if (currentIndex < tabs.length - 1) {
+                                setActiveTab(tabs[currentIndex + 1].id);
+                            }
+                        }}
+                        disabled={tabs.findIndex(t => t.id === activeTab) === tabs.length - 1}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem 1rem',
+                            background: 'transparent',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '8px',
+                            color: tabs.findIndex(t => t.id === activeTab) === tabs.length - 1 ? '#64748b' : '#94a3b8',
+                            cursor: tabs.findIndex(t => t.id === activeTab) === tabs.length - 1 ? 'not-allowed' : 'pointer',
+                            fontSize: '0.9rem',
+                            fontWeight: '500',
+                            opacity: tabs.findIndex(t => t.id === activeTab) === tabs.length - 1 ? 0.4 : 1,
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (tabs.findIndex(t => t.id === activeTab) !== tabs.length - 1) {
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                                e.currentTarget.style.color = '#3b82f6';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                            e.currentTarget.style.color = '#94a3b8';
+                        }}
+                    >
+                        <span>Suivant</span>
+                        <ChevronRight size={18} />
+                    </button>
                 </div>
 
                 {/* Tab Content */}
