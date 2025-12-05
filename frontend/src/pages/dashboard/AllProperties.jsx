@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, FileText, Package, Image, ChevronDown, LayoutGrid, List } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
 import PropertyDetailsModal from '../../components/property/PropertyDetailsModal';
 import PropertyEditModal from '../../components/property/PropertyEditModal';
 import { getAllProperties, getPropertyById, deleteProperty, apiConfig } from '../../api/api';
+import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 
 
 const AllProperties = () => {
@@ -365,8 +366,17 @@ const AllProperties = () => {
                                 ? `Aucun bien trouvé pour "${searchQuery}"`
                                 : 'Aucun bien immobilier. Ajoutez-en un avec le wizard!'}
                         </div>
-                    ) : viewMode === 'list' ? (
-                        <table className="glass-table">
+                    ) : (
+                        <AnimatePresence mode="wait">
+                            {viewMode === 'list' ? (
+                                <motion.table
+                                    key="list"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="glass-table"
+                                >
                             <thead>
                                 <tr>
                                     <th>Bien</th>
@@ -450,9 +460,16 @@ const AllProperties = () => {
                                     </tr>
                                 ))}
                             </tbody>
-                        </table>
-                    ) : (
-                        <div className="properties-grid-view" style={{ 
+                                </motion.table>
+                            ) : (
+                                <motion.div
+                                    key="grid"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="properties-grid-view"
+                                    style={{ 
                             display: 'grid', 
                             gridTemplateColumns: 'repeat(2, 1fr)', 
                             gap: '1.5rem' 
@@ -603,7 +620,9 @@ const AllProperties = () => {
                                 </div>
                                 );
                             })}
-                        </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     )}
                 </div>
             </div>
