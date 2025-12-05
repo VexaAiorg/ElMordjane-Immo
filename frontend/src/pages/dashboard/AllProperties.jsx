@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, FileText, Package, Image, ChevronDown } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, FileText, Package, Image, ChevronDown, LayoutGrid, List } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
 import PropertyDetailsModal from '../../components/property/PropertyDetailsModal';
 import PropertyEditModal from '../../components/property/PropertyEditModal';
-import { getAllProperties, getPropertyById, deleteProperty } from '../../api/api';
+import { getAllProperties, getPropertyById, deleteProperty, apiConfig } from '../../api/api';
 
 
 const AllProperties = () => {
@@ -18,6 +18,7 @@ const AllProperties = () => {
     const [showTypeDropdown, setShowTypeDropdown] = useState(false);
     const [showDateDropdown, setShowDateDropdown] = useState(false);
     const [editingProperty, setEditingProperty] = useState(null);
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
     useEffect(() => {
         fetchProperties();
@@ -138,6 +139,19 @@ const AllProperties = () => {
         return labels[statut] || statut;
     };
 
+    const getFileUrl = (url) => {
+        if (!url) return '#';
+        if (url.startsWith('http')) return url;
+        const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+        return `${apiConfig.baseUrl}${cleanUrl}`;
+    };
+
+    const getFirstPhoto = (property) => {
+        if (!property.piecesJointes) return null;
+        const photo = property.piecesJointes.find(pj => pj.type === 'PHOTO' && pj.visibilite === 'PUBLIABLE');
+        return photo ? getFileUrl(photo.url) : null;
+    };
+
     const handleViewProperty = async (property) => {
         setSelectedProperty(property); // Show modal immediately with basic info
         setLoadingDetails(true);
@@ -251,6 +265,55 @@ const AllProperties = () => {
                             </div>
                         )}
                     </div>
+
+                    <div className="view-toggles" style={{ 
+                        marginLeft: 'auto', 
+                        display: 'flex', 
+                        gap: '0.5rem', 
+                        background: 'rgba(0,0,0,0.2)', 
+                        padding: '0.25rem', 
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>
+                        <button 
+                            onClick={() => setViewMode('list')}
+                            title="Vue liste"
+                            className={viewMode === 'list' ? 'active' : ''}
+                            style={{
+                                background: viewMode === 'list' ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                                color: viewMode === 'list' ? '#3b82f6' : '#94a3b8',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '0.4rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <List size={20} />
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('grid')}
+                            title="Vue grille"
+                            className={viewMode === 'grid' ? 'active' : ''}
+                            style={{
+                                background: viewMode === 'grid' ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                                color: viewMode === 'grid' ? '#3b82f6' : '#94a3b8',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '0.4rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <LayoutGrid size={20} />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="stats-grid">
@@ -302,7 +365,7 @@ const AllProperties = () => {
                                 ? `Aucun bien trouvé pour "${searchQuery}"`
                                 : 'Aucun bien immobilier. Ajoutez-en un avec le wizard!'}
                         </div>
-                    ) : (
+                    ) : viewMode === 'list' ? (
                         <table className="glass-table">
                             <thead>
                                 <tr>
@@ -388,6 +451,159 @@ const AllProperties = () => {
                                 ))}
                             </tbody>
                         </table>
+                    ) : (
+                        <div className="properties-grid-view" style={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: 'repeat(2, 1fr)', 
+                            gap: '1.5rem' 
+                        }}>
+                            {filteredProperties.map((property) => {
+                                const photoUrl = getFirstPhoto(property);
+                                return (
+                                <div key={property.id} style={{
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    padding: '1rem',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '1rem',
+                                    transition: 'transform 0.2s',
+                                    cursor: 'default',
+                                    overflow: 'hidden'
+                                }}>
+                                    <div style={{ 
+                                        height: '200px', 
+                                        width: '100%',
+                                        background: '#1e293b', 
+                                        borderRadius: '12px', 
+                                        overflow: 'hidden',
+                                        position: 'relative'
+                                    }}>
+                                        {photoUrl ? (
+                                            <img src={photoUrl} alt={property.titre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', flexDirection: 'column', gap: '0.5rem' }}>
+                                                {property.type === 'APPARTEMENT' ? <Home size={48} /> :
+                                                 property.type === 'VILLA' ? <Home size={48} /> :
+                                                 property.type === 'TERRAIN' ? <MapPin size={48} /> :
+                                                 property.type === 'LOCAL' ? <DollarSign size={48} /> :
+                                                 <Package size={48} />}
+                                                 <span style={{ fontSize: '0.9rem' }}>Pas de photo</span>
+                                            </div>
+                                        )}
+                                        <span className={`status-badge ${getStatusBadgeClass(property.statut)}`} style={{ position: 'absolute', top: '1rem', right: '1rem', backdropFilter: 'blur(4px)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                                            {getStatusLabel(property.statut)}
+                                        </span>
+                                        <div style={{ 
+                                            position: 'absolute', 
+                                            bottom: '1rem', 
+                                            left: '1rem', 
+                                            background: 'rgba(0,0,0,0.6)', 
+                                            backdropFilter: 'blur(4px)',
+                                            padding: '0.25rem 0.75rem', 
+                                            borderRadius: '20px', 
+                                            color: 'white', 
+                                            fontSize: '0.8rem', 
+                                            fontWeight: '500',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem'
+                                        }}>
+                                            {property.type === 'APPARTEMENT' ? <Home size={14} /> :
+                                             property.type === 'VILLA' ? <Home size={14} /> :
+                                             property.type === 'TERRAIN' ? <MapPin size={14} /> :
+                                             property.type === 'LOCAL' ? <DollarSign size={14} /> :
+                                             <Package size={14} />}
+                                            {property.type}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ padding: '0 0.5rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                                            <div>
+                                                <h3 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                                                    {property.titre}
+                                                </h3>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+                                                    <MapPin size={14} />
+                                                    {property.adresse}
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ color: '#3b82f6', fontWeight: '700', fontSize: '1.1rem' }}>
+                                                    {property.transaction === 'VENTE' 
+                                                        ? formatPrice(property.prixVente)
+                                                        : formatPrice(property.prixLocation)}
+                                                </div>
+                                                <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>
+                                                    {property.transaction}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <button 
+                                            onClick={() => handleViewProperty(property)}
+                                            style={{
+                                                flex: 1,
+                                                background: 'rgba(59, 130, 246, 0.1)',
+                                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                borderRadius: '8px',
+                                                padding: '0.75rem',
+                                                cursor: 'pointer',
+                                                color: '#3b82f6',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '0.5rem',
+                                                fontSize: '0.9rem',
+                                                fontWeight: '600',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <Eye size={18} /> Détails
+                                        </button>
+                                        <button 
+                                            onClick={() => handleEditProperty(property)}
+                                            style={{
+                                                background: 'rgba(245, 158, 11, 0.1)',
+                                                border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                borderRadius: '8px',
+                                                padding: '0.75rem',
+                                                cursor: 'pointer',
+                                                color: '#f59e0b',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeleteProperty(property.id)}
+                                            style={{
+                                                background: 'rgba(239, 68, 68, 0.1)',
+                                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                borderRadius: '8px',
+                                                padding: '0.75rem',
+                                                cursor: 'pointer',
+                                                color: '#ef4444',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                                );
+                            })}
+                        </div>
                     )}
                 </div>
             </div>

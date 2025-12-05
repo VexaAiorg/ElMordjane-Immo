@@ -713,24 +713,34 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
 
             // 3.6 Handle File Deletion (Physical and Database)
             if (data.filesToDelete && Array.isArray(data.filesToDelete) && data.filesToDelete.length > 0) {
+                console.log('Processing files to delete:', data.filesToDelete);
                 const fs = await import('fs/promises');
                 const path = await import('path');
 
-                for (const fileId of data.filesToDelete) {
+                for (const rawFileId of data.filesToDelete) {
+                    const fileId = parseInt(rawFileId.toString());
+                    if (isNaN(fileId)) {
+                        console.warn(`Invalid file ID for deletion: ${rawFileId}`);
+                        continue;
+                    }
+
                     const file = await tx.pieceJointe.findUnique({ where: { id: fileId } });
                     
                     if (file) {
+                        console.log(`Deleting file ID ${fileId}: ${file.nom} (${file.url})`);
                         // Delete physical file if it exists and is local
                         if (file.url && file.url.startsWith('/uploads/')) {
                             try {
                                 const filePath = path.join(process.cwd(), file.url);
-                                await fs.unlink(filePath).catch(() => console.log(`File not found: ${filePath}`));
+                                await fs.unlink(filePath).catch(() => console.log(`File not found on disk: ${filePath}`));
                             } catch (err) {
                                 console.error(`Error deleting file ${file.url}:`, err);
                             }
                         }
                         // Delete database record
                         await tx.pieceJointe.delete({ where: { id: fileId } });
+                    } else {
+                        console.warn(`File ID ${fileId} not found in database.`);
                     }
                 }
             }

@@ -162,6 +162,32 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
         setSaving(true);
 
         try {
+            // Collect all new files first to generate metadata
+            const allNewDocuments = [
+                ...newFiles.juridical,
+                ...newFiles.publicDocuments,
+                ...newFiles.internalDocuments,
+            ];
+
+            const allNewPhotos = [
+                ...newFiles.publicPhotos,
+                ...newFiles.internalPhotos,
+            ];
+
+            // Generate metadata for new files to include in piecesJointes
+            const newFilesMetadata = [
+                ...allNewDocuments,
+                ...allNewPhotos
+            ].map(f => ({
+                nom: f.file.name,
+                type: f.type,
+                visibilite: f.visibilite,
+                categorie: f.categorie
+            }));
+
+            console.log('Files to delete:', filesToDelete);
+            console.log('New files metadata:', newFilesMetadata);
+
             // Prepare data for backend
             const propertyData = {
                 bienImmobilier: formData.bienImmobilier,
@@ -170,23 +196,25 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                 papiers: formData.papiers.map(p => ({ 
                     id: p.id, 
                     statut: p.statut,
-                    nom: p.nom // Include name for new papiers and updates
+                    nom: p.nom
                 })),
-                piecesJointes: formData.piecesJointes.map(pj => ({ 
-                    id: pj.id, 
-                    visibilite: pj.visibilite,
-                    categorie: pj.categorie
-                })),
-                filesToDelete: filesToDelete, // Match backend expectation
+                piecesJointes: [
+                    // Existing files (excluding deleted ones, as they are already filtered out of formData.piecesJointes)
+                    ...formData.piecesJointes.map(pj => ({ 
+                        id: pj.id, 
+                        visibilite: pj.visibilite,
+                        categorie: pj.categorie
+                    })),
+                    // New files metadata
+                    ...newFilesMetadata
+                ],
+                filesToDelete: filesToDelete,
             };
 
             // Add property-specific details based on type
             const type = formData.bienImmobilier.type;
             
-            // IMPORTANT: Always include the property details, even if they're empty
-            // This ensures the backend receives the details structure
             console.log('Property Details before sending:', formData.propertyDetails);
-            console.log('Property Type:', type);
             
             if (type === 'APPARTEMENT') {
                 propertyData.detailAppartement = formData.propertyDetails;
@@ -202,19 +230,13 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
 
             console.log('Full payload being sent:', JSON.stringify(propertyData, null, 2));
 
-            // Collect all new files
-            const allNewDocuments = [
-                ...newFiles.juridical,
-                ...newFiles.publicDocuments,
-                ...newFiles.internalDocuments,
-            ];
-
-            const allNewPhotos = [
-                ...newFiles.publicPhotos,
-                ...newFiles.internalPhotos,
-            ];
-
-            await updateProperty(property.id, propertyData, allNewDocuments, allNewPhotos);
+            // Pass the actual File objects (not the wrapper objects)
+            await updateProperty(
+                property.id, 
+                propertyData, 
+                allNewDocuments.map(f => f.file), 
+                allNewPhotos.map(f => f.file)
+            );
             
             setHasUnsavedChanges(false);
             onUpdate();
