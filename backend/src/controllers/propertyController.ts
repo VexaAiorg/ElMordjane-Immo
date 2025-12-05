@@ -279,7 +279,12 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
                         visibilite: 'PUBLIABLE'
                     },
                     take: 1
-                }
+                },
+                detailAppartement: true,
+                detailVilla: true,
+                detailTerrain: true,
+                detailLocal: true,
+                detailImmeuble: true
             },
             orderBy: {
                 dateCreation: 'desc'

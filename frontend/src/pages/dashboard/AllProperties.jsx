@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
 import PropertyDetailsModal from '../../components/property/PropertyDetailsModal';
 import PropertyEditModal from '../../components/property/PropertyEditModal';
@@ -151,6 +151,30 @@ const AllProperties = () => {
         if (!property.piecesJointes) return null;
         const photo = property.piecesJointes.find(pj => pj.type === 'PHOTO' && pj.visibilite === 'PUBLIABLE');
         return photo ? getFileUrl(photo.url) : null;
+    };
+
+    const getPropertySpecs = (property) => {
+        let specs = [];
+        
+        // Surface
+        let surface = null;
+        if (property.detailAppartement?.surfaceTotal) surface = property.detailAppartement.surfaceTotal;
+        else if (property.detailVilla?.surface) surface = property.detailVilla.surface;
+        else if (property.detailTerrain?.surface) surface = property.detailTerrain.surface;
+        else if (property.detailLocal?.surface) surface = property.detailLocal.surface;
+        else if (property.detailImmeuble?.surface) surface = property.detailImmeuble.surface;
+        
+        if (surface) specs.push(`${surface} m²`);
+
+        // Rooms / Pieces / Type
+        let pieces = null;
+        if (property.detailAppartement?.typeAppart) pieces = property.detailAppartement.typeAppart;
+        else if (property.detailVilla?.pieces) pieces = `${property.detailVilla.pieces} Pièces`;
+        else if (property.detailImmeuble?.nbAppartements) pieces = `${property.detailImmeuble.nbAppartements} Appts`;
+        
+        if (pieces) specs.push(pieces);
+
+        return specs;
     };
 
     const handleViewProperty = async (property) => {
@@ -557,6 +581,42 @@ const AllProperties = () => {
                                                     {property.transaction}
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        {/* Owner & Specs Section */}
+                                        <div style={{ 
+                                            padding: '0.75rem', 
+                                            background: 'rgba(0,0,0,0.2)', 
+                                            borderRadius: '8px',
+                                            marginBottom: '1rem',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '0.5rem'
+                                        }}>
+                                            {/* Owner Info */}
+                                            {property.proprietaire && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#e2e8f0' }}>
+                                                    <User size={14} style={{ color: '#94a3b8' }} />
+                                                    <span style={{ fontWeight: '500' }}>
+                                                        {property.proprietaire.nom} {property.proprietaire.prenom}
+                                                    </span>
+                                                    {property.proprietaire.telephone && (
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>• {property.proprietaire.telephone}</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                            
+                                            {/* Specs */}
+                                            {getPropertySpecs(property).length > 0 && (
+                                                <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.85rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.5rem' }}>
+                                                    {getPropertySpecs(property).map((spec, i) => (
+                                                        <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                            {i === 0 ? <Maximize size={14} /> : <LayoutDashboard size={14} />}
+                                                            {spec}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
