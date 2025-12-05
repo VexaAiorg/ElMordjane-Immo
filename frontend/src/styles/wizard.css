@@ -39,6 +39,27 @@
     flex: 1;
     position: relative;
     z-index: 2;
+    transition: all 0.3s ease;
+}
+
+/* Clickable step styles */
+.progress-step.clickable {
+    cursor: pointer;
+}
+
+.progress-step.clickable:hover .step-indicator {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.progress-step.clickable:hover .step-label {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* Disabled step styles */
+.progress-step.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .step-indicator {

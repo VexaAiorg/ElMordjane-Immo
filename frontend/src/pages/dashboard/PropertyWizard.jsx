@@ -12,7 +12,7 @@ import Page7Summary from '../../components/wizard/Page7Summary';
 import '../../styles/wizard.css';
 
 const WizardContent = () => {
-    const { currentStep } = useWizard();
+    const { currentStep, validatedPages, goToStep } = useWizard();
 
     const steps = [
         { id: 1, title: 'Informations de base', component: Page1BasicInfo },
@@ -25,6 +25,34 @@ const WizardContent = () => {
     ];
 
     const CurrentPageComponent = steps[currentStep - 1]?.component;
+
+    // Check if a step is clickable
+    const isStepClickable = (stepId) => {
+        // Current step is always clickable
+        if (stepId === currentStep) return true;
+        
+        // Completed steps (with checkmark) are always clickable
+        if (currentStep > stepId) return true;
+        
+        // For future steps, check if all previous steps are validated
+        if (stepId > currentStep) {
+            // Check if all steps before this one are validated
+            for (let i = 1; i < stepId; i++) {
+                if (!validatedPages.has(i)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        return false;
+    };
+
+    const handleStepClick = (stepId) => {
+        if (isStepClickable(stepId)) {
+            goToStep(stepId);
+        }
+    };
 
     return (
         <PageTransition>
@@ -39,23 +67,32 @@ const WizardContent = () => {
                 <div className="wizard-wrapper">
                     {/* Progress Indicator */}
                     <div className="wizard-progress-bar">
-                        {steps.map((step, index) => (
-                            <div
-                                key={step.id}
-                                className={`progress-step ${currentStep >= step.id ? 'active' : ''} ${currentStep === step.id ? 'current' : ''
-                                    }`}
-                            >
-                                <div className="step-indicator">
-                                    {currentStep > step.id ? (
-                                        <Check size={16} className="check-icon" />
-                                    ) : (
-                                        <span>{step.id}</span>
-                                    )}
+                        {steps.map((step, index) => {
+                            const clickable = isStepClickable(step.id);
+                            return (
+                                <div
+                                    key={step.id}
+                                    className={`progress-step ${currentStep >= step.id ? 'active' : ''} ${currentStep === step.id ? 'current' : ''
+                                        } ${clickable ? 'clickable' : 'disabled'}`}
+                                    onClick={() => handleStepClick(step.id)}
+                                    style={{
+                                        cursor: clickable ? 'pointer' : 'not-allowed',
+                                        opacity: clickable ? 1 : 0.5,
+                                    }}
+                                    title={clickable ? `Aller à ${step.title}` : 'Complétez les étapes précédentes'}
+                                >
+                                    <div className="step-indicator">
+                                        {currentStep > step.id ? (
+                                            <Check size={16} className="check-icon" />
+                                        ) : (
+                                            <span>{step.id}</span>
+                                        )}
+                                    </div>
+                                    <span className="step-label">{step.title}</span>
+                                    {index < steps.length - 1 && <div className="step-line"></div>}
                                 </div>
-                                <span className="step-label">{step.title}</span>
-                                {index < steps.length - 1 && <div className="step-line"></div>}
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Step Counter */}
