@@ -67,9 +67,9 @@ const TrackingTab = ({ formData, onChange }) => {
                         onChange={handleChange}
                         style={inputStyle}
                     >
-                        <option value="FAIBLE">Faible</option>
                         <option value="NORMAL">Normal</option>
-                        <option value="URGENT">Urgent</option>
+                        <option value="IMPORTANT">Important</option>
+                        <option value="TRES_IMPORTANT">Très Important</option>
                     </select>
                 </div>
             </div>

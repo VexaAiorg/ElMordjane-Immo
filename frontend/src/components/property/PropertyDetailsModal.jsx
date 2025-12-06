@@ -35,6 +35,15 @@ const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
         });
     };
 
+    const getPriorityLabel = (priorite) => {
+        const labels = {
+            'TRES_IMPORTANT': 'Très Important',
+            'IMPORTANT': 'Important',
+            'NORMAL': 'Normal',
+        };
+        return labels[priorite] || priorite;
+    };
+
     const toggleSection = (section) => {
         setExpandedSections(prev => ({
             ...prev,
@@ -213,7 +222,7 @@ const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
                                         </div>
                                         <div className="info-item">
                                             <span className="label">Priorité</span>
-                                            <span className="value">{property.suivi.priorite}</span>
+                                            <span className="value">{getPriorityLabel(property.suivi.priorite)}</span>
                                         </div>
                                         <div className="info-item">
                                             <span className="label">Mandat ?</span>

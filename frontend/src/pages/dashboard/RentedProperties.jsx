@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard, CheckCircle2, XCircle, AlertCircle, FileCheck } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
 import PropertyDetailsModal from '../../components/property/PropertyDetailsModal';
 import PropertyEditModal from '../../components/property/PropertyEditModal';
@@ -140,6 +140,24 @@ const RentedProperties = () => {
             'LOUE': 'Loué',
         };
         return labels[statut] || statut;
+    };
+
+    const getPriorityLabel = (priorite) => {
+        const labels = {
+            'TRES_IMPORTANT': 'Très Important',
+            'IMPORTANT': 'Important',
+            'NORMAL': 'Normal',
+        };
+        return labels[priorite] || 'Normal';
+    };
+
+    const getPriorityColor = (priorite) => {
+        const colors = {
+            'TRES_IMPORTANT': { bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.4)', text: '#ef4444' },
+            'IMPORTANT': { bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.4)', text: '#f59e0b' },
+            'NORMAL': { bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.4)', text: '#3b82f6' },
+        };
+        return colors[priorite] || colors['NORMAL'];
     };
 
     const getFileUrl = (url) => {
@@ -616,6 +634,113 @@ const RentedProperties = () => {
                                                 </div>
                                             )}
                                         </div>
+
+                                        {/* Tracking (Suivi) Section */}
+                                        {property.suivi && (
+                                            <div style={{ 
+                                                padding: '0.75rem', 
+                                                background: 'rgba(0,0,0,0.3)', 
+                                                borderRadius: '8px',
+                                                marginBottom: '1rem',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '0.5rem',
+                                                border: '1px solid rgba(255,255,255,0.05)'
+                                            }}>
+                                                <div style={{ 
+                                                    fontSize: '0.75rem', 
+                                                    fontWeight: '600', 
+                                                    color: '#94a3b8', 
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.05em',
+                                                    marginBottom: '0.25rem'
+                                                }}>
+                                                    Suivi
+                                                </div>
+                                                
+                                                <div style={{ 
+                                                    display: 'grid', 
+                                                    gridTemplateColumns: 'repeat(3, 1fr)', 
+                                                    gap: '0.5rem' 
+                                                }}>
+                                                    {/* Visité */}
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        flexDirection: 'column', 
+                                                        alignItems: 'center',
+                                                        gap: '0.25rem',
+                                                        padding: '0.5rem',
+                                                        background: property.suivi.estVisite 
+                                                            ? 'rgba(34, 197, 94, 0.1)' 
+                                                            : 'rgba(148, 163, 184, 0.1)',
+                                                        borderRadius: '6px',
+                                                        border: `1px solid ${property.suivi.estVisite 
+                                                            ? 'rgba(34, 197, 94, 0.3)' 
+                                                            : 'rgba(148, 163, 184, 0.2)'}`
+                                                    }}>
+                                                        {property.suivi.estVisite ? (
+                                                            <CheckCircle2 size={16} style={{ color: '#22c55e' }} />
+                                                        ) : (
+                                                            <XCircle size={16} style={{ color: '#94a3b8' }} />
+                                                        )}
+                                                        <span style={{ 
+                                                            fontSize: '0.7rem', 
+                                                            color: property.suivi.estVisite ? '#22c55e' : '#94a3b8',
+                                                            fontWeight: '500'
+                                                        }}>
+                                                            {property.suivi.estVisite ? 'Visité' : 'Non visité'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Priorité */}
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        flexDirection: 'column', 
+                                                        alignItems: 'center',
+                                                        gap: '0.25rem',
+                                                        padding: '0.5rem',
+                                                        background: getPriorityColor(property.suivi.priorite).bg,
+                                                        borderRadius: '6px',
+                                                        border: `1px solid ${getPriorityColor(property.suivi.priorite).border}`
+                                                    }}>
+                                                        <AlertCircle size={16} style={{ color: getPriorityColor(property.suivi.priorite).text }} />
+                                                        <span style={{ 
+                                                            fontSize: '0.7rem', 
+                                                            color: getPriorityColor(property.suivi.priorite).text,
+                                                            fontWeight: '500',
+                                                            textAlign: 'center'
+                                                        }}>
+                                                            {getPriorityLabel(property.suivi.priorite)}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Mandat */}
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        flexDirection: 'column', 
+                                                        alignItems: 'center',
+                                                        gap: '0.25rem',
+                                                        padding: '0.5rem',
+                                                        background: property.suivi.aMandat 
+                                                            ? 'rgba(139, 92, 246, 0.15)' 
+                                                            : 'rgba(148, 163, 184, 0.1)',
+                                                        borderRadius: '6px',
+                                                        border: `1px solid ${property.suivi.aMandat 
+                                                            ? 'rgba(139, 92, 246, 0.4)' 
+                                                            : 'rgba(148, 163, 184, 0.2)'}`
+                                                    }}>
+                                                        <FileCheck size={16} style={{ color: property.suivi.aMandat ? '#8b5cf6' : '#94a3b8' }} />
+                                                        <span style={{ 
+                                                            fontSize: '0.7rem', 
+                                                            color: property.suivi.aMandat ? '#8b5cf6' : '#94a3b8',
+                                                            fontWeight: '500'
+                                                        }}>
+                                                            {property.suivi.aMandat ? 'Mandat' : 'Pas mandat'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
