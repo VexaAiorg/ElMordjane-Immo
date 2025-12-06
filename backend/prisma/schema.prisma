@@ -175,6 +175,7 @@ model BienImmobilier {
   prixLocation Float?
 
   adresse       String?
+  archive       Boolean  @default(false) // true = sold by admin, false = sold by other agency
   dateCreation  DateTime @default(now())
   dateMiseAJour DateTime @updatedAt
 

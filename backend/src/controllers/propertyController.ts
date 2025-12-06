@@ -493,6 +493,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     prixVente: data.bienImmobilier.prixVente ? parseFloat(data.bienImmobilier.prixVente.toString()) : null,
                     prixLocation: data.bienImmobilier.prixLocation ? parseFloat(data.bienImmobilier.prixLocation.toString()) : null,
                     adresse: data.bienImmobilier.adresse || null,
+                    archive: data.bienImmobilier.archive !== undefined ? data.bienImmobilier.archive : false,
                 }
             });
 

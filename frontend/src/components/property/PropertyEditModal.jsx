@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import BasicInfoTab from './tabs/BasicInfoTab';
 import OwnerInfoTab from './tabs/OwnerInfoTab';
 import PropertyDetailsTab from './tabs/PropertyDetailsTab';
@@ -13,6 +13,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
     const [activeTab, setActiveTab] = useState('basic');
     const [saving, setSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [archiveDropdownOpen, setArchiveDropdownOpen] = useState(false);
     
     // Form data state
     const [formData, setFormData] = useState({
@@ -25,6 +26,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
             prixVente: property?.prixVente || '',
             prixLocation: property?.prixLocation || '',
             adresse: property?.adresse || '',
+            archive: property?.archive || false,
         },
         proprietaire: {
             id: property?.proprietaire?.id || null,
@@ -86,6 +88,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                     prixVente: property?.prixVente || '',
                     prixLocation: property?.prixLocation || '',
                     adresse: property?.adresse || '',
+                    archive: property?.archive || false,
                 },
                 proprietaire: {
                     id: property?.proprietaire?.id || null,
@@ -270,8 +273,143 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                     <X size={24} />
                 </button>
                 
-                <div className="modal-header">
-                    <h2>Modifier le Bien</h2>
+                <div className="modal-header" style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    gap: '2rem',
+                    position: 'relative'
+                }}>
+                    <h2 style={{ flex: 1 }}>Modifier le Bien</h2>
+                    
+                    {/* Archive Dropdown - Only for VENDU properties */}
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        position: 'absolute',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1
+                    }}>
+                        <label style={{ 
+                            fontSize: '0.9rem', 
+                            color: '#94a3b8',
+                            fontWeight: '500',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            Statut:
+                        </label>
+                        <div 
+                            style={{ position: 'relative', minWidth: '180px' }}
+                            onClick={(e) => {
+                                if (formData.bienImmobilier.statut === 'VENDU') {
+                                    e.stopPropagation();
+                                    setArchiveDropdownOpen(!archiveDropdownOpen);
+                                }
+                            }}
+                        >
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '0.5rem 0.75rem',
+                                background: formData.bienImmobilier.statut !== 'VENDU' 
+                                    ? 'rgba(255,255,255,0.03)' 
+                                    : 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '6px',
+                                color: formData.bienImmobilier.statut !== 'VENDU' ? '#64748b' : 'white',
+                                fontSize: '0.9rem',
+                                cursor: formData.bienImmobilier.statut !== 'VENDU' ? 'not-allowed' : 'pointer',
+                                opacity: formData.bienImmobilier.statut !== 'VENDU' ? 0.5 : 1,
+                                transition: 'all 0.2s'
+                            }}>
+                                <span>
+                                    {formData.bienImmobilier.archive ? 'Archivé' : 'Non archivé'}
+                                </span>
+                                <ChevronDown 
+                                    size={16} 
+                                    style={{
+                                        transform: archiveDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                        transition: 'transform 0.3s ease',
+                                        opacity: 0.7
+                                    }}
+                                />
+                            </div>
+
+                            {archiveDropdownOpen && formData.bienImmobilier.statut === 'VENDU' && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    right: 0,
+                                    marginTop: '0.5rem',
+                                    background: '#1e293b',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '8px',
+                                    overflow: 'hidden',
+                                    zIndex: 50,
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                                }}>
+                                    <div 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                bienImmobilier: { ...prev.bienImmobilier, archive: false }
+                                            }));
+                                            setHasUnsavedChanges(true);
+                                            setArchiveDropdownOpen(false);
+                                        }}
+                                        style={{
+                                            padding: '0.75rem',
+                                            cursor: 'pointer',
+                                            color: !formData.bienImmobilier.archive ? '#3b82f6' : '#94a3b8',
+                                            background: !formData.bienImmobilier.archive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                                            fontSize: '0.9rem',
+                                            transition: 'all 0.2s',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = !formData.bienImmobilier.archive ? 'rgba(59, 130, 246, 0.1)' : 'transparent'}
+                                    >
+                                        Non archivé
+                                        {!formData.bienImmobilier.archive && <span style={{ fontSize: '0.8rem' }}>✓</span>}
+                                    </div>
+                                    <div 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                bienImmobilier: { ...prev.bienImmobilier, archive: true }
+                                            }));
+                                            setHasUnsavedChanges(true);
+                                            setArchiveDropdownOpen(false);
+                                        }}
+                                        style={{
+                                            padding: '0.75rem',
+                                            cursor: 'pointer',
+                                            color: formData.bienImmobilier.archive ? '#3b82f6' : '#94a3b8',
+                                            background: formData.bienImmobilier.archive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                                            fontSize: '0.9rem',
+                                            transition: 'all 0.2s',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = formData.bienImmobilier.archive ? 'rgba(59, 130, 246, 0.1)' : 'transparent'}
+                                    >
+                                        Archivé
+                                        {formData.bienImmobilier.archive && <span style={{ fontSize: '0.8rem' }}>✓</span>}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Enhanced Tab Navigation with Arrows */}

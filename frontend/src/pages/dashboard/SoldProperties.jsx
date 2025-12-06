@@ -36,8 +36,10 @@ const SoldProperties = () => {
             // Extract properties from response
             // Backend returns { status: 'success', data: [...], count: N }
             const propertiesData = response.data || [];
-            // Filter only sales properties
-            const salesProperties = propertiesData.filter(p => p.transaction === 'VENTE');
+            // Filter only sales properties that are NOT archived
+            const salesProperties = propertiesData.filter(p => 
+                p.transaction === 'VENTE' && p.archive !== true
+            );
             setProperties(salesProperties);
         } catch (err) {
             console.error('Error fetching properties:', err);
