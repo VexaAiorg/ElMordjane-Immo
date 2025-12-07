@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard, CheckCircle2, XCircle, AlertCircle, FileCheck } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard, CheckCircle2, XCircle, AlertCircle, FileCheck, Clock } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
 import PropertyDetailsModal from '../../components/property/PropertyDetailsModal';
 import PropertyEditModal from '../../components/property/PropertyEditModal';
@@ -36,10 +36,8 @@ const Archives = () => {
             // Extract properties from response
             // Backend returns { status: 'success', data: [...], count: N }
             const propertiesData = response.data || [];
-            // Filter only ARCHIVED properties (sold by admin)
-            const archivedProperties = propertiesData.filter(p => 
-                p.archive === true && p.statut === 'VENDU'
-            );
+            // Filter only ARCHIVED properties
+            const archivedProperties = propertiesData.filter(p => p.archive === true);
             setProperties(archivedProperties);
         } catch (err) {
             console.error('Error fetching properties:', err);
@@ -98,6 +96,15 @@ const Archives = () => {
         } else {
             console.log('Delete cancelled by user');
         }
+    };
+
+    const getDaysRemaining = (dateCreation) => {
+        const created = new Date(dateCreation);
+        const now = new Date();
+        const diffTime = now - created;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const remaining = 30 - diffDays;
+        return remaining;
     };
 
     const formatPrice = (price) => {
@@ -243,7 +250,7 @@ const Archives = () => {
                 <header className="page-header">
                     <div>
                         <h1 className="page-title">Archives</h1>
-                        <p className="page-subtitle">Biens vendus par l'agence (archivés)</p>
+                        <p className="page-subtitle">Biens archivés (Suppression automatique après 30 jours)</p>
                     </div>
                 </header>
 
@@ -400,11 +407,14 @@ const Archives = () => {
                                     <th>Prix</th>
                                     <th>Transaction</th>
                                     <th>Date d'ajout</th>
+                                    <th>Expiration</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredProperties.map((property) => (
+                                {filteredProperties.map((property) => {
+                                    const remaining = getDaysRemaining(property.dateCreation);
+                                    return (
                                     <tr key={property.id}>
                                         <td>
                                             <div className="table-item-info">
@@ -424,6 +434,19 @@ const Archives = () => {
                                             </span>
                                         </td>
                                         <td>{formatDate(property.dateCreation)}</td>
+                                        <td>
+                                            <span className={`status-badge ${remaining <= 5 ? 'error' : 'neutral'}`} style={{
+                                                background: remaining <= 5 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(148, 163, 184, 0.1)',
+                                                color: remaining <= 5 ? '#ef4444' : '#94a3b8',
+                                                border: remaining <= 5 ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(148, 163, 184, 0.3)',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '0.25rem'
+                                            }}>
+                                                <Clock size={12} />
+                                                {remaining <= 0 ? 'Imminente' : `${remaining} jours`}
+                                            </span>
+                                        </td>
                                         <td>
                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                 <button 
@@ -474,7 +497,7 @@ const Archives = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                )})}
                             </tbody>
                                 </motion.table>
                             ) : (
@@ -492,6 +515,7 @@ const Archives = () => {
                         }}>
                             {filteredProperties.map((property) => {
                                 const photoUrl = getFirstPhoto(property);
+                                const remaining = getDaysRemaining(property.dateCreation);
                                 return (
                                 <div key={property.id} style={{
                                     background: 'rgba(255, 255, 255, 0.05)',
@@ -528,6 +552,28 @@ const Archives = () => {
                                         <span className="status-badge sold" style={{ position: 'absolute', top: '1rem', right: '1rem', backdropFilter: 'blur(4px)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                                             Archivé
                                         </span>
+                                        
+                                        {/* Expiration Badge */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '1rem',
+                                            left: '1rem',
+                                            background: remaining <= 5 ? 'rgba(239, 68, 68, 0.9)' : 'rgba(30, 41, 59, 0.8)',
+                                            backdropFilter: 'blur(4px)',
+                                            padding: '0.25rem 0.5rem',
+                                            borderRadius: '6px',
+                                            color: 'white',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem',
+                                            boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                                        }}>
+                                            <Clock size={12} />
+                                            {remaining <= 0 ? 'Suppression imminente' : `${remaining}j restants`}
+                                        </div>
+
                                         <div style={{ 
                                             position: 'absolute', 
                                             bottom: '1rem', 

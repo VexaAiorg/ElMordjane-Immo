@@ -1,7 +1,12 @@
 import app from './app.ts';
 import dotenv from 'dotenv';
+import { initScheduler } from './src/services/schedulerService.js';
+
 // Load environment variables
 dotenv.config();
+
+// Initialize Scheduler
+initScheduler();
 
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL;
