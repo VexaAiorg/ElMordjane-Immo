@@ -12,28 +12,18 @@ const SALT_ROUNDS = 10;
  */
 export const signup = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { email, password } = req.body;
+        const { email, password, nom, prenom, role } = req.body;
 
         // Validate input
-        if (!email || !password) {
+        if (!email || !password || !nom || !prenom) {
             res.status(400).json({
                 status: 'error',
-                message: 'Email and password are required'
+                message: 'Email, password, nom, and prenom are required'
             });
             return;
         }
 
-        // Check if any admin already exists (one-time signup restriction)
-        const existingAdmin = await prisma.utilisateur.findFirst();
-        if (existingAdmin) {
-            res.status(403).json({
-                status: 'error',
-                message: 'Admin account already exists. Signup is disabled.'
-            });
-            return;
-        }
-
-        // Check if email is already taken (extra safety)
+        // Check if email is already taken
         const existingUser = await prisma.utilisateur.findUnique({
             where: { email }
         });
@@ -49,17 +39,21 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-        // Create admin user
-        const admin = await prisma.utilisateur.create({
+        // Create user
+        const user = await prisma.utilisateur.create({
             data: {
                 email,
                 motDePasse: hashedPassword,
-                role: 'ADMIN'
+                role: role || 'COLLABORATEUR', // Default to COLLABORATEUR if not specified
+                nom,
+                prenom
             },
             select: {
                 id: true,
                 email: true,
                 role: true,
+                nom: true,
+                prenom: true,
                 dateCreation: true
             }
         });
@@ -67,9 +61,9 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
         // Generate JWT token
         const token = jwt.sign(
             {
-                id: admin.id,
-                email: admin.email,
-                role: admin.role
+                id: user.id,
+                email: user.email,
+                role: user.role
             },
             JWT_SECRET,
             { expiresIn: '7d' }
@@ -77,9 +71,9 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
         res.status(201).json({
             status: 'success',
-            message: 'Admin account created successfully',
+            message: 'Account created successfully',
             data: {
-                user: admin,
+                user,
                 token
             }
         });

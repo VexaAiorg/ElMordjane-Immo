@@ -99,11 +99,11 @@ const apiRequest = async (endpoint, options = {}) => {
  * @param {string} credentials.password - User password
  * @returns {Promise<Object>} Response with user data and token
  */
-export const signup = async ({ email, password }) => {
+export const signup = async ({ email, password, nom, prenom, role }) => {
     const data = await apiRequest('/api/auth/signup', {
         method: 'POST',
         headers: createHeaders(false),
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, nom, prenom, role }),
     });
 
     // Store token if signup is successful

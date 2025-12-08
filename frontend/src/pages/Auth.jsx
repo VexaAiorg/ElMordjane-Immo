@@ -7,6 +7,9 @@ const Auth = () => {
     const [activeTab, setActiveTab] = useState('signin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [nom, setNom] = useState('');
+    const [prenom, setPrenom] = useState('');
+    const [role, setRole] = useState('COLLABORATEUR');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -19,7 +22,7 @@ const Auth = () => {
         try {
             const response = activeTab === 'signin'
                 ? await login({ email, password })
-                : await signup({ email, password });
+                : await signup({ email, password, nom, prenom, role });
 
             if (response.status === 'success') {
                 navigate('/dashboard', { replace: true });
@@ -36,6 +39,9 @@ const Auth = () => {
         setError('');
         setEmail('');
         setPassword('');
+        setNom('');
+        setPrenom('');
+        setRole('COLLABORATEUR');
     };
 
     return (
@@ -75,6 +81,58 @@ const Auth = () => {
                 </p>
 
                 <form onSubmit={handleSubmit} className="auth-form">
+                    {activeTab === 'signup' && (
+                        <>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div className="form-group">
+                                    <label htmlFor="nom">Nom</label>
+                                    <input
+                                        type="text"
+                                        id="nom"
+                                        placeholder="Votre nom"
+                                        value={nom}
+                                        onChange={(e) => setNom(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="prenom">Prénom</label>
+                                    <input
+                                        type="text"
+                                        id="prenom"
+                                        placeholder="Votre prénom"
+                                        value={prenom}
+                                        onChange={(e) => setPrenom(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="form-group">
+                                <label htmlFor="role">Rôle</label>
+                                <select
+                                    id="role"
+                                    value={role}
+                                    onChange={(e) => setRole(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '14px 16px',
+                                        background: 'var(--input-bg)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '8px',
+                                        fontSize: '0.95rem',
+                                        color: 'var(--text-primary)',
+                                        outline: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="COLLABORATEUR">Collaborateur</option>
+                                    <option value="ADMIN">Administrateur</option>
+                                </select>
+                            </div>
+                        </>
+                    )}
+
                     <div className="form-group">
                         <label htmlFor="email">Email</label>
                         <input
