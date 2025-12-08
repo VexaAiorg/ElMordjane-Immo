@@ -5,6 +5,7 @@ import AllProperties from './pages/dashboard/AllProperties';
 import SoldProperties from './pages/dashboard/SoldProperties';
 import RentedProperties from './pages/dashboard/RentedProperties';
 import Archives from './pages/dashboard/Archives';
+import ProfileSettings from './pages/dashboard/ProfileSettings';
 import PropertyWizard from './pages/dashboard/PropertyWizard';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -42,6 +43,7 @@ function App() {
           <Route path="archives" element={<Archives />} />
           <Route path="wizard" element={<PropertyWizard />} />
           <Route path="wizard/:step" element={<PropertyWizard />} />
+          <Route path="profile" element={<ProfileSettings />} />
         </Route>
 
         {/* Catch all - redirect to auth */}

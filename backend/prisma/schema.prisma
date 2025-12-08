@@ -132,6 +132,9 @@ model Utilisateur {
   email        String   @unique
   motDePasse   String
   role         String   @default("ADMIN")
+  nom          String?
+  prenom       String?
+  photoProfil  String?
   dateCreation DateTime @default(now())
 }
 

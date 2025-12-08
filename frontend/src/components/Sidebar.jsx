@@ -6,7 +6,8 @@ import {
     Key,
     Archive,
     PlusCircle,
-    LogOut
+    LogOut,
+    Settings
 } from 'lucide-react';
 import { logout } from '../api/api';
 import '../styles/Dashboard.css';
@@ -30,6 +31,7 @@ const Sidebar = () => {
         { path: '/dashboard/location', icon: <Key size={20} />, label: 'Location' },
         { path: '/dashboard/archives', icon: <Archive size={20} />, label: 'Archives' },
         { path: '/dashboard/wizard', icon: <PlusCircle size={20} />, label: 'Nouveau Bien' },
+        { path: '/dashboard/profile', icon: <Settings size={20} />, label: 'Paramètres' },
     ];
 
     return (

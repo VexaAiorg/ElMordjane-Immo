@@ -38,10 +38,12 @@ app.get('/health', (req, res) => {
 });
 
 import uploadRoutes from "./src/routes/uploadRoutes.js";
+import userRoutes from "./src/routes/userRoutes.js";
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/user', userRoutes);
 
 export default app;

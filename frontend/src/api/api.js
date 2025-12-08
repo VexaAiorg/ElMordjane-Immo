@@ -372,6 +372,72 @@ export const tokenManager = {
 // Export API Configuration (for testing/debugging)
 // ============================================================================
 
+// ============================================================================
+// User Profile API
+// ============================================================================
+
+/**
+ * Get current user profile
+ * @returns {Promise<Object>} Response with user profile data
+ */
+export const getUserProfile = async () => {
+    const data = await apiRequest('/api/user/profile', {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+    return data;
+};
+
+/**
+ * Update user profile
+ * @param {Object} profileData - User profile data (nom, prenom, email)
+ * @param {File} photoFile - Profile picture file
+ * @returns {Promise<Object>} Response with updated user data
+ */
+export const updateUserProfile = async (profileData, photoFile) => {
+    const token = getAuthToken();
+    const url = `${API_BASE_URL}/api/user/profile`;
+    
+    const formData = new FormData();
+    // Append fields individually
+    if (profileData.nom !== undefined) formData.append('nom', profileData.nom);
+    if (profileData.prenom !== undefined) formData.append('prenom', profileData.prenom);
+    if (profileData.email !== undefined) formData.append('email', profileData.email);
+    
+    if (photoFile) {
+        formData.append('photoProfil', photoFile);
+    }
+
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || 'Error updating profile');
+    }
+    return data;
+};
+
+/**
+ * Update user password
+ * @param {string} oldPassword - Current password
+ * @param {string} newPassword - New password
+ * @returns {Promise<Object>} Response confirming update
+ */
+export const updateUserPassword = async (oldPassword, newPassword) => {
+    const data = await apiRequest('/api/user/password', {
+        method: 'PUT',
+        headers: createHeaders(true),
+        body: JSON.stringify({ oldPassword, newPassword }),
+    });
+    return data;
+};
+
 export const apiConfig = {
     baseUrl: API_BASE_URL,
     timeout: API_TIMEOUT,
