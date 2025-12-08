@@ -444,12 +444,13 @@ const ProfileSettings = () => {
                         </div>
 
                         {/* Actions */}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
                             <button 
                                 type="button" 
                                 onClick={handleCancel}
-                                className="btn-secondary"
+                                className="btn-danger"
                                 disabled={saving}
+                                style={{ flex: 1 }}
                             >
                                 <X size={18} /> Annuler
                             </button>
@@ -457,6 +458,7 @@ const ProfileSettings = () => {
                                 type="submit" 
                                 className="btn-primary"
                                 disabled={saving}
+                                style={{ flex: 1 }}
                             >
                                 {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                                 {saving ? 'Enregistrement...' : 'Confirmer'}

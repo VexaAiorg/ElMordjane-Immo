@@ -510,16 +510,21 @@ select option:hover {
 
 .btn-secondary,
 .btn-primary,
-.btn-success {
+.btn-success,
+.btn-danger {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0 1.5rem;
+  height: 48px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  border: none;
+  border: 1px solid transparent;
   transition: all 0.2s;
+  box-sizing: border-box;
+  margin: 0; /* Override global margins */
 }
 
 .btn-secondary {
@@ -552,6 +557,18 @@ select option:hover {
 
 .btn-success:hover {
   background: #059669;
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  color: #f87171;
 }
 
 /* Review Card */
