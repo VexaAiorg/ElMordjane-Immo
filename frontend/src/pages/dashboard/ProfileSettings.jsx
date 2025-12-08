@@ -349,7 +349,7 @@ const ProfileSettings = () => {
                                                     zIndex: 10
                                                 }}
                                             >
-                                                {showOldPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                {showOldPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                                             </button>
                                         </div>
                                     </div>
@@ -392,7 +392,7 @@ const ProfileSettings = () => {
                                                         zIndex: 10
                                                     }}
                                                 >
-                                                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    {showNewPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                                                 </button>
                                             </div>
                                         </div>
@@ -434,7 +434,7 @@ const ProfileSettings = () => {
                                                         zIndex: 10
                                                     }}
                                                 >
-                                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    {showConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                                                 </button>
                                             </div>
                                         </div>
@@ -444,30 +444,12 @@ const ProfileSettings = () => {
                         </div>
 
                         {/* Actions */}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                             <button 
                                 type="button" 
                                 onClick={handleCancel}
                                 className="btn-secondary"
                                 disabled={saving}
-                                style={{
-                                    flex: 1,
-                                    maxWidth: '200px',
-                                    padding: '0 1.5rem',
-                                    borderRadius: '8px',
-                                    background: 'rgba(239, 68, 68, 0.2)',
-                                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                                    color: '#ef4444',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '0.5rem',
-                                    fontWeight: '600',
-                                    transition: 'all 0.2s',
-                                    height: '48px',
-                                    boxSizing: 'border-box'
-                                }}
                             >
                                 <X size={18} /> Annuler
                             </button>
@@ -475,23 +457,6 @@ const ProfileSettings = () => {
                                 type="submit" 
                                 className="btn-primary"
                                 disabled={saving}
-                                style={{
-                                    flex: 1,
-                                    maxWidth: '200px',
-                                    padding: '0 1.5rem',
-                                    borderRadius: '8px',
-                                    background: '#3b82f6',
-                                    border: '1px solid transparent',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '0.5rem',
-                                    fontWeight: '600',
-                                    height: '48px',
-                                    boxSizing: 'border-box'
-                                }}
                             >
                                 {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                                 {saving ? 'Enregistrement...' : 'Confirmer'}
