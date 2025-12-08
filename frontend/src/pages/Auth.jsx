@@ -114,17 +114,6 @@ const Auth = () => {
                                     id="role"
                                     value={role}
                                     onChange={(e) => setRole(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '14px 16px',
-                                        background: 'var(--input-bg)',
-                                        border: '1px solid var(--border-color)',
-                                        borderRadius: '8px',
-                                        fontSize: '0.95rem',
-                                        color: 'var(--text-primary)',
-                                        outline: 'none',
-                                        cursor: 'pointer'
-                                    }}
                                 >
                                     <option value="COLLABORATEUR">Collaborateur</option>
                                     <option value="ADMIN">Administrateur</option>
