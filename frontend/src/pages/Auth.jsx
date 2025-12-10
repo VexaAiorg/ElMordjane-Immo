@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, signup } from '../api/api';
+import { useAuth } from '../contexts/AuthContext';
 import '../styles/Auth.css';
 
 const Auth = () => {
@@ -13,6 +14,7 @@ const Auth = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { updateUser } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -25,6 +27,10 @@ const Auth = () => {
                 : await signup({ email, password, nom, prenom, role });
 
             if (response.status === 'success') {
+                // Update user in AuthContext
+                if (response.data?.user) {
+                    updateUser(response.data.user);
+                }
                 navigate('/dashboard', { replace: true });
             }
         } catch (err) {

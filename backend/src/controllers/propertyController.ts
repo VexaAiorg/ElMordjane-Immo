@@ -256,12 +256,26 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
 /**
  * Get all properties
  * GET /api/properties
- * Protected: Admin only
+ * Protected: Admin & Collaborateur
+ * Note: Collaborateurs cannot view archived properties
  */
 //
 export const getAllProperties = async (req: Request, res: Response): Promise<void> => {
     try {
+        // Get user from authenticated request
+        const user = (req as any).user;
+        const isAdmin = user?.role === 'ADMIN';
+
+        // Build where clause based on user role
+        const whereClause: any = {};
+        
+        // Collaborateurs cannot view archived properties
+        if (!isAdmin) {
+            whereClause.archive = false;
+        }
+
         const properties = await prisma.bienImmobilier.findMany({
+            where: whereClause,
             include: {
                 proprietaire: {
                     select: {
@@ -308,7 +322,8 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
 /**
  * Get a single property by ID
  * GET /api/properties/:id
- * Protected: Admin only
+ * Protected: Admin & Collaborateur
+ * Note: Collaborateurs cannot view archived properties
  */
 export const getPropertyById = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -321,6 +336,10 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
             });
             return;
         }
+
+        // Get user from authenticated request
+        const user = (req as any).user;
+        const isAdmin = user?.role === 'ADMIN';
 
         const property = await prisma.bienImmobilier.findUnique({
             where: { id: parseInt(id) },
@@ -342,6 +361,15 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
             res.status(404).json({
                 status: 'error',
                 message: 'Property not found'
+            });
+            return;
+        }
+
+        // Collaborateurs cannot access archived properties
+        if (!isAdmin && property.archive) {
+            res.status(403).json({
+                status: 'error',
+                message: 'Access denied. You do not have permission to view archived properties.'
             });
             return;
         }
@@ -444,7 +472,8 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
 /**
  * Update a property by ID
  * PUT /api/properties/:id
- * Protected: Admin only
+ * Protected: Admin & Collaborateur
+ * Note: Collaborateurs cannot change archive status
  */
 export const updateProperty = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -465,6 +494,27 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
 
         console.log('Updating property:', propertyId, data.bienImmobilier?.titre);
 
+        // Get user from authenticated request
+        const user = (req as any).user;
+        const isAdmin = user?.role === 'ADMIN';
+
+        // Prevent collaborateurs from modifying archive status
+        if (!isAdmin && data.bienImmobilier?.archive !== undefined) {
+            // Get current property to check if archive status is being changed
+            const currentProperty = await prisma.bienImmobilier.findUnique({
+                where: { id: propertyId },
+                select: { archive: true }
+            });
+
+            if (currentProperty && currentProperty.archive !== data.bienImmobilier.archive) {
+                res.status(403).json({
+                    status: 'error',
+                    message: 'Access denied. Only admins can change the archive status of properties.'
+                });
+                return;
+            }
+        }
+
         // Access uploaded files from Multer
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         const documentFiles = files?.documents || [];
@@ -482,19 +532,26 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
         // Use Prisma transaction
         const result = await prisma.$transaction(async (tx) => {
             // 1. Update Property Basic Info
+            // Build update data object based on role
+            const updateData: any = {
+                titre: data.bienImmobilier.titre,
+                description: data.bienImmobilier.description || null,
+                type: data.bienImmobilier.type,
+                statut: data.bienImmobilier.statut,
+                transaction: data.bienImmobilier.transaction,
+                prixVente: data.bienImmobilier.prixVente ? parseFloat(data.bienImmobilier.prixVente.toString()) : null,
+                prixLocation: data.bienImmobilier.prixLocation ? parseFloat(data.bienImmobilier.prixLocation.toString()) : null,
+                adresse: data.bienImmobilier.adresse || null,
+            };
+
+            // Only admins can update archive status
+            if (isAdmin && data.bienImmobilier.archive !== undefined) {
+                updateData.archive = data.bienImmobilier.archive;
+            }
+
             const property = await tx.bienImmobilier.update({
                 where: { id: propertyId },
-                data: {
-                    titre: data.bienImmobilier.titre,
-                    description: data.bienImmobilier.description || null,
-                    type: data.bienImmobilier.type,
-                    statut: data.bienImmobilier.statut,
-                    transaction: data.bienImmobilier.transaction,
-                    prixVente: data.bienImmobilier.prixVente ? parseFloat(data.bienImmobilier.prixVente.toString()) : null,
-                    prixLocation: data.bienImmobilier.prixLocation ? parseFloat(data.bienImmobilier.prixLocation.toString()) : null,
-                    adresse: data.bienImmobilier.adresse || null,
-                    archive: data.bienImmobilier.archive !== undefined ? data.bienImmobilier.archive : false,
-                }
+                data: updateData
             });
 
             // 2. Update Owner

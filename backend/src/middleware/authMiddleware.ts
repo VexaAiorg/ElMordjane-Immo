@@ -75,3 +75,56 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction): void =
         });
     }
 };
+
+/**
+ * Middleware to verify collaborateur role
+ * Use this after authenticateToken for collaborateur-only routes
+ */
+export const isCollaborateur = (req: Request, res: Response, next: NextFunction): void => {
+    try {
+        const user = (req as any).user as JwtPayload;
+
+        if (!user || user.role !== 'COLLABORATEUR') {
+            res.status(403).json({
+                status: 'error',
+                message: 'Access denied. Collaborateur privileges required.'
+            });
+            return;
+        }
+
+        next();
+    } catch (error) {
+        console.error('Authorization error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal server error during authorization'
+        });
+    }
+};
+
+/**
+ * Middleware to verify either admin or collaborateur role
+ * Use this after authenticateToken for routes accessible to both roles
+ */
+export const isAdminOrCollaborateur = (req: Request, res: Response, next: NextFunction): void => {
+    try {
+        const user = (req as any).user as JwtPayload;
+
+        if (!user || (user.role !== 'ADMIN' && user.role !== 'COLLABORATEUR')) {
+            res.status(403).json({
+                status: 'error',
+                message: 'Access denied. Admin or Collaborateur privileges required.'
+            });
+            return;
+        }
+
+        next();
+    } catch (error) {
+        console.error('Authorization error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal server error during authorization'
+        });
+    }
+};
+

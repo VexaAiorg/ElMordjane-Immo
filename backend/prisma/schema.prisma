@@ -8,6 +8,11 @@ generator client {
 
 // --- ENUMS ---
 
+enum Role {
+  ADMIN
+  COLLABORATEUR
+}
+
 enum TypeBien {
   APPARTEMENT
   TERRAIN
@@ -131,7 +136,7 @@ model Utilisateur {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   motDePasse   String
-  role         String   @default("ADMIN")
+  role         Role     @default(ADMIN)
   nom          String?
   prenom       String?
   photoProfil  String?

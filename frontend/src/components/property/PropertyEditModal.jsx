@@ -8,12 +8,14 @@ import TrackingTab from './tabs/TrackingTab';
 import PublicFilesTab from './tabs/PublicFilesTab';
 import InternalFilesTab from './tabs/InternalFilesTab';
 import { updateProperty } from '../../api/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
     const [activeTab, setActiveTab] = useState('basic');
     const [saving, setSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [archiveDropdownOpen, setArchiveDropdownOpen] = useState(false);
+    const { isAdmin } = useAuth(); // Get role check from AuthContext
     
     // Form data state
     const [formData, setFormData] = useState({
@@ -303,7 +305,8 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                         <div 
                             style={{ position: 'relative', minWidth: '180px' }}
                             onClick={(e) => {
-                                if (formData.bienImmobilier.statut === 'VENDU') {
+                                // Only allow admins to open dropdown for VENDU properties
+                                if (formData.bienImmobilier.statut === 'VENDU' && isAdmin()) {
                                     e.stopPropagation();
                                     setArchiveDropdownOpen(!archiveDropdownOpen);
                                 }
@@ -319,14 +322,19 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                                     : 'rgba(255,255,255,0.05)',
                                 border: '1px solid rgba(255,255,255,0.1)',
                                 borderRadius: '6px',
-                                color: formData.bienImmobilier.statut !== 'VENDU' ? '#64748b' : 'white',
+                                color: (formData.bienImmobilier.statut !== 'VENDU' || !isAdmin()) ? '#64748b' : 'white',
                                 fontSize: '0.9rem',
-                                cursor: formData.bienImmobilier.statut !== 'VENDU' ? 'not-allowed' : 'pointer',
-                                opacity: formData.bienImmobilier.statut !== 'VENDU' ? 0.5 : 1,
+                                cursor: (formData.bienImmobilier.statut !== 'VENDU' || !isAdmin()) ? 'not-allowed' : 'pointer',
+                                opacity: (formData.bienImmobilier.statut !== 'VENDU' || !isAdmin()) ? 0.5 : 1,
                                 transition: 'all 0.2s'
                             }}>
                                 <span>
                                     {formData.bienImmobilier.archive ? 'Archivé' : 'Non archivé'}
+                                    {!isAdmin() && formData.bienImmobilier.statut === 'VENDU' && (
+                                        <span style={{ fontSize: '0.75rem', marginLeft: '0.5rem', opacity: 0.6 }}>
+                                            (Admin seulement)
+                                        </span>
+                                    )}
                                 </span>
                                 <ChevronDown 
                                     size={16} 
@@ -338,7 +346,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                                 />
                             </div>
 
-                            {archiveDropdownOpen && formData.bienImmobilier.statut === 'VENDU' && (
+                            {archiveDropdownOpen && formData.bienImmobilier.statut === 'VENDU' && isAdmin() && (
                                 <div style={{
                                     position: 'absolute',
                                     top: '100%',

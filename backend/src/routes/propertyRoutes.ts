@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createProperty, getAllProperties, getPropertyById, deleteProperty, updateProperty } from '../controllers/propertyController.js';
-import { authenticateToken, isAdmin } from '../middleware/authMiddleware.js';
+import { authenticateToken, isAdmin, isAdminOrCollaborateur } from '../middleware/authMiddleware.js';
 
 import { uploadPropertyFiles } from '../middleware/uploadMiddleware.js';
 
@@ -9,7 +9,7 @@ const router = Router();
 /**
  * @route   POST /api/properties
  * @desc    Create a new property
- * @access  Private (Admin only)
+ * @access  Private (Admin & Collaborateur)
  * @body    Multipart/form-data
  *          - data: JSON string of property information
  *          - documents: Array of document files
@@ -18,7 +18,7 @@ const router = Router();
 router.post(
     '/',
     authenticateToken,
-    isAdmin,
+    isAdminOrCollaborateur,
     uploadPropertyFiles,
     createProperty
 );
@@ -26,24 +26,26 @@ router.post(
 /**
  * @route   GET /api/properties
  * @desc    Get all properties
- * @access  Private (Admin only)
+ * @access  Private (Admin & Collaborateur)
+ * @note    Collaborateurs cannot view archived properties
  */
 router.get(
     '/',
     authenticateToken,
-    isAdmin,
+    isAdminOrCollaborateur,
     getAllProperties
 );
 
 /**
  * @route   GET /api/properties/:id
  * @desc    Get a single property by ID
- * @access  Private (Admin only)
+ * @access  Private (Admin & Collaborateur)
+ * @note    Collaborateurs cannot view archived properties
  */
 router.get(
     '/:id',
     authenticateToken,
-    isAdmin,
+    isAdminOrCollaborateur,
     getPropertyById
 );
 
@@ -62,12 +64,13 @@ router.delete(
 /**
  * @route   PUT /api/properties/:id
  * @desc    Update a property by ID
- * @access  Private (Admin only)
+ * @access  Private (Admin & Collaborateur)
+ * @note    Collaborateurs cannot change archive status
  */
 router.put(
     '/:id',
     authenticateToken,
-    isAdmin,
+    isAdminOrCollaborateur,
     uploadPropertyFiles,
     updateProperty
 );
