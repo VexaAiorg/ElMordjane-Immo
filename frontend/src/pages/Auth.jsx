@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { login, signup } from '../api/api';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/Auth.css';
@@ -13,6 +14,7 @@ const Auth = () => {
     const [role, setRole] = useState('COLLABORATEUR');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const { updateUser } = useAuth();
 
@@ -142,14 +144,40 @@ const Auth = () => {
 
                     <div className="form-group">
                         <label htmlFor="password">Mot de passe</label>
-                        <input
-                            type="password"
-                            id="password"
-                            placeholder={activeTab === 'signin' ? 'Entrez votre mot de passe' : 'Utilisez un mot de passe fort'}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                id="password"
+                                placeholder={activeTab === 'signin' ? 'Entrez votre mot de passe' : 'Utilisez un mot de passe fort'}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                style={{ paddingRight: '3rem' }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '0.75rem',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: '#94a3b8',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '0.25rem',
+                                    transition: 'color 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#3b82f6'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                            >
+                                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                            </button>
+                        </div>
                     </div>
 
                     {error && (
