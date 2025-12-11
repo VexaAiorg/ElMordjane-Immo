@@ -14,7 +14,6 @@ const Page3PropertyDetails = () => {
         register,
         handleSubmit,
         formState: { errors },
-        watch,
     } = useForm({
         resolver: zodResolver(detailsSchema),
         defaultValues: formData.propertyDetails,
@@ -343,7 +342,7 @@ const Page3PropertyDetails = () => {
                                     <input id="facades" type="number" {...register('facades', { valueAsNumber: true })} />
                                 </div>
 
-                                <label className="checkbox-label">
+                                <label className="checkbox-label compact">
                                     <input type="checkbox" {...register('viabilise')} />
                                     <span>Viabilisé</span>
                                 </label>
