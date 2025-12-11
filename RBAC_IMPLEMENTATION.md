@@ -26,6 +26,20 @@ This document outlines the implementation of Role-Based Access Control (RBAC) in
 - **Cannot** archive properties
 - **Cannot** view archived properties
 
+## Permission Matrix
+
+| Action                             | ADMIN | COLLABORATEUR |
+| ---------------------------------- | ----- | ------------- |
+| View all properties (non-archived) | ✅    | ✅            |
+| View archived properties           | ✅    | ❌            |
+| Create new property                | ✅    | ✅            |
+| Edit property details              | ✅    | ✅            |
+| Change archive status              | ✅    | ❌            |
+| Delete property                    | ✅    | ❌            |
+| Upload documents/photos            | ✅    | ✅            |
+| Delete uploaded files              | ✅    | ✅            |
+| Access Archives page               | ✅    | ❌            |
+
 ---
 
 ## Access Control Matrix

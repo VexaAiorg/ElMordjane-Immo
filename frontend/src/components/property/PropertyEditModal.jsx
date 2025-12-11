@@ -75,9 +75,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
     // Reload form data when property changes (e.g., when full data loads from API)
     React.useEffect(() => {
         if (property) {
-            console.log('Loading property data:', property);
-            console.log('Proprietaire data:', property.proprietaire);
-            console.log('Detail Appartement:', property.detailAppartement);
+            // Property data loaded successfully
             
             // Update all form data with fresh property data
             setFormData({
@@ -190,8 +188,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                 categorie: f.categorie
             }));
 
-            console.log('Files to delete:', filesToDelete);
-            console.log('New files metadata:', newFilesMetadata);
+            // Processing file updates
 
             // Prepare data for backend
             const propertyData = {
@@ -219,7 +216,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
             // Add property-specific details based on type
             const type = formData.bienImmobilier.type;
             
-            console.log('Property Details before sending:', formData.propertyDetails);
+            // Preparing property details
             
             if (type === 'APPARTEMENT') {
                 propertyData.detailAppartement = formData.propertyDetails;
@@ -233,7 +230,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                 propertyData.detailImmeuble = formData.propertyDetails;
             }
 
-            console.log('Full payload being sent:', JSON.stringify(propertyData, null, 2));
+            // Sending property update
 
             // Pass the actual File objects (not the wrapper objects)
             await updateProperty(

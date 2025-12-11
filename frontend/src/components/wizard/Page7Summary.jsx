@@ -228,13 +228,12 @@ const Page7Summary = () => {
                 piecesJointes,
             };
 
-            console.log('Creating property with data:', propertyData);
-            console.log('Total attachments:', piecesJointes.length);
+            // Creating property with collected data
 
             // Call API with propertyData (no file uploads needed - files already on server!)
             const response = await createProperty(propertyData, [], []); // Empty arrays for files
 
-            console.log('Property created successfully:', response);
+            // Property created successfully
 
             // Show success message
             alert('✅ Bien immobilier ajouté avec succès! 🎉');

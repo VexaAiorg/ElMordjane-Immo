@@ -1,24 +1,24 @@
 import express from 'express';
-import { authenticateToken, isAdmin } from '../middleware/authMiddleware';
+import { authenticateToken, isAdminOrCollaborateur } from '../middleware/authMiddleware';
 import { uploadTempFiles } from '../middleware/tempUploadMiddleware';
 import { uploadTemp, deleteTempFile } from '../controllers/uploadController';
 
 const router = express.Router();
 
-// Upload files temporarily
+// Upload files temporarily (Admins and Collaborateurs can upload)
 router.post(
     '/temp',
     authenticateToken,
-    isAdmin,
+    isAdminOrCollaborateur,
     uploadTempFiles, // Multer middleware
     uploadTemp       // Controller
 );
 
-// Delete temporary file
+// Delete temporary file (Admins and Collaborateurs can delete)
 router.delete(
     '/temp/:filename',
     authenticateToken,
-    isAdmin,
+    isAdminOrCollaborateur,
     deleteTempFile
 );
 

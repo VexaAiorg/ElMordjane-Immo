@@ -33,7 +33,7 @@ const AllProperties = () => {
             setError(null);
             const response = await getAllProperties();
             
-            console.log('Fetched properties:', response);
+            // Properties fetched successfully
             
             // Extract properties from response
             // Backend returns { status: 'success', data: [...], count: N }
@@ -76,8 +76,6 @@ const AllProperties = () => {
     });
 
     const handleDeleteProperty = async (propertyId) => {
-        console.log('handleDeleteProperty called with ID:', propertyId);
-        
         if (!propertyId) {
             console.error('Error: propertyId is undefined or null');
             alert('Erreur: ID du bien introuvable');
@@ -86,17 +84,12 @@ const AllProperties = () => {
 
         if (window.confirm('🗑️ Êtes-vous sûr de vouloir supprimer ce bien ?\n\n⚠️ ATTENTION : Cette action est IRRÉVERSIBLE !\nToutes les données associées (documents, photos, etc.) seront définitivement supprimées.')) {
             try {
-                console.log('Sending delete request...');
                 await deleteProperty(propertyId);
-                console.log('Delete request successful');
-                // Refresh properties list
                 fetchProperties();
             } catch (err) {
                 console.error('Error deleting property:', err);
                 alert('Erreur lors de la suppression du bien: ' + err.message);
             }
-        } else {
-            console.log('Delete cancelled by user');
         }
     };
 
