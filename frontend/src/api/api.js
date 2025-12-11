@@ -496,3 +496,31 @@ export const deleteCollaborateur = async (id) => {
     });
     return data;
 };
+
+/**
+ * Get a single collaborateur by ID
+ * @param {number} id - Collaborateur ID
+ * @returns {Promise<Object>} Collaborateur data
+ */
+export const getCollaborateur = async (id) => {
+    const data = await apiRequest(`/api/admin/collaborateurs/${id}`, {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+    return data;
+};
+
+/**
+ * Update a collaborateur
+ * @param {number} id - Collaborateur ID
+ * @param {Object} updateData - Data to update
+ * @returns {Promise<Object>} Updated collaborateur
+ */
+export const updateCollaborateur = async (id, updateData) => {
+    const data = await apiRequest(`/api/admin/collaborateurs/${id}`, {
+        method: 'PUT',
+        headers: createHeaders(true),
+        body: JSON.stringify(updateData),
+    });
+    return data;
+};

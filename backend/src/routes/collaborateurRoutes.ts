@@ -4,7 +4,9 @@ import {
     getAllCollaborateurs, 
     getCollaborateurProperties,
     createCollaborateur, 
-    deleteCollaborateur 
+    deleteCollaborateur,
+    getCollaborateurById,
+    updateCollaborateur
 } from '../controllers/collaborateurController.js';
 
 const router = express.Router();
@@ -17,6 +19,12 @@ router.get('/', getAllCollaborateurs);
 
 // GET /api/admin/collaborateurs/:id/properties - Get properties created by collaborateur
 router.get('/:id/properties', getCollaborateurProperties);
+
+// GET /api/admin/collaborateurs/:id - Get single collaborateur
+router.get('/:id', getCollaborateurById);
+
+// PUT /api/admin/collaborateurs/:id - Update collaborateur
+router.put('/:id', updateCollaborateur);
 
 // POST /api/admin/collaborateurs - Create new collaborateur
 router.post('/', createCollaborateur);
