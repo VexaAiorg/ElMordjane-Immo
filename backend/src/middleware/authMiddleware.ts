@@ -38,7 +38,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
             }
 
             // Attach user data to request object
-            (req as any).user = decoded as JwtPayload;
+            req.user = decoded as JwtPayload;
             next();
         });
     } catch (error) {
@@ -56,7 +56,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
  */
 export const isAdmin = (req: Request, res: Response, next: NextFunction): void => {
     try {
-        const user = (req as any).user as JwtPayload;
+        const user = req.user;
 
         if (!user || user.role !== 'ADMIN') {
             res.status(403).json({
@@ -82,7 +82,7 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction): void =
  */
 export const isCollaborateur = (req: Request, res: Response, next: NextFunction): void => {
     try {
-        const user = (req as any).user as JwtPayload;
+        const user = req.user;
 
         if (!user || user.role !== 'COLLABORATEUR') {
             res.status(403).json({
@@ -108,7 +108,7 @@ export const isCollaborateur = (req: Request, res: Response, next: NextFunction)
  */
 export const isAdminOrCollaborateur = (req: Request, res: Response, next: NextFunction): void => {
     try {
-        const user = (req as any).user as JwtPayload;
+        const user = req.user;
 
         if (!user || (user.role !== 'ADMIN' && user.role !== 'COLLABORATEUR')) {
             res.status(403).json({

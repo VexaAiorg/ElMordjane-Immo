@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -7,7 +7,8 @@ import {
     Archive,
     PlusCircle,
     LogOut,
-    Settings
+    Settings,
+    Loader2
 } from 'lucide-react';
 import { logout } from '../api/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,16 +17,24 @@ import '../styles/Dashboard.css';
 const Sidebar = () => {
     const navigate = useNavigate();
     const { isAdmin, clearUser } = useAuth();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const handleLogout = async () => {
         try {
+            setIsLoggingOut(true);
             await logout();
             clearUser(); // Clear user from AuthContext
-            navigate('/auth', { replace: true });
+            
+            // Add a small delay for animation effect
+            setTimeout(() => {
+                navigate('/auth', { replace: true });
+            }, 200);
         } catch (error) {
             console.error('Logout error:', error);
             clearUser(); // Clear user even on error
-            navigate('/auth', { replace: true });
+            setTimeout(() => {
+                navigate('/auth', { replace: true });
+            }, 200);
         }
     };
 
@@ -43,38 +52,118 @@ const Sidebar = () => {
     const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin());
 
     return (
-        <aside className="sidebar">
-            <div className="sidebar-header">
-                <img
-                    src="/assets/ElMordjanMainLogo.png"
-                    alt="El Mordjane"
-                    className="sidebar-logo"
-                />
-                <span className="sidebar-brand">El Mordjane</span>
-            </div>
+        <>
+            {/* Loading Overlay */}
+            {isLoggingOut && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10000,
+                    animation: 'fadeIn 0.3s ease'
+                }}>
+                    <Loader2 
+                        size={48} 
+                        style={{ 
+                            color: '#3b82f6',
+                            animation: 'spin 1s linear infinite'
+                        }} 
+                    />
+                    <p style={{ 
+                        color: 'white', 
+                        marginTop: '1rem',
+                        fontSize: '1.1rem',
+                        fontWeight: '500'
+                    }}>
+                        Déconnexion en cours...
+                    </p>
+                </div>
+            )}
 
-            <nav className="sidebar-nav">
-                {navItems.map((item) => (
-                    <NavLink
-                        key={item.path}
-                        to={item.path}
-                        className={({ isActive }) =>
-                            `nav-item ${isActive ? 'active' : ''}`
+            <aside className="sidebar">
+                <div className="sidebar-header">
+                    <img
+                        src="/assets/ElMordjanMainLogo.png"
+                        alt="El Mordjane"
+                        className="sidebar-logo"
+                    />
+                    <span className="sidebar-brand">El Mordjane</span>
+                </div>
+
+                <nav className="sidebar-nav">
+                    {navItems.filter(item => {
+                        // Hide Archives for collaborateurs
+                        if (item.path === '/dashboard/archives' && !isAdmin()) {
+                            return false;
                         }
-                    >
-                        {item.icon}
-                        <span>{item.label}</span>
-                    </NavLink>
-                ))}
-            </nav>
+                        return true;
+                    }).map((item) => (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={({ isActive }) =>
+                                `nav-item ${isActive ? 'active' : ''}`
+                            }
+                        >
+                            {item.icon}
+                            <span>{item.label}</span>
+                        </NavLink>
+                    ))}
+                </nav>
 
-            <div className="sidebar-footer">
-                <button onClick={handleLogout} className="nav-item logout-btn">
-                    <LogOut size={20} />
-                    <span>Déconnexion</span>
-                </button>
-            </div>
-        </aside>
+                <div className="sidebar-footer">
+                    <button 
+                        onClick={handleLogout} 
+                        className="nav-item logout-btn"
+                        disabled={isLoggingOut}
+                        style={{
+                            opacity: isLoggingOut ? 0.6 : 1,
+                            cursor: isLoggingOut ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        {isLoggingOut ? (
+                            <Loader2 size={20} className="animate-spin" />
+                        ) : (
+                            <LogOut size={20} />
+                        )}
+                        <span>{isLoggingOut ? 'Déconnexion...' : 'Déconnexion'}</span>
+                    </button>
+                </div>
+            </aside>
+
+            <style>{`
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+
+                @keyframes spin {
+                    from {
+                        transform: rotate(0deg);
+                    }
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+
+                .animate-spin {
+                    animation: spin 1s linear infinite;
+                }
+            `}</style>
+        </>
     );
 };
 

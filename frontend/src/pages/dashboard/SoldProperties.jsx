@@ -5,9 +5,11 @@ import PropertyDetailsModal from '../../components/property/PropertyDetailsModal
 import PropertyEditModal from '../../components/property/PropertyEditModal';
 import { getAllProperties, getPropertyById, deleteProperty, apiConfig } from '../../api/api';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
+import { useAuth } from '../../contexts/AuthContext';
 
 
 const SoldProperties = () => {
+    const { isAdmin } = useAuth();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -477,21 +479,23 @@ const SoldProperties = () => {
                                                 >
                                                     <Edit size={16} />
                                                 </button>
-                                                <button 
-                                                    className="btn-icon" 
-                                                    title="Supprimer"
-                                                    onClick={() => handleDeleteProperty(property.id)}
-                                                    style={{
-                                                        background: 'rgba(239, 68, 68, 0.1)',
-                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                        borderRadius: '6px',
-                                                        padding: '0.4rem',
-                                                        cursor: 'pointer',
-                                                        color: '#ef4444'
-                                                    }}
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
+                                                {isAdmin() && (
+                                                    <button 
+                                                        className="btn-icon" 
+                                                        title="Supprimer"
+                                                        onClick={() => handleDeleteProperty(property.id)}
+                                                        style={{
+                                                            background: 'rgba(239, 68, 68, 0.1)',
+                                                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                            borderRadius: '6px',
+                                                            padding: '0.4rem',
+                                                            cursor: 'pointer',
+                                                            color: '#ef4444'
+                                                        }}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -777,23 +781,26 @@ const SoldProperties = () => {
                                         >
                                             <Edit size={18} />
                                         </button>
-                                        <button 
-                                            onClick={() => handleDeleteProperty(property.id)}
-                                            style={{
-                                                background: 'rgba(239, 68, 68, 0.1)',
-                                                border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                borderRadius: '8px',
-                                                padding: '0.75rem',
-                                                cursor: 'pointer',
-                                                color: '#ef4444',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        {isAdmin() && (
+                                            <button 
+                                                title="Supprimer"
+                                                onClick={() => handleDeleteProperty(property.id)}
+                                                style={{
+                                                    background: 'rgba(239, 68, 68, 0.1)',
+                                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                    borderRadius: '8px',
+                                                    padding: '0.75rem',
+                                                    cursor: 'pointer',
+                                                    color: '#ef4444',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                                 );

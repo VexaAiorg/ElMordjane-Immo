@@ -90,6 +90,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
                     prixLocation: data.bienImmobilier.prixLocation ? parseFloat(data.bienImmobilier.prixLocation.toString()) : null,
                     adresse: data.bienImmobilier.adresse || null,
                     proprietaireId,
+                    createdById: req.user?.id ?? null, // Track who created this property
                 }
             });
 

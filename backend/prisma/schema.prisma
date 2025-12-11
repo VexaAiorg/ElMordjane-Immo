@@ -141,6 +141,10 @@ model Utilisateur {
   prenom       String?
   photoProfil  String?
   dateCreation DateTime @default(now())
+
+  // Relation to properties created by this user
+  biensCreated    BienImmobilier[] @relation("CreatedBy")
+  bienImmobiliers BienImmobilier[]
 }
 
 model Proprietaire {
@@ -191,6 +195,10 @@ model BienImmobilier {
   proprietaireId Int
   proprietaire   Proprietaire @relation(fields: [proprietaireId], references: [id])
 
+  // Track who created this property
+  createdById Int?
+  createdBy   Utilisateur? @relation("CreatedBy", fields: [createdById], references: [id])
+
   suivi         Suivi?
   papiers       Papier[]
   piecesJointes PieceJointe[]
@@ -202,6 +210,8 @@ model BienImmobilier {
   detailTerrain     DetailTerrain?
   detailLocal       DetailLocal?
   detailImmeuble    DetailImmeuble?
+  utilisateur       Utilisateur?       @relation(fields: [utilisateurId], references: [id])
+  utilisateurId     Int?
 }
 
 model Suivi {
