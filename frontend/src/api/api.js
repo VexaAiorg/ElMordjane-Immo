@@ -442,3 +442,57 @@ export const apiConfig = {
     baseUrl: API_BASE_URL,
     timeout: API_TIMEOUT,
 };
+
+// --- Collaborateur Management (Admin Only) ---
+
+/**
+ * Get all collaborateurs
+ * @returns {Promise<Array>} List of collaborateurs
+ */
+export const getAllCollaborateurs = async () => {
+    const data = await apiRequest('/api/admin/collaborateurs', {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+    return data;
+};
+
+/**
+ * Get properties created by a specific collaborateur
+ * @param {number} id - Collaborateur ID
+ * @returns {Promise<Array>} List of properties
+ */
+export const getCollaborateurProperties = async (id) => {
+    const data = await apiRequest(`/api/admin/collaborateurs/${id}/properties`, {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+    return data;
+};
+
+/**
+ * Create a new collaborateur
+ * @param {Object} collaborateurData - { email, password, nom, prenom }
+ * @returns {Promise<Object>} Created collaborateur
+ */
+export const createCollaborateur = async (collaborateurData) => {
+    const data = await apiRequest('/api/admin/collaborateurs', {
+        method: 'POST',
+        headers: createHeaders(true),
+        body: JSON.stringify(collaborateurData),
+    });
+    return data;
+};
+
+/**
+ * Delete a collaborateur
+ * @param {number} id - Collaborateur ID
+ * @returns {Promise<Object>} Success message
+ */
+export const deleteCollaborateur = async (id) => {
+    const data = await apiRequest(`/api/admin/collaborateurs/${id}`, {
+        method: 'DELETE',
+        headers: createHeaders(true),
+    });
+    return data;
+};

@@ -6,6 +6,7 @@ import AllProperties from './pages/dashboard/AllProperties';
 import SoldProperties from './pages/dashboard/SoldProperties';
 import RentedProperties from './pages/dashboard/RentedProperties';
 import Archives from './pages/dashboard/Archives';
+import GestionCollaborateurs from './pages/dashboard/GestionCollaborateurs';
 import ProfileSettings from './pages/dashboard/ProfileSettings';
 import PropertyWizard from './pages/dashboard/PropertyWizard';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -43,6 +44,7 @@ function App() {
             <Route path="vente" element={<SoldProperties />} />
             <Route path="location" element={<RentedProperties />} />
             <Route path="archives" element={<Archives />} />
+            <Route path="collaborateurs" element={<GestionCollaborateurs />} />
             <Route path="wizard" element={<PropertyWizard />} />
             <Route path="wizard/:step" element={<PropertyWizard />} />
             <Route path="profile" element={<ProfileSettings />} />
