@@ -94,8 +94,16 @@ const GestionCollaborateurs = () => {
             property.titre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             property.adresse?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesCollab = selectedCollabFilter === 'ALL' || 
-            property.createdById === selectedCollabFilter;
+        // Create a Set of collaborator IDs for efficient lookup
+        const collabIds = new Set(collaborateurs.map(c => c.id));
+
+        let matchesCollab = false;
+        if (selectedCollabFilter === 'ALL') {
+             // Only show properties created by one of the collaborators (exclude admins)
+             matchesCollab = collabIds.has(property.createdById);
+        } else {
+             matchesCollab = property.createdById === selectedCollabFilter;
+        }
 
         return matchesSearch && matchesCollab;
     });

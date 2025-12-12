@@ -231,7 +231,7 @@ const Page7Summary = () => {
             // Creating property with collected data
 
             // Call API with propertyData (no file uploads needed - files already on server!)
-            const response = await createProperty(propertyData, [], []); // Empty arrays for files
+            await createProperty(propertyData, [], []); // Empty arrays for files
 
             // Property created successfully
 
@@ -401,10 +401,7 @@ const Page7Summary = () => {
                                 <span>Documents: {attachments.piecesJointes.filter(a => a.type === 'DOCUMENT').length}</span>
                                 <span>Localisations: {attachments.piecesJointes.filter(a => a.type === 'LOCALISATION').length}</span>
                             </div>
-                            <div className="visibility-count">
-                                <span>Publiables: {attachments.piecesJointes.filter(a => a.visibilite === 'PUBLIABLE').length}</span>
-                                <span>Internes: {attachments.piecesJointes.filter(a => a.visibilite === 'INTERNE').length}</span>
-                            </div>
+
                         </div>
                     ) : (
                         <p className="no-data">Aucune pièce jointe supplémentaire</p>

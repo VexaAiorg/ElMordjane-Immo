@@ -44,7 +44,7 @@ const AttachmentUploadZone = ({ onFilesAccepted, accept, label, isUploading }) =
     );
 };
 
-const AttachmentItem = ({ attachment, onRemove, onVisibilityChange }) => {
+const AttachmentItem = ({ attachment, onRemove }) => {
     const getIcon = () => {
         switch (attachment.type) {
             case 'PHOTO':
@@ -86,29 +86,9 @@ const AttachmentItem = ({ attachment, onRemove, onVisibilityChange }) => {
                 </div>
 
                 <div className="attachment-controls">
-                    <div className="visibility-control">
-                        <label className="radio-label-inline">
-                            <input
-                                type="radio"
-                                name={`visibility-${attachment.id}`}
-                                value="PUBLIABLE"
-                                checked={attachment.visibilite === 'PUBLIABLE'}
-                                onChange={() => onVisibilityChange('PUBLIABLE')}
-                            />
-                            <span>Publiable</span>
-                        </label>
-                        <label className="radio-label-inline">
-                            <input
-                                type="radio"
-                                name={`visibility-${attachment.id}`}
-                                value="INTERNE"
-                                checked={attachment.visibilite === 'INTERNE'}
-                                onChange={() => onVisibilityChange('INTERNE')}
-                            />
-                            <span>Interne</span>
-                        </label>
-                    </div>
-
+                    <span className="status-badge available" style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}>
+                        Publiable
+                    </span>
                     <button
                         type="button"
                         onClick={onRemove}
@@ -224,11 +204,7 @@ const Page5Tracking = () => {
         setAttachments(attachments.filter((a) => a.id !== id));
     };
 
-    const handleVisibilityChange = (id, visibilite) => {
-        setAttachments(
-            attachments.map((a) => (a.id === id ? { ...a, visibilite } : a))
-        );
-    };
+
 
     const onSubmit = (data) => {
         // Save tracking data
@@ -349,7 +325,6 @@ const Page5Tracking = () => {
                                     key={attachment.id}
                                     attachment={attachment}
                                     onRemove={() => handleRemove(attachment.id)}
-                                    onVisibilityChange={(vis) => handleVisibilityChange(attachment.id, vis)}
                                 />
                             ))}
                         </div>
@@ -377,7 +352,6 @@ const Page5Tracking = () => {
                                     key={attachment.id}
                                     attachment={attachment}
                                     onRemove={() => handleRemove(attachment.id)}
-                                    onVisibilityChange={(vis) => handleVisibilityChange(attachment.id, vis)}
                                 />
                             ))}
                         </div>
@@ -414,7 +388,6 @@ const Page5Tracking = () => {
                                     key={attachment.id}
                                     attachment={attachment}
                                     onRemove={() => handleRemove(attachment.id)}
-                                    onVisibilityChange={(vis) => handleVisibilityChange(attachment.id, vis)}
                                 />
                             ))}
                         </div>
