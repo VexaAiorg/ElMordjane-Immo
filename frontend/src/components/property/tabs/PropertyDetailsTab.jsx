@@ -267,20 +267,39 @@ const PropertyDetailsTab = ({ propertyType, formData, onChange }) => {
                         />
                         <span>Aéroport</span>
                     </label>
-                    <div>
+                    <div style={{ gridColumn: '1 / -1' }}>
                         <label style={labelStyle}>Transport</label>
-                        <select
-                            name="proximiteTransport"
-                            value={formData.proximiteTransport || ''}
-                            onChange={handleChange}
-                            style={inputStyle}
-                        >
-                            <option value="">-- Aucun --</option>
-                            <option value="BUS">Bus</option>
-                            <option value="TRAMWAY">Tramway</option>
-                            <option value="METRO">Métro</option>
-                            <option value="TRAIN">Train</option>
-                        </select>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                            {['BUS', 'TRAMWAY', 'METRO', 'TRAIN'].map((transport) => (
+                                <label key={transport} style={checkboxContainerStyle}>
+                                    <input
+                                        type="checkbox"
+                                        value={transport}
+                                        checked={
+                                            Array.isArray(formData.proximiteTransport)
+                                                ? formData.proximiteTransport.includes(transport)
+                                                : formData.proximiteTransport === transport
+                                        }
+                                        onChange={(e) => {
+                                            const { value, checked } = e.target;
+                                            let currentTransport = formData.proximiteTransport || [];
+                                            if (!Array.isArray(currentTransport)) {
+                                                currentTransport = currentTransport ? [currentTransport] : [];
+                                            }
+                                            
+                                            let newTransport;
+                                            if (checked) {
+                                                newTransport = [...currentTransport, value];
+                                            } else {
+                                                newTransport = currentTransport.filter(t => t !== value);
+                                            }
+                                            onChange({ proximiteTransport: newTransport });
+                                        }}
+                                    />
+                                    <span style={{ textTransform: 'capitalize' }}>{transport.toLowerCase()}</span>
+                                </label>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

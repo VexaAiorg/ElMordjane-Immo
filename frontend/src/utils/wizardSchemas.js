@@ -101,7 +101,7 @@ export const appartementDetailsSchema = z.object({
     parking: z.boolean().default(false),
     gardinage: z.boolean().default(false),
     proximiteEcole: z.boolean().default(false),
-    proximiteTransport: z.enum(['BUS', 'TRAMWAY', 'METRO', 'TRAIN']).optional(),
+    proximiteTransport: z.array(z.enum(['BUS', 'TRAMWAY', 'METRO', 'TRAIN'])).optional(),
     proximitePlage: z.boolean().default(false),
     proximiteAeroport: z.boolean().default(false),
 });

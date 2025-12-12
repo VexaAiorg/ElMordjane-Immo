@@ -16,7 +16,14 @@ const Page3PropertyDetails = () => {
         formState: { errors },
     } = useForm({
         resolver: zodResolver(detailsSchema),
-        defaultValues: formData.propertyDetails,
+        defaultValues: {
+            ...formData.propertyDetails,
+            proximiteTransport: Array.isArray(formData.propertyDetails?.proximiteTransport)
+                ? formData.propertyDetails.proximiteTransport
+                : formData.propertyDetails?.proximiteTransport
+                ? [formData.propertyDetails.proximiteTransport]
+                : [],
+        },
     });
 
     const onSubmit = (data) => {
@@ -207,15 +214,26 @@ const Page3PropertyDetails = () => {
                                 </label>
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="proximiteTransport">Transport à proximité</label>
-                                <select id="proximiteTransport" {...register('proximiteTransport')}>
-                                    <option value="">Aucun</option>
-                                    <option value="BUS">Bus</option>
-                                    <option value="TRAMWAY">Tramway</option>
-                                    <option value="METRO">Métro</option>
-                                    <option value="TRAIN">Train</option>
-                                </select>
+                            <div className="form-group full-width">
+                                <label>Transport à proximité</label>
+                                <div className="checkbox-grid">
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" value="BUS" {...register('proximiteTransport')} />
+                                        <span>Bus</span>
+                                    </label>
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" value="TRAMWAY" {...register('proximiteTransport')} />
+                                        <span>Tramway</span>
+                                    </label>
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" value="METRO" {...register('proximiteTransport')} />
+                                        <span>Métro</span>
+                                    </label>
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" value="TRAIN" {...register('proximiteTransport')} />
+                                        <span>Train</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </>

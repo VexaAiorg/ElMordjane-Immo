@@ -7,6 +7,8 @@ import { getAllProperties, getPropertyById, deleteProperty, apiConfig } from '..
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 
 
+import { searchProperty } from '../../utils/searchUtils';
+
 const RentedProperties = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -56,13 +58,7 @@ const RentedProperties = () => {
     // Filter properties based on search
     // Filter properties based on search and type, then sort by date
     const filteredProperties = properties.filter(property => {
-        const query = searchQuery.toLowerCase();
-        const matchesSearch = (
-            property.titre?.toLowerCase().includes(query) ||
-            property.adresse?.toLowerCase().includes(query) ||
-            property.type?.toLowerCase().includes(query)
-        );
-        
+        const matchesSearch = searchProperty(property, searchQuery);
         const matchesType = filterType === 'ALL' || property.type === filterType;
         
         return matchesSearch && matchesType;

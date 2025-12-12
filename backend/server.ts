@@ -1,4 +1,4 @@
-import app from './app.ts';
+import app from './app.ts'; // Trigger restart
 import dotenv from 'dotenv';
 import { initScheduler } from './src/services/schedulerService.js';
 

@@ -21,6 +21,8 @@ import PropertyDetailsModal from '../../components/property/PropertyDetailsModal
 import PropertyEditModal from '../../components/property/PropertyEditModal';
 import '../../styles/Dashboard.css';
 
+import { searchProperty } from '../../utils/searchUtils';
+
 const GestionCollaborateurs = () => {
     // Global State
     const [activeTab, setActiveTab] = useState('biens'); // 'biens' | 'comptes'
@@ -90,9 +92,7 @@ const GestionCollaborateurs = () => {
     const filteredProperties = properties.filter(property => {
         if (activeTab !== 'biens') return false;
 
-        const matchesSearch = searchTerm === '' || 
-            property.titre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            property.adresse?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = searchProperty(property, searchTerm);
 
         // Create a Set of collaborator IDs for efficient lookup
         const collabIds = new Set(collaborateurs.map(c => c.id));

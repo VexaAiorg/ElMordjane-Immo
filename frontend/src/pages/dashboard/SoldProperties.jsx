@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line 
 import { useAuth } from '../../contexts/AuthContext';
 
 
+import { searchProperty } from '../../utils/searchUtils';
+
 const SoldProperties = () => {
     const { isAdmin } = useAuth();
     const [properties, setProperties] = useState([]);
@@ -60,13 +62,7 @@ const SoldProperties = () => {
     // Filter properties based on search
     // Filter properties based on search and type, then sort by date
     const filteredProperties = properties.filter(property => {
-        const query = searchQuery.toLowerCase();
-        const matchesSearch = (
-            property.titre?.toLowerCase().includes(query) ||
-            property.adresse?.toLowerCase().includes(query) ||
-            property.type?.toLowerCase().includes(query)
-        );
-        
+        const matchesSearch = searchProperty(property, searchQuery);
         const matchesType = filterType === 'ALL' || property.type === filterType;
         
         return matchesSearch && matchesType;

@@ -289,10 +289,10 @@ model DetailAppartement {
   parking   Boolean @default(false)
   gardinage Boolean @default(false)
 
-  proximiteEcole     Boolean        @default(false)
-  proximiteTransport TypeTransport?
-  proximitePlage     Boolean        @default(false)
-  proximiteAeroport  Boolean        @default(false)
+  proximiteEcole     Boolean         @default(false)
+  proximiteTransport TypeTransport[]
+  proximitePlage     Boolean         @default(false)
+  proximiteAeroport  Boolean         @default(false)
 }
 
 model DetailTerrain {
