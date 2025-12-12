@@ -9,13 +9,15 @@ import {
     LogOut,
     Settings,
     Loader2,
-    Users
+    Users,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { logout } from '../api/api';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/Dashboard.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isCollapsed, toggleSidebar }) => {
     const navigate = useNavigate();
     const { isAdmin, clearUser } = useAuth();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -90,14 +92,14 @@ const Sidebar = () => {
                 </div>
             )}
 
-            <aside className="sidebar">
+            <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
                 <div className="sidebar-header">
                     <img
                         src="/assets/ElMordjanMainLogo.png"
                         alt="El Mordjane"
                         className="sidebar-logo"
                     />
-                    <span className="sidebar-brand">El Mordjane</span>
+                    {!isCollapsed && <span className="sidebar-brand">El Mordjane</span>}
                 </div>
 
                 <nav className="sidebar-nav">
@@ -112,32 +114,43 @@ const Sidebar = () => {
                             key={item.path}
                             to={item.path}
                             className={({ isActive }) =>
-                                `nav-item ${isActive ? 'active' : ''}`
+                                `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'collapsed' : ''}`
                             }
+                            title={isCollapsed ? item.label : ''}
                         >
                             {item.icon}
-                            <span>{item.label}</span>
+                            {!isCollapsed && <span>{item.label}</span>}
                         </NavLink>
                     ))}
                 </nav>
 
                 <div className="sidebar-footer">
-                    <button 
+                    <button
+                        onClick={toggleSidebar}
+                        className={`nav-item toggle-btn ${isCollapsed ? 'collapsed' : ''}`}
+                        style={{ marginBottom: '0.5rem', justifyContent: isCollapsed ? 'center' : 'flex-start' }}
+                    >
+                        {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                        {!isCollapsed && <span>Réduire</span>}
+                    </button>
+                    <button  
                         onClick={handleLogout} 
-                        className="nav-item logout-btn"
+                        className={`nav-item logout-btn ${isCollapsed ? 'collapsed' : ''}`}
                         disabled={isLoggingOut}
                         style={{
                             opacity: isLoggingOut ? 0.6 : 1,
                             cursor: isLoggingOut ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.3s ease'
+                            transition: 'all 0.3s ease',
+                            justifyContent: isCollapsed ? 'center' : 'flex-start'
                         }}
+                        title={isCollapsed ? 'Déconnexion' : ''}
                     >
                         {isLoggingOut ? (
                             <Loader2 size={20} className="animate-spin" />
                         ) : (
                             <LogOut size={20} />
                         )}
-                        <span>{isLoggingOut ? 'Déconnexion...' : 'Déconnexion'}</span>
+                        {!isCollapsed && <span>{isLoggingOut ? 'Déconnexion...' : 'Déconnexion'}</span>}
                     </button>
                 </div>
             </aside>

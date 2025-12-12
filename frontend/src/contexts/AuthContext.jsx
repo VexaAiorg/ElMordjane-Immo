@@ -1,5 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { verifyToken } from '../api/api';
+import { getUserProfile } from '../api/api';
 
 const AuthContext = createContext();
 
@@ -21,9 +22,9 @@ export const AuthProvider = ({ children }) => {
             try {
                 const token = localStorage.getItem('authToken');
                 if (token) {
-                    const response = await verifyToken();
-                    if (response.status === 'success' && response.data?.user) {
-                        setUser(response.data.user);
+                    const response = await getUserProfile();
+                    if (response.status === 'success' && response.data) {
+                        setUser(response.data);
                     }
                 }
             } catch (error) {

@@ -10,6 +10,11 @@ const DashboardLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    const toggleSidebar = () => {
+        setIsCollapsed(!isCollapsed);
+    };
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -32,8 +37,8 @@ const DashboardLayout = () => {
 
     return (
         <div className="dashboard-layout">
-            <Sidebar />
-            <main className="main-content" style={{ position: 'relative' }}>
+            <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
+            <main className={`main-content ${isCollapsed ? 'collapsed' : ''}`} style={{ position: 'relative' }}>
                 {/* User Profile Widget */}
                 <div 
                     onClick={() => navigate('/dashboard/profile')}
