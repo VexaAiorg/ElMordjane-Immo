@@ -50,7 +50,7 @@ const AllProperties = () => {
     // Calculate stats
     const totalProperties = properties.length;
     const availableProperties = properties.filter(p => p.statut === 'DISPONIBLE').length;
-    const inNegotiation = properties.filter(p => p.statut === 'EN_COURS').length;
+
     const soldRented = properties.filter(p => ['VENDU', 'LOUE'].includes(p.statut)).length;
 
     // Filter properties based on search
@@ -363,10 +363,7 @@ const AllProperties = () => {
                         <div className="stat-value">{availableProperties}</div>
                         <div className="stat-label">Disponibles</div>
                     </div>
-                    <div className="stat-card orange">
-                        <div className="stat-value">{inNegotiation}</div>
-                        <div className="stat-label">En Négociation</div>
-                    </div>
+
                     <div className="stat-card purple">
                         <div className="stat-value">{soldRented}</div>
                         <div className="stat-label">Vendus/Loués</div>

@@ -36,8 +36,8 @@ const Archives = () => {
             // Extract properties from response
             // Backend returns { status: 'success', data: [...], count: N }
             const propertiesData = response.data || [];
-            // Filter only ARCHIVED properties
-            const archivedProperties = propertiesData.filter(p => p.archive === true);
+            // Filter only ARCHIVED properties and VENTE transaction
+            const archivedProperties = propertiesData.filter(p => p.archive === true && p.transaction === 'VENTE');
             setProperties(archivedProperties);
         } catch (err) {
             console.error('Error fetching properties:', err);
@@ -49,8 +49,6 @@ const Archives = () => {
 
     // Calculate stats
     const totalProperties = properties.length;
-    const ventesProperties = properties.filter(p => p.transaction === 'VENTE').length;
-    const locationsProperties = properties.filter(p => p.transaction === 'LOCATION').length;
 
     // Filter properties based on search and type, then sort by date
     const filteredProperties = properties.filter(property => {
@@ -344,14 +342,6 @@ const Archives = () => {
                     <div className="stat-card blue">
                         <div className="stat-value">{totalProperties}</div>
                         <div className="stat-label">Total Archives</div>
-                    </div>
-                    <div className="stat-card green">
-                        <div className="stat-value">{ventesProperties}</div>
-                        <div className="stat-label">Ventes</div>
-                    </div>
-                    <div className="stat-card purple">
-                        <div className="stat-value">{locationsProperties}</div>
-                        <div className="stat-label">Locations</div>
                     </div>
                 </div>
 
