@@ -503,7 +503,7 @@ const GestionCollaborateurs = () => {
                             transition={{ duration: 0.2 }}
                         >
                             {filteredProperties.length === 0 ? (
-                                <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+                                <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                                     <Building2 size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
                                     <p>Aucun bien trouvé</p>
                                 </div>

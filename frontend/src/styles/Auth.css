@@ -30,7 +30,7 @@
     gap: 0;
     margin-bottom: 2rem;
     position: relative;
-    background: var(--input-bg);
+    background: var(--bg-tertiary);
     border-radius: 10px;
     padding: 4px;
 }
@@ -59,11 +59,11 @@
     left: 4px;
     width: calc(50% - 4px);
     height: calc(100% - 8px);
-    background: var(--card-bg);
+    background: var(--bg-secondary);
     border-radius: 8px;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
 }
 
 .tab-indicator.signup {
@@ -106,8 +106,8 @@
 .form-group input {
     width: 500px;
     padding: 14px 16px;
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     font-size: 0.95rem;
     color: var(--text-primary);
@@ -116,20 +116,20 @@
 }
 
 .form-group input::placeholder {
-    color: #666;
+    color: var(--text-tertiary);
 }
 
 .form-group input:focus {
-    border-color: var(--primary-color);
-    background: #3a3a3a;
-    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+    border-color: var(--primary);
+    background: var(--bg-hover);
+    box-shadow: 0 0 0 3px var(--glass-bg);
 }
 
 .form-group select {
     width: 100%;
     padding: 14px 16px;
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     font-size: 0.95rem;
     color: var(--text-primary);
@@ -147,14 +147,14 @@
 }
 
 .form-group select:focus {
-    border-color: var(--primary-color);
-    background-color: #3a3a3a;
-    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+    border-color: var(--primary);
+    background-color: var(--bg-hover);
+    box-shadow: 0 0 0 3px var(--glass-bg);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ff6b6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 .form-group select option {
-    background: var(--card-bg);
+    background: var(--bg-elevated);
     color: var(--text-primary);
     padding: 0.5rem;
 }

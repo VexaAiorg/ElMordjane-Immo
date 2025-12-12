@@ -2,16 +2,15 @@
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
-  background: #0f172a;
-  /* Dark background base */
+  background: var(--bg-primary);
   font-family: "Inter", sans-serif;
 }
 
 /* Sidebar Styling */
 .sidebar {
   width: 260px;
-  background: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-primary);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -25,7 +24,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-secondary);
 }
 
 .sidebar-logo {
@@ -36,7 +35,7 @@
 .sidebar-brand {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .sidebar-nav {
@@ -53,7 +52,7 @@
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  color: #64748b;
+  color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s ease;
@@ -65,27 +64,27 @@
 }
 
 .nav-item:hover {
-  background: #f8fafc;
-  color: #3b82f6;
+  background: var(--bg-hover);
+  color: var(--accent-info);
 }
 
 .nav-item.active {
-  background: #eff6ff;
-  color: #3b82f6;
+  background: var(--glass-bg);
+  color: var(--accent-info);
 }
 
 .sidebar-footer {
   padding: 1rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-secondary);
 }
 
 .logout-btn {
-  color: #ef4444;
+  color: var(--accent-error);
 }
 
 .logout-btn:hover {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--bg-hover);
+  color: var(--accent-error);
 }
 
 /* Main Content Area */
@@ -94,10 +93,9 @@
   margin-left: 260px;
   /* Match sidebar width */
   padding: 2rem;
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-  /* Dark blue/purple gradient */
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   min-height: 100vh;
-  color: white;
+  color: var(--text-primary);
   overflow-x: hidden;
   transition: margin-left 0.3s ease;
 }
@@ -118,14 +116,14 @@
   font-size: 1.875rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  background: linear-gradient(to right, #fff, #94a3b8);
+  background: linear-gradient(to right, var(--text-primary), var(--text-secondary));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .page-subtitle {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 1rem;
 }
 
@@ -134,11 +132,11 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   padding: 1rem;
   border-radius: 12px;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   position: relative;
   z-index: 20;
 }
@@ -157,7 +155,7 @@
 .search-input {
   background: transparent;
   border: none;
-  color: white;
+  color: var(--text-primary);
   width: 100%;
   outline: none;
   font-size: 0.95rem;
@@ -169,7 +167,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg);
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s;
@@ -184,25 +182,25 @@
 .dropdown-arrow {
   margin-left: auto;
   transition: transform 0.3s ease;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .filter-dropdown.open .dropdown-arrow {
   transform: rotate(180deg);
-  color: white;
+  color: var(--text-primary);
 }
 
 .dropdown-menu {
   position: absolute;
   top: 100%;
   left: 0;
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-elevated);
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   padding: 0.5rem;
   min-width: 180px;
   z-index: 100;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
   margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -211,7 +209,7 @@
 
 .dropdown-item {
   padding: 0.5rem 1rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   cursor: pointer;
   border-radius: 6px;
   transition: background 0.2s;
@@ -220,13 +218,13 @@
 }
 
 .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--glass-bg);
+  color: var(--text-primary);
 }
 
 .dropdown-item.active {
-  background: #3b82f6;
-  color: white;
+  background: var(--accent-info);
+  color: var(--text-primary);
 }
 
 /* Stats Grid */
@@ -240,9 +238,9 @@
 .stat-card {
   padding: 1.5rem;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -261,7 +259,7 @@
 }
 
 .stat-label {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -286,25 +284,25 @@
 
 /* Glass Table */
 .content-table-container {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   border-radius: 16px;
   padding: 1.5rem;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   overflow-x: auto;
 }
 
 .glass-table {
   width: 100%;
   border-collapse: collapse;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .glass-table th {
   text-align: left;
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
+  border-bottom: 1px solid var(--glass-border);
+  color: var(--text-secondary);
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
@@ -312,8 +310,9 @@
 
 .glass-table td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-secondary);
   vertical-align: middle;
+  color: var(--text-primary);
 }
 
 .glass-table tr:last-child td {
@@ -331,12 +330,12 @@
 
 .item-name {
   font-weight: 600;
-  color: white;
+  color: var(--text-primary);
 }
 
 .item-sub {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .status-badge {
@@ -365,11 +364,11 @@
 .wizard-container {
   max-width: 800px;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
 }
 
 .wizard-progress {
@@ -393,29 +392,30 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: var(--glass-bg);
+  border: 2px solid var(--border-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  color: var(--text-primary);
   transition: all 0.3s;
 }
 
 .progress-step.active .step-indicator {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: var(--accent-info);
+  border-color: var(--accent-info);
   color: white;
 }
 
 .step-label {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .progress-step.active .step-label {
-  color: white;
+  color: var(--text-primary);
 }
 
 .step-line {
@@ -436,7 +436,7 @@
 .step-form h2 {
   margin-bottom: 2rem;
   font-size: 1.5rem;
-  color: white;
+  color: var(--text-primary);
   text-align: center;
 }
 
@@ -458,17 +458,17 @@
 
 .form-group label {
   font-size: 0.9rem;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
   padding: 0.75rem;
   border-radius: 8px;
-  color: white;
+  color: var(--text-primary);
   font-size: 1rem;
   outline: none;
   transition: border-color 0.2s;
@@ -477,31 +477,31 @@
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  border-color: #3b82f6;
+  border-color: var(--accent-info);
 }
 
 /* Fix select dropdown options background */
 .form-group select option {
-  background: #1e293b;
-  color: white;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   padding: 0.5rem;
 }
 
 /* Ensure select elements have proper styling */
 select {
-  background-color: rgba(0, 0, 0, 0.3) !important;
-  color: white !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-primary) !important;
 }
 
 select option {
-  background: #1e293b !important;
-  color: white !important;
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
   padding: 0.75rem !important;
 }
 
 select option:hover {
-  background: #334155 !important;
+  background: var(--bg-hover) !important;
 }
 
 /* Wizard Actions */
@@ -533,8 +533,8 @@ select option:hover {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--glass-bg);
+  color: var(--text-primary);
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -547,33 +547,34 @@ select option:hover {
 }
 
 .btn-primary {
-  background: #3b82f6;
+  background: var(--accent-info);
   color: white;
 }
 
 .btn-primary:hover {
-  background: #2563eb;
+  background: var(--primary-hover);
 }
 
 .btn-success {
-  background: #10b981;
+  background: var(--accent-success);
   color: white;
 }
 
 .btn-success:hover {
-  background: #059669;
+  background: var(--accent-success);
+  filter: brightness(0.9);
 }
 
 .btn-danger {
   background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  border: 1px solid var(--accent-error);
+  color: var(--accent-error);
 }
 
 .btn-danger:hover {
   background: rgba(239, 68, 68, 0.3);
-  border-color: #ef4444;
-  color: #f87171;
+  border-color: var(--accent-error);
+  color: var(--accent-error);
 }
 
 /* Review Card */
@@ -595,12 +596,12 @@ select option:hover {
 }
 
 .review-item .label {
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .review-item .value {
   font-weight: 600;
-  color: white;
+  color: var(--text-primary);
 }
 
 .user-widget:hover {
@@ -659,15 +660,15 @@ select option:hover {
 }
 
 .modal-content {
-  background: rgba(30, 41, 59, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-elevated);
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
   width: 100%;
   max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
   animation: slideUp 0.3s ease-out;
 }
 
@@ -686,9 +687,9 @@ select option:hover {
   position: absolute;
   top: 1.5rem;
   right: 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg);
   border: none;
-  color: #94a3b8;
+  color: var(--text-secondary);
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -701,18 +702,18 @@ select option:hover {
 }
 
 .modal-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .modal-header {
   padding: 2rem 2rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .modal-header h2 {
   font-size: 1.5rem;
-  color: white;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -732,7 +733,7 @@ select option:hover {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -756,17 +757,17 @@ select option:hover {
 
 .info-item .label {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .info-item .value {
-  color: white;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .address-text,
 .description-text {
-  color: #e2e8f0;
+  color: var(--text-primary);
   line-height: 1.6;
   background: rgba(0, 0, 0, 0.2);
   padding: 1rem;

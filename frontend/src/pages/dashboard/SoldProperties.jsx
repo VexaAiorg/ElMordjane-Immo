@@ -375,7 +375,7 @@ const SoldProperties = () => {
                         <div style={{ 
                             padding: '3rem', 
                             textAlign: 'center', 
-                            color: 'rgba(255, 255, 255, 0.6)' 
+                            color: 'var(--text-secondary)' 
                         }}>
                             Chargement des biens immobiliers...
                         </div>
@@ -394,7 +394,7 @@ const SoldProperties = () => {
                         <div style={{ 
                             padding: '3rem', 
                             textAlign: 'center', 
-                            color: 'rgba(255, 255, 255, 0.6)' 
+                            color: 'var(--text-secondary)' 
                         }}>
                             {searchQuery 
                                 ? `Aucun bien trouvé pour "${searchQuery}"`

@@ -11,15 +11,19 @@ import {
     Loader2,
     Users,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Sun,
+    Moon
 } from 'lucide-react';
 import { logout } from '../api/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import '../styles/Dashboard.css';
 
 const Sidebar = ({ isCollapsed, toggleSidebar }) => {
     const navigate = useNavigate();
     const { isAdmin, clearUser } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const handleLogout = async () => {
@@ -125,6 +129,27 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
                 </nav>
 
                 <div className="sidebar-footer">
+                    {/* Theme Toggle Button */}
+                    <button
+                        onClick={toggleTheme}
+                        className={`nav-item theme-toggle-btn ${isCollapsed ? 'collapsed' : ''}`}
+                        style={{ 
+                            marginBottom: '0.5rem', 
+                            justifyContent: isCollapsed ? 'center' : 'flex-start' 
+                        }}
+                        title={isCollapsed ? (theme === 'dark' ? 'Mode Clair' : 'Mode Sombre') : ''}
+                    >
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center',
+                            transition: 'transform 0.3s ease'
+                        }}>
+                            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                        </div>
+                        {!isCollapsed && <span>{theme === 'dark' ? 'Mode Clair' : 'Mode Sombre'}</span>}
+                    </button>
+
+                    {/* Collapse Toggle Button */}
                     <button
                         onClick={toggleSidebar}
                         className={`nav-item toggle-btn ${isCollapsed ? 'collapsed' : ''}`}
@@ -133,6 +158,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
                         {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                         {!isCollapsed && <span>Réduire</span>}
                     </button>
+
+                    {/* Logout Button */}
                     <button  
                         onClick={handleLogout} 
                         className={`nav-item logout-btn ${isCollapsed ? 'collapsed' : ''}`}

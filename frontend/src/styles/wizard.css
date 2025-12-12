@@ -8,12 +8,12 @@
 }
 
 .wizard-wrapper {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 /* ===========================
@@ -66,17 +66,17 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #1a1a2e;
-  /* Solid background to block the line */
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-tertiary);
   transition: all 0.3s ease;
   position: relative;
   z-index: 3;
+  box-shadow: 0 0 0 4px var(--bg-secondary);
 }
 
 .progress-step.active .step-indicator {
@@ -103,13 +103,13 @@
 
 .step-label {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
   text-align: center;
   transition: color 0.3s ease;
 }
 
 .progress-step.active .step-label {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -119,7 +119,7 @@
   left: 50%;
   width: 100%;
   height: 2px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-primary);
   z-index: 0;
 }
 
@@ -128,7 +128,7 @@
 }
 
 .check-icon {
-  color: white;
+  color: var(--text-primary);
 }
 
 /* ===========================
@@ -149,11 +149,11 @@
 
 .step-separator {
   margin: 0 0.5rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-secondary);
 }
 
 .total-steps {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
 }
 
 /* ===========================
@@ -192,7 +192,7 @@
 
 .wizard-page-subtitle {
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   margin-bottom: 2rem;
 }
 
@@ -217,7 +217,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -242,7 +242,7 @@
 .form-group label {
   font-size: 0.9rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
 }
 
 .required {
@@ -252,11 +252,11 @@
 .form-group input,
 .form-group select,
 .form-group textarea {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   padding: 0.75rem 1rem;
-  color: white;
+  color: var(--text-primary);
   font-size: 0.95rem;
   transition: all 0.3s ease;
   width: 100%;
@@ -295,8 +295,8 @@
 
 /* Fix dropdown options visibility */
 .form-group select option {
-  background: #1a1a2e;
-  color: white;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   padding: 0.5rem;
 }
 
@@ -304,8 +304,8 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent-info);
+  background: var(--bg-hover);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -441,7 +441,7 @@
 /* Radio button text */
 .radio-label span,
 .checkbox-label span {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.5;
@@ -449,7 +449,6 @@
   display: flex;
   align-items: center;
   padding-left: 3.5rem;
-  /* Increased space for the custom radio */
   width: 100%;
 }
 
@@ -679,7 +678,7 @@ Custom radio circle - inner dot (checked state) */
 }
 
 .toggle-label span {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
   font-size: 0.95rem;
 }
 
