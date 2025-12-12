@@ -279,7 +279,24 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                     gap: '2rem',
                     position: 'relative'
                 }}>
-                    <h2 style={{ flex: 1 }}>Modifier le Bien</h2>
+                    <div style={{ flex: 1 }}>
+                        <h2 style={{ margin: 0 }}>Modifier le Bien</h2>
+                        {property?.createdBy && (
+                            <p style={{ 
+                                margin: '0.5rem 0 0 0', 
+                                fontSize: '0.85rem', 
+                                color: '#94a3b8',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }}>
+                                <span style={{ opacity: 0.7 }}>Créé par:</span>
+                                <span style={{ color: '#60a5fa', fontWeight: '500' }}>
+                                    {property.createdBy.prenom} {property.createdBy.nom}
+                                </span>
+                            </p>
+                        )}
+                    </div>
                     
                     {/* Archive Dropdown - Only for VENDU properties */}
                     <div style={{ 

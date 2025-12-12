@@ -139,7 +139,24 @@ const PropertyDetailsModal = ({ property, onClose, isLoading }) => {
                 ) : (
                     <>
                         <div className="modal-header">
-                            <h2>{property.titre}</h2>
+                            <div>
+                                <h2>{property.titre}</h2>
+                                {property?.createdBy && (
+                                    <p style={{ 
+                                        margin: '0.5rem 0 0 0', 
+                                        fontSize: '0.85rem', 
+                                        color: '#94a3b8',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}>
+                                        <span style={{ opacity: 0.7 }}>Créé par:</span>
+                                        <span style={{ color: '#60a5fa', fontWeight: '500' }}>
+                                            {property.createdBy.prenom} {property.createdBy.nom}
+                                        </span>
+                                    </p>
+                                )}
+                            </div>
                             <span className={`status-badge ${property.statut === 'DISPONIBLE' ? 'available' : 'pending'}`}>
                                 {property.statut}
                             </span>

@@ -346,6 +346,14 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
             where: { id: parseInt(id) },
             include: {
                 proprietaire: true,
+                createdBy: {
+                    select: {
+                        id: true,
+                        nom: true,
+                        prenom: true,
+                        email: true
+                    }
+                },
                 detailAppartement: true,
                 detailTerrain: true,
                 detailVilla: true,

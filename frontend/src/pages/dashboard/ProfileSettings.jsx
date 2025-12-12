@@ -284,7 +284,7 @@ const ProfileSettings = () => {
 
                         {/* Password Section */}
                         <div style={{ 
-                            borderTop: '1px solid rgba(255,255,255,0.1)', 
+                            borderTop: '1px solid var(--border-primary)', 
                             paddingTop: '2rem', 
                             marginBottom: '2rem' 
                         }}>
@@ -293,8 +293,8 @@ const ProfileSettings = () => {
                                 onClick={() => setShowPasswordChange(!showPasswordChange)}
                                 style={{
                                     background: 'transparent',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    color: '#e2e8f0',
+                                    border: '1px solid var(--border-primary)',
+                                    color: 'var(--text-primary)',
                                     padding: '0.75rem 1.5rem',
                                     borderRadius: '8px',
                                     cursor: 'pointer',

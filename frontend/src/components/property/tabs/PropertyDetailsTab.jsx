@@ -9,14 +9,11 @@ const PropertyDetailsTab = ({ propertyType, formData, onChange }) => {
     const inputStyle = {
         width: '100%',
         padding: '0.75rem',
-        background: 'rgba(255,255,255,0.05) !important',
-        border: '1px solid rgba(255,255,255,0.1)',
+        background: 'var(--bg-input)',
+        border: '1px solid var(--border-primary)',
         borderRadius: '8px',
-        color: 'white',
-        fontSize: '1rem',
-        WebkitBoxShadow: '0 0 0 1000px rgba(26, 26, 46, 0.95) inset !important',
-        WebkitTextFillColor: 'white !important',
-        caretColor: 'white'
+        color: 'var(--text-primary)',
+        fontSize: '1rem'
     };
 
     const labelStyle = {
