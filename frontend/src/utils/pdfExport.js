@@ -79,18 +79,17 @@ export const exportPropertiesToPDF = async (properties) => {
         let yPos = 20;
 
         // A. Photo (Top Left)
-        let photoUrl = null;
+        let mainPhotoUrl = null;
         if (property.piecesJointes) {
             let photo = property.piecesJointes.find(pj => pj.type === 'PHOTO' && pj.visibilite === 'PUBLIABLE');
-            // Fallback to any photo if no publiable one found (optional, but requested "photo publiable")
-            // If strictly only publiable, keep as is. If fallback desired:
+            // Fallback to any photo if no publiable one found
             if (!photo) photo = property.piecesJointes.find(pj => pj.type === 'PHOTO');
             
-            if (photo) photoUrl = getFileUrl(photo.url);
+            if (photo) mainPhotoUrl = getFileUrl(photo.url);
         }
 
-        if (photoUrl) {
-            const photoBase64 = await getBase64FromUrl(photoUrl);
+        if (mainPhotoUrl) {
+            const photoBase64 = await getBase64FromUrl(mainPhotoUrl);
             if (photoBase64) {
                 try {
                     const formatMatch = photoBase64.match(/^data:image\/(\w+);base64,/);
@@ -142,33 +141,7 @@ export const exportPropertiesToPDF = async (properties) => {
         yPos = drawSidebarText('Date d\'ajout', formatDate(property.dateCreation), yPos);
         yPos = drawSidebarText('Statut', property.statut, yPos);
 
-        yPos += 5;
-
-        // C. Localisation
-        doc.setFontSize(14);
-        doc.setTextColor(...sidebarTextColor);
-        doc.setFont('helvetica', 'bold');
-        doc.text('LOCALISATION', 10, yPos);
-        doc.line(10, yPos + 2, sidebarWidth - 10, yPos + 2);
-        yPos += 10;
-
-        yPos = drawSidebarText('Adresse', property.adresse, yPos);
-
-        yPos += 5;
-
-        // D. Suivi (Tracking)
-        if (property.suivi) {
-            doc.setFontSize(14);
-            doc.setTextColor(...sidebarTextColor);
-            doc.setFont('helvetica', 'bold');
-            doc.text('SUIVI', 10, yPos);
-            doc.line(10, yPos + 2, sidebarWidth - 10, yPos + 2);
-            yPos += 10;
-
-            yPos = drawSidebarText('Visité', property.suivi.estVisite ? 'Oui' : 'Non', yPos);
-            yPos = drawSidebarText('Priorité', property.suivi.priorite, yPos);
-            yPos = drawSidebarText('Mandat', property.suivi.aMandat ? 'Oui' : 'Non', yPos);
-        }
+        // REMOVED: Localisation and Suivi sections from sidebar as requested
 
         // --- 3. Main Content (Right) ---
         
@@ -257,22 +230,25 @@ export const exportPropertiesToPDF = async (properties) => {
                 doc.setTextColor(100, 100, 100);
                 doc.text(`${item.label}:`, x, y);
                 
+                // Separate value from detail: Add fixed spacing
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(...mainTextColor);
-                const labelWidth = doc.getTextWidth(`${item.label}: `);
-                doc.text(item.value.toString(), x + labelWidth, y);
+                // Calculate width of label to position value after it with some padding
+                // Or use a fixed offset if labels are generally short, but dynamic is safer.
+                // User asked to "separate a little bit the value from each detail"
+                const labelWidth = doc.getTextWidth(`${item.label}:`);
+                const valueX = x + labelWidth + 5; // Add 5mm spacing
+                
+                doc.text(item.value.toString(), valueX, y);
             });
 
             mainY += (Math.ceil(detailsList.length / 2) * 8) + 10;
         }
 
-        // D. Documents Juridiques (List)
-        // Exclude internal files, only show juridical papers status or public docs
-        // The user said "do not put Propriétaire and Pièces Jointes Internes"
-        // But "Documents Juridiques" (papiers) are usually important status indicators.
-        // I will list them.
+        // D. Documents Juridiques (List) - Filtered for Available only
+        const availableDocs = property.papiers ? property.papiers.filter(p => p.statut === 'DISPONIBLE') : [];
         
-        if (property.papiers && property.papiers.length > 0) {
+        if (availableDocs.length > 0) {
             // Check page break
             if (mainY > pageHeight - 40) {
                 doc.addPage();
@@ -284,25 +260,84 @@ export const exportPropertiesToPDF = async (properties) => {
             doc.setFontSize(12);
             doc.setTextColor(...accentColor);
             doc.setFont('helvetica', 'bold');
-            doc.text('DOCUMENTS JURIDIQUES', mainX, mainY);
+            doc.text('DOCUMENTS JURIDIQUES DISPONIBLES', mainX, mainY);
             mainY += 7;
 
-            doc.setFontSize(9);
-            property.papiers.forEach(papier => {
-                const statusColor = papier.statut === 'DISPONIBLE' ? [46, 204, 113] : [231, 76, 60]; // Green or Red
-                
-                doc.setTextColor(...mainTextColor);
-                doc.setFont('helvetica', 'normal');
-                doc.text(`• ${papier.nom}`, mainX, mainY);
-                
-                // Draw status badge-like text
-                doc.setTextColor(...statusColor);
-                doc.setFont('helvetica', 'bold');
-                doc.text(papier.statut, mainX + 100, mainY, { align: 'right' });
-                
-                mainY += 6;
-            });
+            doc.setFontSize(10);
+            doc.setTextColor(...mainTextColor);
+            doc.setFont('helvetica', 'normal');
+            
+            // List them comma separated or bullet points? User said "add doc juridiques not the docs theme selves just the ones available"
+            // Let's do a clean list
+            const docNames = availableDocs.map(d => d.nom).join(', ');
+            const splitDocs = doc.splitTextToSize(docNames, mainContentWidth);
+            doc.text(splitDocs, mainX, mainY);
+            
+            mainY += (splitDocs.length * 5) + 10;
+        }
+
+        // E. Photos Gallery (All Publiable Photos)
+        const galleryPhotos = property.piecesJointes 
+            ? property.piecesJointes.filter(pj => pj.type === 'PHOTO' && pj.visibilite === 'PUBLIABLE')
+            : [];
+
+        if (galleryPhotos.length > 0) {
+            // Check page break
+            if (mainY > pageHeight - 60) {
+                doc.addPage();
+                mainY = 20;
+                doc.setFillColor(...sidebarColor);
+                doc.rect(0, 0, sidebarWidth, pageHeight, 'F');
+            }
+
+            doc.setFontSize(12);
+            doc.setTextColor(...accentColor);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PHOTOS', mainX, mainY);
             mainY += 10;
+
+            // Grid layout for photos (e.g., 2 columns in the main content area)
+            const photoSize = (mainContentWidth - 10) / 2; // 2 photos per row with 10mm gap
+            let currentX = mainX;
+            
+            for (let pIndex = 0; pIndex < galleryPhotos.length; pIndex++) {
+                const photo = galleryPhotos[pIndex];
+                const photoUrl = getFileUrl(photo.url);
+                const photoBase64 = await getBase64FromUrl(photoUrl);
+
+                if (photoBase64) {
+                    try {
+                        // Check if we need a new page
+                        if (mainY + photoSize > pageHeight - 10) {
+                            doc.addPage();
+                            mainY = 20;
+                            doc.setFillColor(...sidebarColor);
+                            doc.rect(0, 0, sidebarWidth, pageHeight, 'F');
+                            currentX = mainX; // Reset X
+                        }
+
+                        const formatMatch = photoBase64.match(/^data:image\/(\w+);base64,/);
+                        const format = formatMatch ? formatMatch[1].toUpperCase() : 'JPEG';
+                        
+                        doc.addImage(photoBase64, format, currentX, mainY, photoSize, photoSize);
+                        
+                        // Draw border
+                        doc.setDrawColor(200, 200, 200);
+                        doc.rect(currentX, mainY, photoSize, photoSize);
+
+                        // Move position
+                        if (currentX === mainX) {
+                            currentX += photoSize + 10; // Move to second column
+                        } else {
+                            currentX = mainX; // Reset to first column
+                            mainY += photoSize + 10; // Move to next row
+                        }
+
+                    } catch (err) {
+                        console.warn('Error adding gallery image:', err);
+                    }
+                }
+            }
         }
     }
 
