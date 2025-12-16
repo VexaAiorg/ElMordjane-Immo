@@ -305,14 +305,14 @@
 .form-group textarea:focus {
   outline: none;
   border-color: var(--accent-info);
-  background: var(--bg-hover);
+  background-color: var(--bg-hover);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .form-group input.error,
 .form-group select.error {
   border-color: #ff6b6b;
-  background: rgba(255, 107, 107, 0.05);
+  background-color: rgba(255, 107, 107, 0.05);
 }
 
 .error-message {

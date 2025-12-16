@@ -223,7 +223,7 @@ const Page5Tracking = () => {
 
     return (
         <div className="wizard-page">
-            <h2 className="wizard-page-title">Suivi & Informations Internes</h2>
+            <h2 className="wizard-page-title">Suivi & Informations </h2>
             <p className="wizard-page-subtitle">Gestion du workflow et priorités</p>
 
             <form onSubmit={handleSubmit(onSubmit)} className="wizard-form">
@@ -306,7 +306,7 @@ const Page5Tracking = () => {
 
                 {/* Fichiers et médias liés au bien */}
                 <div className="form-section">
-                    <h3 className="section-title">Fichiers et médias liés au bien</h3>
+                    <h3 className="section-title">Fichiers et médias liés au bien (Publiable)</h3>
 
                     {/* Photos Section */}
                     <div className="subsection">
