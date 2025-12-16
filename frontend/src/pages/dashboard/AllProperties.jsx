@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard, CheckCircle2, XCircle, AlertCircle, FileCheck } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard, CheckCircle2, XCircle, AlertCircle, FileCheck, FileDown } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
 import PropertyDetailsModal from '../../components/property/PropertyDetailsModal';
 import PropertyEditModal from '../../components/property/PropertyEditModal';
@@ -9,6 +9,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 
 import { searchProperty } from '../../utils/searchUtils';
+import { exportPropertiesToPDF } from '../../utils/pdfExport';
 
 const AllProperties = () => {
     const { isAdmin } = useAuth();
@@ -24,6 +25,7 @@ const AllProperties = () => {
     const [showDateDropdown, setShowDateDropdown] = useState(false);
     const [editingProperty, setEditingProperty] = useState(null);
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+    const [isExporting, setIsExporting] = useState(false);
 
     useEffect(() => {
         fetchProperties();
@@ -233,6 +235,27 @@ const AllProperties = () => {
         fetchProperties();
     };
 
+    const handleExportPDF = async () => {
+        try {
+            setIsExporting(true);
+            await exportPropertiesToPDF(filteredProperties);
+        } catch (err) {
+            console.error('Error exporting PDF:', err);
+            alert('Erreur lors de l\'export PDF');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleExportSingleProperty = async (property) => {
+        try {
+            await exportPropertiesToPDF([property]);
+        } catch (err) {
+            console.error('Error exporting property:', err);
+            alert('Erreur lors de l\'export du bien');
+        }
+    };
+
     return (
         <PageTransition>
             <div className="page-container">
@@ -300,8 +323,31 @@ const AllProperties = () => {
                         )}
                     </div>
 
+                    <button 
+                        onClick={handleExportPDF}
+                        disabled={isExporting}
+                        title="Exporter en PDF"
+                        style={{
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            color: '#3b82f6',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '8px',
+                            padding: '0.5rem 1rem',
+                            cursor: isExporting ? 'wait' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontSize: '0.9rem',
+                            fontWeight: '500',
+                            marginLeft: 'auto',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        <FileDown size={18} />
+                        {isExporting ? 'Export...' : 'PDF'}
+                    </button>
+
                     <div className="view-toggles" style={{ 
-                        marginLeft: 'auto', 
                         display: 'flex', 
                         gap: '0.5rem', 
                         background: 'rgba(0,0,0,0.2)', 
@@ -394,7 +440,7 @@ const AllProperties = () => {
                         }}>
                             {searchQuery 
                                 ? `Aucun bien trouvé pour "${searchQuery}"`
-                                : 'Aucun bien immobilier. Ajoutez-en un avec le wizard!'}
+                                : 'Aucun bien immobilier !'}
                         </div>
                     ) : (
                         <AnimatePresence mode="wait">
@@ -475,6 +521,21 @@ const AllProperties = () => {
                                                     }}
                                                 >
                                                     <Edit size={16} />
+                                                </button>
+                                                <button 
+                                                    className="btn-icon" 
+                                                    title="Exporter PDF"
+                                                    onClick={() => handleExportSingleProperty(property)}
+                                                    style={{
+                                                        background: 'rgba(59, 130, 246, 0.1)',
+                                                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                        borderRadius: '6px',
+                                                        padding: '0.4rem',
+                                                        cursor: 'pointer',
+                                                        color: '#3b82f6'
+                                                    }}
+                                                >
+                                                    <FileDown size={16} />
                                                 </button>
                                                 {isAdmin() && (
                                                     <button 
@@ -779,6 +840,23 @@ const AllProperties = () => {
                                             }}
                                         >
                                             <Edit size={18} />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleExportSingleProperty(property)}
+                                            style={{
+                                                background: 'rgba(59, 130, 246, 0.1)',
+                                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                borderRadius: '8px',
+                                                padding: '0.75rem',
+                                                cursor: 'pointer',
+                                                color: '#3b82f6',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <FileDown size={18} />
                                         </button>
                                         {isAdmin() && (
                                             <button 
