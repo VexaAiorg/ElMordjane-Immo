@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard, CheckCircle2, XCircle, AlertCircle, FileCheck, Clock } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard, CheckCircle2, XCircle, AlertCircle, FileCheck, Clock, Undo } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
 import PropertyDetailsModal from '../../components/property/PropertyDetailsModal';
-import PropertyEditModal from '../../components/property/PropertyEditModal';
-import { getAllProperties, getPropertyById, deleteProperty, apiConfig } from '../../api/api';
+import { getTrashedProperties, getPropertyById, restoreProperty, permanentlyDeleteProperty, apiConfig } from '../../api/api';
 import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line no-unused-vars
 
 
 import { searchProperty } from '../../utils/searchUtils';
 
-const Archives = () => {
+const Corbeille = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -20,7 +19,6 @@ const Archives = () => {
     const [sortDate, setSortDate] = useState('NEWEST');
     const [showTypeDropdown, setShowTypeDropdown] = useState(false);
     const [showDateDropdown, setShowDateDropdown] = useState(false);
-    const [editingProperty, setEditingProperty] = useState(null);
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
     useEffect(() => {
@@ -31,19 +29,18 @@ const Archives = () => {
         try {
             setLoading(true);
             setError(null);
-            const response = await getAllProperties();
+            const response = await getTrashedProperties();
             
             // Properties fetched successfully
             
             // Extract properties from response
             // Backend returns { status: 'success', data: [...], count: N }
             const propertiesData = response.data || [];
-            // Filter only ARCHIVED properties and VENTE transaction
-            const archivedProperties = propertiesData.filter(p => p.archive === true && p.transaction === 'VENTE');
-            setProperties(archivedProperties);
+            // All properties in trash (deletedAt is not null)
+            setProperties(propertiesData);
         } catch (err) {
-            console.error('Error fetching properties:', err);
-            setError(err.message || 'Erreur lors du chargement des biens');
+            console.error('Error fetching trashed properties:', err);
+            setError(err.message || 'Erreur lors du chargement des biens supprimés');
         } finally {
             setLoading(false);
         }
@@ -91,25 +88,59 @@ const Archives = () => {
         return labels[statut] || statut;
     };
 
-    const handleDeleteProperty = async (propertyId) => {
+    const handleRestoreProperty = async (propertyId) => {
         if (!propertyId) {
             console.error('Error: propertyId is undefined or null');
             alert('Erreur: ID du bien introuvable');
             return;
         }
 
-        if (window.confirm('🗑️ Êtes-vous sûr de vouloir supprimer ce bien archivé ?\n\nLe bien sera déplacé vers la corbeille où il sera conservé pendant 30 jours avant suppression définitive.')) {
+        if (window.confirm('🔄 Voulez-vous restaurer ce bien?\n\nLe bien sera retiré de la corbeille et restauré dans les archives.')) {
             try {
-                await deleteProperty(propertyId);
+                await restoreProperty(propertyId);
                 // Refresh properties list
                 fetchProperties();
+                alert('✅ Bien restauré avec succès!');
             } catch (err) {
-                console.error('Error deleting property:', err);
-                alert('Erreur lors de la suppression du bien: ' + err.message);
+                console.error('Error restoring property:', err);
+                alert('Erreur lors de la restauration du bien: ' + err.message);
             }
-        } else {
-            console.log('Delete cancelled by user');
         }
+    };
+
+    const handlePermanentDelete = async (propertyId) => {
+        if (!propertyId) {
+            console.error('Error: propertyId is undefined or null');
+            alert('Erreur: ID du bien introuvable');
+            return;
+        }
+
+        if (window.confirm('⚠️ SUPPRESSION DÉFINITIVE ⚠️\n\nÊtes-vous ABSOLUMENT SÛR de vouloir supprimer définitivement ce bien?\n\n❌ Cette action est IRRÉVERSIBLE!\n❌ Toutes les données (documents, photos, etc.) seront DÉFINITIVEMENT supprimées.\n\nTapez "SUPPRIMER" pour confirmer.')) {
+            const confirmation = prompt('Tapez "SUPPRIMER" pour confirmer la suppression définitive:');
+            if (confirmation === 'SUPPRIMER') {
+                try {
+                    await permanentlyDeleteProperty(propertyId);
+                    // Refresh properties list
+                    fetchProperties();
+                    alert('✅ Bien supprimé définitivement');
+                } catch (err) {
+                    console.error('Error permanently deleting property:', err);
+                    alert('Erreur lors de la suppression définitive: ' + err.message);
+                }
+            } else {
+                alert('Suppression annulée');
+            }
+        }
+    };
+
+    const getDaysRemaining = (deletedAt) => {
+        if (!deletedAt) return 30; // If no deletedAt, assume full 30 days
+        const deleted = new Date(deletedAt);
+        const now = new Date();
+        const diffTime = now - deleted;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const remaining = 30 - diffDays;
+        return remaining;
     };
 
     const formatPrice = (price) => {
@@ -207,31 +238,6 @@ const Archives = () => {
         setLoadingDetails(false);
     };
 
-    const handleEditProperty = async (property) => {
-        setEditingProperty(property);
-        setLoadingDetails(true);
-        
-        try {
-            const response = await getPropertyById(property.id);
-            if (response.data) {
-                setEditingProperty(response.data);
-            }
-        } catch (err) {
-            console.error('Error fetching property details:', err);
-        } finally {
-            setLoadingDetails(false);
-        }
-    };
-
-    const handleCloseEditModal = () => {
-        setEditingProperty(null);
-        setLoadingDetails(false);
-    };
-
-    const handleUpdateSuccess = () => {
-        fetchProperties();
-    };
-
     return (
         <PageTransition>
             <div className="page-container">
@@ -243,19 +249,10 @@ const Archives = () => {
                     />
                 )}
                 
-                {editingProperty && (
-                    <PropertyEditModal 
-                        property={editingProperty} 
-                        onClose={handleCloseEditModal}
-                        onUpdate={handleUpdateSuccess}
-                        isLoading={loadingDetails && !editingProperty.detailAppartement}
-                    />
-                )}
-                
                 <header className="page-header">
                     <div>
-                        <h1 className="page-title">Archives</h1>
-                        <p className="page-subtitle">Historique des biens vendus et archivés</p>
+                        <h1 className="page-title">Corbeille</h1>
+                        <p className="page-subtitle">Biens supprimés (Suppression définitive après 30 jours)</p>
                     </div>
                 </header>
 
@@ -264,7 +261,7 @@ const Archives = () => {
                         <Search size={18} className="search-icon" />
                         <input 
                             type="text" 
-                            placeholder="Rechercher dans les archives..." 
+                            placeholder="Rechercher un bien..." 
                             className="search-input"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -352,7 +349,7 @@ const Archives = () => {
                 <div className="stats-grid">
                     <div className="stat-card blue">
                         <div className="stat-value">{totalProperties}</div>
-                        <div className="stat-label">Biens Archivés</div>
+                        <div className="stat-label">Total Corbeille</div>
                     </div>
                 </div>
 
@@ -363,7 +360,7 @@ const Archives = () => {
                             textAlign: 'center', 
                             color: 'var(--text-secondary)' 
                         }}>
-                            Chargement des archives...
+                            Chargement de la corbeille...
                         </div>
                     ) : error ? (
                         <div style={{ 
@@ -384,7 +381,7 @@ const Archives = () => {
                         }}>
                             {searchQuery 
                                 ? `Aucun bien trouvé pour "${searchQuery}"`
-                                : 'Aucun bien archivé.'}
+                                : '🗑️ La corbeille est vide.'}
                         </div>
                     ) : (
                         <AnimatePresence mode="wait">
@@ -405,11 +402,13 @@ const Archives = () => {
                                     <th>Statut</th>
                                     <th>Transaction</th>
                                     <th>Date d'ajout</th>
+                                    <th>Expiration</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredProperties.map((property) => {
+                                    const remaining = getDaysRemaining(property.deletedAt);
                                     return (
                                     <tr key={property.id}>
                                         <td>
@@ -436,6 +435,19 @@ const Archives = () => {
                                         </td>
                                         <td>{formatDate(property.dateCreation)}</td>
                                         <td>
+                                            <span className={`status-badge ${remaining <= 5 ? 'error' : 'neutral'}`} style={{
+                                                background: remaining <= 5 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(148, 163, 184, 0.1)',
+                                                color: remaining <= 5 ? '#ef4444' : '#94a3b8',
+                                                border: remaining <= 5 ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(148, 163, 184, 0.3)',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '0.25rem'
+                                            }}>
+                                                <Clock size={12} />
+                                                {remaining <= 0 ? 'Imminente' : `${remaining} jours`}
+                                            </span>
+                                        </td>
+                                        <td>
                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                 <button 
                                                     className="btn-icon" 
@@ -454,23 +466,23 @@ const Archives = () => {
                                                 </button>
                                                 <button 
                                                     className="btn-icon" 
-                                                    title="Modifier"
-                                                    onClick={() => handleEditProperty(property)}
+                                                    title="Restaurer"
+                                                    onClick={() => handleRestoreProperty(property.id)}
                                                     style={{
-                                                        background: 'rgba(245, 158, 11, 0.1)',
-                                                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                        background: 'rgba(34, 197, 94, 0.1)',
+                                                        border: '1px solid rgba(34, 197, 94, 0.3)',
                                                         borderRadius: '6px',
                                                         padding: '0.4rem',
                                                         cursor: 'pointer',
-                                                        color: '#f59e0b'
+                                                        color: '#22c55e'
                                                     }}
                                                 >
-                                                    <Edit size={16} />
+                                                    <Undo size={16} />
                                                 </button>
                                                 <button 
                                                     className="btn-icon" 
-                                                    title="Supprimer"
-                                                    onClick={() => handleDeleteProperty(property.id)}
+                                                    title="Supprimer Définitivement"
+                                                    onClick={() => handlePermanentDelete(property.id)}
                                                     style={{
                                                         background: 'rgba(239, 68, 68, 0.1)',
                                                         border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -503,6 +515,7 @@ const Archives = () => {
                         }}>
                             {filteredProperties.map((property) => {
                                 const photoUrl = getFirstPhoto(property);
+                                const remaining = getDaysRemaining(property.deletedAt);
                                 return (
                                 <div key={property.id} style={{
                                     background: 'rgba(255, 255, 255, 0.05)',
@@ -540,6 +553,27 @@ const Archives = () => {
                                             Archivé
                                         </span>
                                         
+                                        {/* Expiration Badge */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '1rem',
+                                            left: '1rem',
+                                            background: remaining <= 5 ? 'rgba(239, 68, 68, 0.9)' : 'rgba(30, 41, 59, 0.8)',
+                                            backdropFilter: 'blur(4px)',
+                                            padding: '0.25rem 0.5rem',
+                                            borderRadius: '6px',
+                                            color: 'white',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem',
+                                            boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                                        }}>
+                                            <Clock size={12} />
+                                            {remaining <= 0 ? 'Suppression imminente' : `${remaining}j restants`}
+                                        </div>
+
                                         <div style={{ 
                                             position: 'absolute', 
                                             bottom: '1rem', 
@@ -754,24 +788,28 @@ const Archives = () => {
                                             <Eye size={18} /> Détails
                                         </button>
                                         <button 
-                                            onClick={() => handleEditProperty(property)}
+                                            onClick={() => handleRestoreProperty(property.id)}
                                             style={{
-                                                background: 'rgba(245, 158, 11, 0.1)',
-                                                border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                flex: 1,
+                                                background: 'rgba(34, 197, 94, 0.1)',
+                                                border: '1px solid rgba(34, 197, 94, 0.3)',
                                                 borderRadius: '8px',
                                                 padding: '0.75rem',
                                                 cursor: 'pointer',
-                                                color: '#f59e0b',
+                                                color: '#22c55e',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
+                                                gap: '0.5rem',
+                                                fontSize: '0.9rem',
+                                                fontWeight: '600',
                                                 transition: 'all 0.2s'
                                             }}
                                         >
-                                            <Edit size={18} />
+                                            <Undo size={18} /> Restaurer
                                         </button>
                                         <button 
-                                            onClick={() => handleDeleteProperty(property.id)}
+                                            onClick={() => handlePermanentDelete(property.id)}
                                             style={{
                                                 background: 'rgba(239, 68, 68, 0.1)',
                                                 border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -801,4 +839,4 @@ const Archives = () => {
     );
 };
 
-export default Archives;
+export default Corbeille;

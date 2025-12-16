@@ -268,7 +268,9 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
         const isAdmin = user?.role === 'ADMIN';
 
         // Build where clause based on user role
-        const whereClause: any = {};
+        const whereClause: any = {
+            deletedAt: null // Exclude trashed properties
+        };
         
         // Collaborateurs cannot view archived properties
         if (!isAdmin) {
@@ -398,9 +400,10 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
 };
 
 /**
- * Delete a property by ID
+ * Soft delete a property by ID (Move to trash)
  * DELETE /api/properties/:id
  * Protected: Admin only
+ * Note: This sets deletedAt timestamp, property will be permanently deleted after 30 days
  */
 export const deleteProperty = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -416,12 +419,9 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
 
         const propertyId = parseInt(id);
 
-        // Check if property exists and get all file attachments
+        // Check if property exists
         const existingProperty = await prisma.bienImmobilier.findUnique({
-            where: { id: propertyId },
-            include: {
-                piecesJointes: true
-            }
+            where: { id: propertyId }
         });
 
         if (!existingProperty) {
@@ -432,44 +432,20 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        // Delete physical files from uploads folder
-        const fs = await import('fs/promises');
-        const path = await import('path');
-        
-        for (const piece of existingProperty.piecesJointes) {
-            // Only delete local files (not external URLs like Google Maps)
-            if (piece.url && piece.url.startsWith('/uploads/')) {
-                try {
-                    // Extract file path from URL (e.g., /uploads/APPARTEMENT/filename.jpg)
-                    const filePath = path.join(process.cwd(), piece.url);
-                    
-                    // Check if file exists before attempting to delete
-                    try {
-                        await fs.access(filePath);
-                        await fs.unlink(filePath);
-                        console.log(`Deleted file: ${filePath}`);
-                    } catch (err) {
-                        // File doesn't exist, skip
-                        console.log(`File not found (already deleted?): ${filePath}`);
-                    }
-                } catch (error) {
-                    console.error(`Error deleting file ${piece.url}:`, error);
-                    // Continue with deletion even if file deletion fails
-                }
+        // Soft delete: Set deletedAt timestamp
+        await prisma.bienImmobilier.update({
+            where: { id: propertyId },
+            data: {
+                deletedAt: new Date()
             }
-        }
-
-        // Delete property (cascade will delete related records)
-        await prisma.bienImmobilier.delete({
-            where: { id: propertyId }
         });
 
         res.status(200).json({
             status: 'success',
-            message: 'Property and associated files deleted successfully'
+            message: 'Property moved to trash. It will be permanently deleted after 30 days.'
         });
     } catch (error: any) {
-        console.error('Delete property error:', error);
+        console.error('Soft delete property error:', error);
         res.status(500).json({
             status: 'error',
             message: 'Failed to delete property',
@@ -889,6 +865,206 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
         res.status(500).json({
             status: 'error',
             message: 'Failed to update property',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Get all trashed properties (deletedAt is not null)
+ * GET /api/properties/trash
+ * Protected: Admin only
+ */
+export const getTrashedProperties = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const properties = await prisma.bienImmobilier.findMany({
+            where: {
+                deletedAt: {
+                    not: null
+                }
+            },
+            include: {
+                proprietaire: {
+                    select: {
+                        id: true,
+                        nom: true,
+                        prenom: true,
+                        telephone: true,
+                        email: true
+                    }
+                },
+                suivi: true,
+                piecesJointes: {
+                    where: {
+                        type: 'PHOTO',
+                        visibilite: 'PUBLIABLE'
+                    },
+                    take: 1
+                },
+                detailAppartement: true,
+                detailVilla: true,
+                detailTerrain: true,
+                detailLocal: true,
+                detailImmeuble: true
+            },
+            orderBy: {
+                deletedAt: 'desc'
+            }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: properties,
+            count: properties.length
+        });
+    } catch (error) {
+        console.error('Get trashed properties error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to fetch trashed properties'
+        });
+    }
+};
+
+/**
+ * Restore a property from trash
+ * PUT /api/properties/:id/restore
+ * Protected: Admin only
+ */
+export const restoreProperty = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        if (!id || isNaN(parseInt(id))) {
+            res.status(400).json({
+                status: 'error',
+                message: 'Invalid property ID'
+            });
+            return;
+        }
+
+        const propertyId = parseInt(id);
+
+        // Check if property exists and is in trash
+        const existingProperty = await prisma.bienImmobilier.findUnique({
+            where: { id: propertyId }
+        });
+
+        if (!existingProperty) {
+            res.status(404).json({
+                status: 'error',
+                message: 'Property not found'
+            });
+            return;
+        }
+
+        if (!existingProperty.deletedAt) {
+            res.status(400).json({
+                status: 'error',
+                message: 'Property is not in trash'
+            });
+            return;
+        }
+
+        // Restore: Remove deletedAt timestamp
+        await prisma.bienImmobilier.update({
+            where: { id: propertyId },
+            data: {
+                deletedAt: null
+            }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Property restored successfully'
+        });
+    } catch (error: any) {
+        console.error('Restore property error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to restore property',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Permanently delete a property by ID
+ * DELETE /api/properties/:id/permanent
+ * Protected: Admin only
+ * Note: This permanently deletes the property and all associated files
+ */
+export const permanentlyDeleteProperty = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        if (!id || isNaN(parseInt(id))) {
+            res.status(400).json({
+                status: 'error',
+                message: 'Invalid property ID'
+            });
+            return;
+        }
+
+        const propertyId = parseInt(id);
+
+        // Check if property exists and get all file attachments
+        const existingProperty = await prisma.bienImmobilier.findUnique({
+            where: { id: propertyId },
+            include: {
+                piecesJointes: true
+            }
+        });
+
+        if (!existingProperty) {
+            res.status(404).json({
+                status: 'error',
+                message: 'Property not found'
+            });
+            return;
+        }
+
+        // Delete physical files from uploads folder
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        
+        for (const piece of existingProperty.piecesJointes) {
+            // Only delete local files (not external URLs like Google Maps)
+            if (piece.url && piece.url.startsWith('/uploads/')) {
+                try {
+                    // Extract file path from URL (e.g., /uploads/APPARTEMENT/filename.jpg)
+                    const filePath = path.join(process.cwd(), piece.url);
+                    
+                    // Check if file exists before attempting to delete
+                    try {
+                        await fs.access(filePath);
+                        await fs.unlink(filePath);
+                        console.log(`Deleted file: ${filePath}`);
+                    } catch (err) {
+                        // File doesn't exist, skip
+                        console.log(`File not found (already deleted?): ${filePath}`);
+                    }
+                } catch (error) {
+                    console.error(`Error deleting file ${piece.url}:`, error);
+                    // Continue with deletion even if file deletion fails
+                }
+            }
+        }
+
+        // Delete property (cascade will delete related records)
+        await prisma.bienImmobilier.delete({
+            where: { id: propertyId }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Property and associated files permanently deleted'
+        });
+    } catch (error: any) {
+        console.error('Permanent delete property error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to permanently delete property',
             error: error.message
         });
     }

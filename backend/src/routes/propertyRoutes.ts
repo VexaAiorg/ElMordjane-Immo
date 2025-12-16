@@ -1,5 +1,14 @@
 import { Router } from 'express';
-import { createProperty, getAllProperties, getPropertyById, deleteProperty, updateProperty } from '../controllers/propertyController.js';
+import { 
+    createProperty, 
+    getAllProperties, 
+    getPropertyById, 
+    deleteProperty, 
+    updateProperty,
+    getTrashedProperties,
+    restoreProperty,
+    permanentlyDeleteProperty
+} from '../controllers/propertyController.js';
 import { authenticateToken, isAdmin, isAdminOrCollaborateur } from '../middleware/authMiddleware.js';
 
 import { uploadPropertyFiles } from '../middleware/uploadMiddleware.js';
@@ -25,7 +34,7 @@ router.post(
 
 /**
  * @route   GET /api/properties
- * @desc    Get all properties
+ * @desc    Get all properties (excluding trashed)
  * @access  Private (Admin & Collaborateur)
  * @note    Collaborateurs cannot view archived properties
  */
@@ -34,6 +43,18 @@ router.get(
     authenticateToken,
     isAdminOrCollaborateur,
     getAllProperties
+);
+
+/**
+ * @route   GET /api/properties/trash
+ * @desc    Get all trashed properties
+ * @access  Private (Admin only)
+ */
+router.get(
+    '/trash',
+    authenticateToken,
+    isAdmin,
+    getTrashedProperties
 );
 
 /**
@@ -50,8 +71,20 @@ router.get(
 );
 
 /**
+ * @route   PUT /api/properties/:id/restore
+ * @desc    Restore a property from trash
+ * @access  Private (Admin only)
+ */
+router.put(
+    '/:id/restore',
+    authenticateToken,
+    isAdmin,
+    restoreProperty
+);
+
+/**
  * @route   DELETE /api/properties/:id
- * @desc    Delete a property by ID
+ * @desc    Soft delete a property (move to trash)
  * @access  Private (Admin only)
  */
 router.delete(
@@ -59,6 +92,18 @@ router.delete(
     authenticateToken,
     isAdmin,
     deleteProperty
+);
+
+/**
+ * @route   DELETE /api/properties/:id/permanent
+ * @desc    Permanently delete a property
+ * @access  Private (Admin only)
+ */
+router.delete(
+    '/:id/permanent',
+    authenticateToken,
+    isAdmin,
+    permanentlyDeleteProperty
 );
 
 /**

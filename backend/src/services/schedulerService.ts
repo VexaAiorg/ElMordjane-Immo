@@ -11,7 +11,7 @@ export const initScheduler = () => {
 
     // Run every day at midnight (00:00)
     cron.schedule('0 0 * * *', async () => {
-        console.log('🧹 Running daily cleanup of archived properties...');
+        console.log('🧹 Running daily cleanup of trashed properties...');
         
         try {
             // Calculate the date 30 days ago
@@ -19,11 +19,11 @@ export const initScheduler = () => {
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
             // Find properties to delete
-            // Condition: archive = true AND dateCreation < 30 days ago
+            // Condition: deletedAt is NOT null AND deletedAt < 30 days ago
             const propertiesToDelete = await prisma.bienImmobilier.findMany({
                 where: {
-                    archive: true,
-                    dateCreation: {
+                    deletedAt: {
+                        not: null,
                         lt: thirtyDaysAgo
                     }
                 },
@@ -37,10 +37,10 @@ export const initScheduler = () => {
                 return;
             }
 
-            console.log(`found ${propertiesToDelete.length} properties to delete.`);
+            console.log(`📋 Found ${propertiesToDelete.length} properties to permanently delete.`);
 
             for (const property of propertiesToDelete) {
-                console.log(`🗑️ Deleting property ID ${property.id} (Created: ${property.dateCreation.toISOString()})`);
+                console.log(`🗑️ Deleting property ID ${property.id} (Deleted on: ${property.deletedAt?.toISOString()})`);
 
                 // Delete physical files
                 for (const piece of property.piecesJointes) {
@@ -60,7 +60,7 @@ export const initScheduler = () => {
                 });
             }
 
-            console.log(`✅ Successfully deleted ${propertiesToDelete.length} old archived properties.`);
+            console.log(`✅ Successfully deleted ${propertiesToDelete.length} old trashed properties.`);
 
         } catch (error) {
             console.error('❌ Error running daily cleanup:', error);

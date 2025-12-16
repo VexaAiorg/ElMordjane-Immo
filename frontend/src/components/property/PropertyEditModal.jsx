@@ -298,7 +298,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                         )}
                     </div>
                     
-                    {/* Archive Dropdown - Only for VENDU properties */}
+                    {/* Archive Dropdown - Only for VENTE properties */}
                     <div style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
@@ -319,8 +319,8 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                         <div 
                             style={{ position: 'relative', minWidth: '180px' }}
                             onClick={(e) => {
-                                // Only allow admins to open dropdown for VENDU properties
-                                if (formData.bienImmobilier.statut === 'VENDU' && isAdmin()) {
+                                // Only allow admins to open dropdown for VENTE properties
+                                if (formData.bienImmobilier.transaction === 'VENTE' && isAdmin()) {
                                     e.stopPropagation();
                                     setArchiveDropdownOpen(!archiveDropdownOpen);
                                 }
@@ -331,20 +331,20 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 padding: '0.5rem 0.75rem',
-                                background: formData.bienImmobilier.statut !== 'VENDU' 
+                                background: formData.bienImmobilier.transaction !== 'VENTE' 
                                     ? 'rgba(255,255,255,0.03)' 
                                     : 'rgba(255,255,255,0.05)',
                                 border: '1px solid rgba(255,255,255,0.1)',
                                 borderRadius: '6px',
-                                color: (formData.bienImmobilier.statut !== 'VENDU' || !isAdmin()) ? '#64748b' : 'white',
+                                color: (formData.bienImmobilier.transaction !== 'VENTE' || !isAdmin()) ? '#64748b' : 'white',
                                 fontSize: '0.9rem',
-                                cursor: (formData.bienImmobilier.statut !== 'VENDU' || !isAdmin()) ? 'not-allowed' : 'pointer',
-                                opacity: (formData.bienImmobilier.statut !== 'VENDU' || !isAdmin()) ? 0.5 : 1,
+                                cursor: (formData.bienImmobilier.transaction !== 'VENTE' || !isAdmin()) ? 'not-allowed' : 'pointer',
+                                opacity: (formData.bienImmobilier.transaction !== 'VENTE' || !isAdmin()) ? 0.5 : 1,
                                 transition: 'all 0.2s'
                             }}>
                                 <span>
                                     {formData.bienImmobilier.archive ? 'Archivé' : 'Non archivé'}
-                                    {!isAdmin() && formData.bienImmobilier.statut === 'VENDU' && (
+                                    {!isAdmin() && formData.bienImmobilier.transaction === 'VENTE' && (
                                         <span style={{ fontSize: '0.75rem', marginLeft: '0.5rem', opacity: 0.6 }}>
                                             (Admin seulement)
                                         </span>
@@ -360,7 +360,7 @@ const PropertyEditModal = ({ property, onClose, onUpdate, isLoading }) => {
                                 />
                             </div>
 
-                            {archiveDropdownOpen && formData.bienImmobilier.statut === 'VENDU' && isAdmin() && (
+                            {archiveDropdownOpen && formData.bienImmobilier.transaction === 'VENTE' && isAdmin() && (
                                 <div style={{
                                     position: 'absolute',
                                     top: '100%',

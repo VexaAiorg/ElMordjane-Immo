@@ -1,17 +1,18 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
-import Auth from './pages/Auth';
 import DashboardLayout from './components/DashboardLayout';
 import AllProperties from './pages/dashboard/AllProperties';
 import SoldProperties from './pages/dashboard/SoldProperties';
 import RentedProperties from './pages/dashboard/RentedProperties';
 import Archives from './pages/dashboard/Archives';
+import Corbeille from './pages/dashboard/Corbeille';
 import GestionCollaborateurs from './pages/dashboard/GestionCollaborateurs';
 import ProfileSettings from './pages/dashboard/ProfileSettings';
 import PropertyWizard from './pages/dashboard/PropertyWizard';
 import ProtectedRoute from './components/ProtectedRoute';
-import PublicRoute from './components/PublicRoute';
+import Auth from './pages/Auth';
 
 function App() {
   return (
@@ -19,41 +20,37 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            {/* Redirect root to auth */}
-            <Route path="/" element={<Navigate to="/auth" replace />} />
+            {/* Public Route */}
+            <Route path="/auth" element={<Auth />} />
 
-            {/* Public routes - redirect to dashboard if already authenticated */}
-            <Route
-              path="/auth"
-              element={
-                <PublicRoute>
-                  <Auth />
-                </PublicRoute>
-              }
-            />
-
-            {/* Protected routes - require authentication */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="menu" replace />} />
-              <Route path="menu" element={<AllProperties />} />
-              <Route path="vente" element={<SoldProperties />} />
-              <Route path="location" element={<RentedProperties />} />
-              <Route path="archives" element={<Archives />} />
-              <Route path="collaborateurs" element={<GestionCollaborateurs />} />
-              <Route path="wizard" element={<PropertyWizard />} />
-              <Route path="wizard/:step" element={<PropertyWizard />} />
-              <Route path="profile" element={<ProfileSettings />} />
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+                <Route index element={<Navigate to="/dashboard/menu" replace />} />
+                <Route path="menu" element={<AllProperties />} />
+                <Route path="vente" element={<SoldProperties />} />
+                <Route path="location" element={<RentedProperties />} />
+                <Route path="archives" element={
+                    <ProtectedRoute adminOnly>
+                        <Archives />
+                    </ProtectedRoute>
+                } />
+                <Route path="corbeille" element={
+                    <ProtectedRoute adminOnly>
+                        <Corbeille />
+                    </ProtectedRoute>
+                } />
+                <Route path="collaborateurs" element={
+                    <ProtectedRoute adminOnly>
+                        <GestionCollaborateurs />
+                    </ProtectedRoute>
+                } />
+                <Route path="wizard" element={<PropertyWizard />} />
+                <Route path="wizard/:step" element={<PropertyWizard />} />
+                <Route path="profile" element={<ProfileSettings />} />
             </Route>
 
-            {/* Catch all - redirect to auth */}
-            <Route path="*" element={<Navigate to="/auth" replace />} />
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/dashboard/menu" replace />} />
           </Routes>
         </Router>
       </AuthProvider>

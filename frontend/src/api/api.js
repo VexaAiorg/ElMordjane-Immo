@@ -524,3 +524,43 @@ export const updateCollaborateur = async (id, updateData) => {
     });
     return data;
 };
+
+// --- Trash/Corbeille Management (Admin Only) ---
+
+/**
+ * Get all trashed properties
+ * @returns {Promise<Object>} Response with trashed properties list
+ */
+export const getTrashedProperties = async () => {
+    const data = await apiRequest('/api/properties/trash', {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+    return data;
+};
+
+/**
+ * Restore a property from trash
+ * @param {string|number} propertyId - Property ID
+ * @returns {Promise<Object>} Response confirming restoration
+ */
+export const restoreProperty = async (propertyId) => {
+    const data = await apiRequest(`/api/properties/${propertyId}/restore`, {
+        method: 'PUT',
+        headers: createHeaders(true),
+    });
+    return data;
+};
+
+/**
+ * Permanently delete a property
+ * @param {string|number} propertyId - Property ID
+ * @returns {Promise<Object>} Response confirming permanent deletion
+ */
+export const permanentlyDeleteProperty = async (propertyId) => {
+    const data = await apiRequest(`/api/properties/${propertyId}/permanent`, {
+        method: 'DELETE',
+        headers: createHeaders(true),
+    });
+    return data;
+};

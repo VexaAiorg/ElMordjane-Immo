@@ -413,6 +413,7 @@ const AllProperties = () => {
                                     <th>Type</th>
                                     <th>Prix</th>
                                     <th>Statut</th>
+                                    <th>Transaction</th>
                                     <th>Date d'ajout</th>
                                     <th>Actions</th>
                                 </tr>
@@ -435,6 +436,11 @@ const AllProperties = () => {
                                         <td>
                                             <span className={`status-badge ${getStatusBadgeClass(property.statut)}`}>
                                                 {getStatusLabel(property.statut)}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge ${property.transaction === 'VENTE' ? 'available' : 'pending'}`}>
+                                                {property.transaction}
                                             </span>
                                         </td>
                                         <td>{formatDate(property.dateCreation)}</td>
