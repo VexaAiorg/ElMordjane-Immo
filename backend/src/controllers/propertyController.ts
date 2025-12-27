@@ -30,11 +30,11 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
 
         // Base URL for images
         // If APP_BASE_URL is set (e.g. https://api.site.com), use it.
-        const baseUrl = process.env.APP_BASE_URL || ''; 
-        
+        const baseUrl = process.env.APP_BASE_URL || '';
+
         const getFileUrl = (file: Express.Multer.File, type: string) => {
-             // Returns: /uploads/TYPE/filename.jpg
-             return `${baseUrl}/uploads/${type}/${file.filename}`;
+            // Returns: /uploads/TYPE/filename.jpg
+            return `${baseUrl}/uploads/${type}/${file.filename}`;
         };
 
         const propertyType = data.bienImmobilier.type || 'AUTRE';
@@ -145,13 +145,13 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
                     // The frontend should send the file with the same name
                     // But for Papiers (Checklist), they might not always have a file uploaded right away?
                     // If they do, it's in the uploadedFilesMap
-                    
+
                     // Actually, the frontend sends Page 4 documents as 'piecesJointes' with type DOCUMENT as well
                     // But here we are populating the 'Papier' table which is the checklist.
                     // The actual file link might be stored here OR in PieceJointe?
                     // The schema seems to have 'Papier' as a checklist.
                     // Let's just create the checklist item.
-                    
+
                     await tx.papier.create({
                         data: {
                             bienId: property.id,
@@ -165,12 +165,21 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
 
             // Step 5: Create PiecesJointes (Attachments)
             // This includes Photos, Documents (from Page 4 & 6), and Locations
+            console.log('📦 [Backend] Processing piecesJointes...');
+            console.log(`   Total pieces to process: ${data.piecesJointes?.length || 0}`);
+
             if (data.piecesJointes && Array.isArray(data.piecesJointes)) {
-                for (const piece of data.piecesJointes) {
+                for (let i = 0; i < data.piecesJointes.length; i++) {
+                    const piece = data.piecesJointes[i];
+                    console.log(`   [${i}] Processing: ${piece.nom} (${piece.type}, ${piece.visibilite})`);
+                    console.log(`       URL: ${piece.url || 'none'}`);
+
                     const uploadedFile = uploadedFilesMap.get(piece.nom);
+                    console.log(`       In uploadedFilesMap: ${uploadedFile ? 'YES' : 'NO'}`);
 
                     if (uploadedFile) {
                         // It's a file we just uploaded
+                        console.log(`       ✅ Creating from uploadedFile`);
                         await tx.pieceJointe.create({
                             data: {
                                 bienId: property.id,
@@ -182,7 +191,8 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
                             }
                         });
                     } else if (piece.url) {
-                        // It's a URL-only attachment (like Google Maps)
+                        // It's a URL-only attachment (like Google Maps) or pre-uploaded file
+                        console.log(`       ✅ Creating from URL: ${piece.url}`);
                         await tx.pieceJointe.create({
                             data: {
                                 bienId: property.id,
@@ -193,8 +203,11 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
                                 categorie: piece.categorie || null
                             }
                         });
+                    } else {
+                        console.log(`       ⚠️ SKIPPED - No uploadedFile and no URL!`);
                     }
                 }
+                console.log(`✅ [Backend] Finished processing ${data.piecesJointes.length} piecesJointes`);
             }
 
             // Step 6: Create Suivi (Tracking)
@@ -271,7 +284,7 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
         const whereClause: any = {
             deletedAt: null // Exclude trashed properties
         };
-        
+
         // Collaborateurs cannot view archived properties
         if (!isAdmin) {
             whereClause.archive = false;
@@ -295,7 +308,9 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
                         type: 'PHOTO',
                         visibilite: 'PUBLIABLE'
                     },
-                    take: 1
+                    orderBy: {
+                        id: 'asc'
+                    }
                 },
                 detailAppartement: true,
                 detailVilla: true,
@@ -507,9 +522,9 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
 
         // Base URL for images
         const baseUrl = process.env.APP_BASE_URL || '';
-        
+
         const getFileUrl = (file: Express.Multer.File, type: string) => {
-             return `${baseUrl}/uploads/${type}/${file.filename}`;
+            return `${baseUrl}/uploads/${type}/${file.filename}`;
         };
 
         const propertyType = data.bienImmobilier.type || 'AUTRE';
@@ -543,7 +558,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
             if (data.proprietaire) {
                 // If it's an existing owner update
                 if (data.proprietaire.id) {
-                     await tx.proprietaire.update({
+                    await tx.proprietaire.update({
                         where: { id: data.proprietaire.id },
                         data: {
                             nom: data.proprietaire.nom,
@@ -567,7 +582,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
             // 3. Update Details
             const parseNum = (val: any) => (val !== undefined && val !== null && val !== '') ? parseFloat(val.toString()) : null;
             const parseIntNum = (val: any) => (val !== undefined && val !== null && val !== '') ? parseInt(val.toString()) : null;
-            
+
             // Helper function to remove null/undefined values from update object
             const cleanUpdateData = (obj: any) => {
                 const cleaned: any = {};
@@ -591,10 +606,10 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     etage: parseIntNum(rawDetail.etage),
                     anneeConstruction: parseIntNum(rawDetail.anneeConstruction),
                 };
-                
+
                 // Remove null values to prevent overwriting existing data
                 const updateData = cleanUpdateData(detailData);
-                
+
                 await tx.detailAppartement.upsert({
                     where: { bienId: propertyId },
                     create: { bienId: propertyId, ...detailData },
@@ -610,9 +625,9 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     largeur: parseNum(rawDetail.largeur),
                     facades: parseIntNum(rawDetail.facades),
                 };
-                
+
                 const updateData = cleanUpdateData(detailData);
-                
+
                 if (surface !== null) {
                     await tx.detailTerrain.upsert({
                         where: { bienId: propertyId },
@@ -641,7 +656,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     etages: parseIntNum(rawDetail.etages),
                     pieces: parseIntNum(rawDetail.pieces),
                 };
-                
+
                 const updateData = cleanUpdateData(detailData);
 
                 if (surface !== null) {
@@ -667,7 +682,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     hauteur: parseNum(rawDetail.hauteur),
                     facades: parseIntNum(rawDetail.facades),
                 };
-                
+
                 const updateData = cleanUpdateData(detailData);
 
                 if (surface !== null) {
@@ -699,7 +714,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     nbAppartements: parseIntNum(rawDetail.nbAppartements),
                     surfaceSol: parseNum(rawDetail.surfaceSol),
                 };
-                
+
                 const updateData = cleanUpdateData(detailData);
 
                 if (surface !== null) {
@@ -773,7 +788,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                     }
 
                     const file = await tx.pieceJointe.findUnique({ where: { id: fileId } });
-                    
+
                     if (file) {
                         console.log(`Deleting file ID ${fileId}: ${file.nom} (${file.url})`);
                         // Delete physical file if it exists and is local
@@ -813,12 +828,12 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
                                 categorie: piece.categorie || null
                             }
                         });
-                    } 
+                    }
                     // If it's an existing file (has ID), update visibility and category
                     else if (piece.id) {
-                         await tx.pieceJointe.update({
+                        await tx.pieceJointe.update({
                             where: { id: piece.id },
-                            data: { 
+                            data: {
                                 visibilite: piece.visibilite,
                                 categorie: piece.categorie || null
                             }
@@ -1027,14 +1042,14 @@ export const permanentlyDeleteProperty = async (req: Request, res: Response): Pr
         // Delete physical files from uploads folder
         const fs = await import('fs/promises');
         const path = await import('path');
-        
+
         for (const piece of existingProperty.piecesJointes) {
             // Only delete local files (not external URLs like Google Maps)
             if (piece.url && piece.url.startsWith('/uploads/')) {
                 try {
                     // Extract file path from URL (e.g., /uploads/APPARTEMENT/filename.jpg)
                     const filePath = path.join(process.cwd(), piece.url);
-                    
+
                     // Check if file exists before attempting to delete
                     try {
                         await fs.access(filePath);

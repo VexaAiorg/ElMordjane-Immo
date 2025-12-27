@@ -44,7 +44,7 @@ const Page7Summary = () => {
         try {
             // Prepare property data object matching backend expectations
             const isNewOwner = !formData.owner?.proprietaireId;
-            
+
             // Map specific details based on property type
             const propertyType = formData.basicInfo?.type;
             let specificDetail = {};
@@ -63,6 +63,9 @@ const Page7Summary = () => {
             // Build piecesJointes array from uploaded file URLs
             const piecesJointes = [];
 
+            console.log('📋 [Page 7] Building piecesJointes array...');
+            console.log('   uploadedFileUrls:', uploadedFileUrls);
+
             // 1. Add documents from Page 4 (using uploadedFileUrls.documents) - INTERNE
             if (uploadedFileUrls.documents) {
                 Object.entries(uploadedFileUrls.documents).forEach(([docName, fileData]) => {
@@ -74,23 +77,31 @@ const Page7Summary = () => {
                         categorie: docName, // Link to the juridical document name (e.g., "Acte", "Livret Foncier")
                     });
                 });
+                console.log(`   ✅ Added ${Object.keys(uploadedFileUrls.documents).length} documents from Page 4 (INTERNE)`);
             }
 
             // 2. Add photos from Page 5 - Fichiers liés au bien (PUBLIABLE by default)
+            console.log(`   📸 Page 5 trackingPhotos count: ${uploadedFileUrls.trackingPhotos?.length || 0}`);
             if (uploadedFileUrls.trackingPhotos && uploadedFileUrls.trackingPhotos.length > 0) {
-                uploadedFileUrls.trackingPhotos.forEach((fileData) => {
+                uploadedFileUrls.trackingPhotos.forEach((fileData, idx) => {
                     // Find matching attachment to get visibility setting
                     const attachment = formData.trackingAttachments?.piecesJointes?.find(
                         a => a.type === 'PHOTO' && a.file?.name === fileData.originalname
                     );
-                    
-                    piecesJointes.push({
+
+                    const piece = {
                         type: 'PHOTO',
                         visibilite: attachment?.visibilite || 'PUBLIABLE',
                         nom: fileData.originalname,
                         url: fileData.url,
-                    });
+                    };
+
+                    piecesJointes.push(piece);
+                    console.log(`     [${idx}] ${piece.nom} - ${piece.visibilite}`);
                 });
+                console.log(`   ✅ Added ${uploadedFileUrls.trackingPhotos.length} photos from Page 5 (PUBLIABLE)`);
+            } else {
+                console.log(`   ⚠️ No trackingPhotos found in uploadedFileUrls`);
             }
 
             // 3. Add documents from Page 5 - Fichiers liés au bien (PUBLIABLE by default)
@@ -100,7 +111,7 @@ const Page7Summary = () => {
                     const attachment = formData.trackingAttachments?.piecesJointes?.find(
                         a => a.type === 'DOCUMENT' && a.file?.name === fileData.originalname
                     );
-                    
+
                     piecesJointes.push({
                         type: 'DOCUMENT',
                         visibilite: attachment?.visibilite || 'PUBLIABLE',
@@ -131,7 +142,7 @@ const Page7Summary = () => {
                     const attachment = formData.attachments?.piecesJointes?.find(
                         a => a.type === 'PHOTO' && a.file?.name === fileData.originalname
                     );
-                    
+
                     piecesJointes.push({
                         type: 'PHOTO',
                         visibilite: attachment?.visibilite || 'INTERNE',
@@ -148,7 +159,7 @@ const Page7Summary = () => {
                     const attachment = formData.attachments?.piecesJointes?.find(
                         a => a.type === 'DOCUMENT' && a.file?.name === fileData.originalname
                     );
-                    
+
                     piecesJointes.push({
                         type: 'DOCUMENT',
                         visibilite: attachment?.visibilite || 'INTERNE',
@@ -411,10 +422,10 @@ const Page7Summary = () => {
 
             {/* Error Display */}
             {error && (
-                <div className="error-message" style={{ 
-                    marginTop: '1rem', 
-                    padding: '1rem', 
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+                <div className="error-message" style={{
+                    marginTop: '1rem',
+                    padding: '1rem',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
                     border: '1px solid rgba(239, 68, 68, 0.3)',
                     borderRadius: '8px',
                     color: '#ef4444'

@@ -19,16 +19,61 @@ const getBase64FromUrl = async (url) => {
         });
         if (!response.ok) return null;
         const blob = await response.blob();
-        return new Promise((resolve) => {
+
+        // Convert to Base64
+        const base64 = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result);
             reader.readAsDataURL(blob);
         });
+
+        return base64;
     } catch (error) {
         console.error('Error loading image for PDF:', error);
         return null;
     }
 };
+
+/**
+ * Convert image to JPEG format using Canvas
+ * This helps with PNG images that jsPDF has trouble with
+ */
+const convertImageToJPEG = async (base64Image) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                const ctx = canvas.getContext('2d');
+                // Fill white background (for transparent PNGs)
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Draw image
+                ctx.drawImage(img, 0, 0);
+
+                // Convert to JPEG with 90% quality
+                const jpegBase64 = canvas.toDataURL('image/jpeg', 0.9);
+                resolve(jpegBase64);
+            } catch (error) {
+                console.error('Error converting image:', error);
+                reject(error);
+            }
+        };
+
+        img.onerror = (error) => {
+            console.error('Error loading image for conversion:', error);
+            reject(error);
+        };
+
+        img.src = base64Image;
+    });
+};
+
 
 const formatPrice = (price) => {
     if (!price) return '-';
@@ -69,43 +114,92 @@ export const exportPropertiesToPDF = async (properties) => {
         const property = properties[i];
 
         // --- 1. Draw Layout ---
-        
+
         // Sidebar Background
         doc.setFillColor(...sidebarColor);
         doc.rect(0, 0, sidebarWidth, pageHeight, 'F');
 
         // --- 2. Sidebar Content (Left) ---
-        
+
         let yPos = 20;
 
         // A. Photo (Top Left)
         let mainPhotoUrl = null;
         if (property.piecesJointes) {
+            console.log('🔍 All piecesJointes for property:', property.titre);
+            console.log('Total pieces:', property.piecesJointes.length);
+            property.piecesJointes.forEach((pj, idx) => {
+                console.log(`  [${idx}] Type: ${pj.type}, Visibilite: ${pj.visibilite}, URL: ${pj.url}`);
+            });
+
             let photo = property.piecesJointes.find(pj => pj.type === 'PHOTO' && pj.visibilite === 'PUBLIABLE');
+            console.log('📸 PUBLIABLE photo found:', photo ? 'YES' : 'NO');
+
             // Fallback to any photo if no publiable one found
-            if (!photo) photo = property.piecesJointes.find(pj => pj.type === 'PHOTO');
-            
-            if (photo) mainPhotoUrl = getFileUrl(photo.url);
+            if (!photo) {
+                photo = property.piecesJointes.find(pj => pj.type === 'PHOTO');
+                console.log('📸 Fallback to any photo:', photo ? 'YES' : 'NO');
+            }
+
+            if (photo) {
+                mainPhotoUrl = getFileUrl(photo.url);
+                console.log('🌐 Main photo URL:', mainPhotoUrl);
+            }
         }
 
         if (mainPhotoUrl) {
-            const photoBase64 = await getBase64FromUrl(mainPhotoUrl);
+            console.log('⬇️ Fetching main photo from:', mainPhotoUrl);
+            let photoBase64 = await getBase64FromUrl(mainPhotoUrl);
             if (photoBase64) {
                 try {
                     const formatMatch = photoBase64.match(/^data:image\/(\w+);base64,/);
-                    const format = formatMatch ? formatMatch[1].toUpperCase() : 'JPEG';
-                    // Draw image in sidebar
+                    let format = formatMatch ? formatMatch[1].toUpperCase() : 'JPEG';
+                    console.log('✅ Image format detected:', format);
+                    console.log('📏 Base64 length:', photoBase64.length);
+
+                    // Try to add the image
                     const imgSize = 50;
                     const xPos = (sidebarWidth - imgSize) / 2;
-                    doc.addImage(photoBase64, format, xPos, yPos, imgSize, imgSize);
-                    yPos += imgSize + 15;
+
+                    try {
+                        doc.addImage(photoBase64, format, xPos, yPos, imgSize, imgSize);
+                        yPos += imgSize + 15;
+                        console.log('✅ Main image added successfully');
+                    } catch (addImageError) {
+                        // If PNG fails, try converting to JPEG
+                        if (format === 'PNG') {
+                            console.log('⚠️ PNG failed, converting to JPEG...');
+                            try {
+                                photoBase64 = await convertImageToJPEG(photoBase64);
+                                format = 'JPEG';
+                                console.log('✅ Converted to JPEG, Base64 length:', photoBase64.length);
+
+                                doc.addImage(photoBase64, format, xPos, yPos, imgSize, imgSize);
+                                yPos += imgSize + 15;
+                                console.log('✅ Main image added successfully (after conversion)');
+                            } catch (conversionError) {
+                                console.error('❌ Conversion failed:', conversionError);
+                                throw addImageError; // Throw original error
+                            }
+                        } else {
+                            throw addImageError;
+                        }
+                    }
                 } catch (err) {
-                    console.warn('Error adding image:', err);
+                    console.error('❌ Error adding main image:', err);
+                    console.error('   URL was:', mainPhotoUrl);
+                    console.error('   Base64 preview:', photoBase64.substring(0, 100));
+                    // Continue without image
+                    yPos += 20;
                 }
+            } else {
+                console.warn('⚠️ Failed to convert main photo to base64');
             }
         } else {
+            console.log('ℹ️ No main photo found, skipping');
             yPos += 20; // Space if no image
         }
+
 
         // Helper for Sidebar Text
         const drawSidebarText = (label, value, y) => {
@@ -113,14 +207,14 @@ export const exportPropertiesToPDF = async (properties) => {
             doc.setTextColor(200, 200, 200); // Light grey for label
             doc.setFont('helvetica', 'normal');
             doc.text(label.toUpperCase(), 10, y);
-            
+
             doc.setFontSize(10);
             doc.setTextColor(...sidebarTextColor); // White for value
             doc.setFont('helvetica', 'bold');
             // Handle multi-line values
             const splitValue = doc.splitTextToSize(value || '-', sidebarWidth - 20);
             doc.text(splitValue, 10, y + 5);
-            
+
             return y + 5 + (splitValue.length * 5) + 8; // Return new Y position
         };
 
@@ -144,7 +238,7 @@ export const exportPropertiesToPDF = async (properties) => {
         // REMOVED: Localisation and Suivi sections from sidebar as requested
 
         // --- 3. Main Content (Right) ---
-        
+
         let mainY = 20;
         const mainX = sidebarWidth + margin;
         const mainContentWidth = contentWidth - (margin * 2);
@@ -209,11 +303,11 @@ export const exportPropertiesToPDF = async (properties) => {
             // Draw Grid (2 Columns)
             const colWidth = mainContentWidth / 2;
             doc.setFontSize(10);
-            
+
             detailsList.forEach((item, idx) => {
                 const col = idx % 2; // 0 or 1
                 const row = Math.floor(idx / 2);
-                
+
                 const x = mainX + (col * colWidth);
                 const y = mainY + (row * 8);
 
@@ -229,7 +323,7 @@ export const exportPropertiesToPDF = async (properties) => {
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(100, 100, 100);
                 doc.text(`${item.label}:`, x, y);
-                
+
                 // Separate value from detail: Add fixed spacing
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(...mainTextColor);
@@ -238,7 +332,7 @@ export const exportPropertiesToPDF = async (properties) => {
                 // User asked to "separate a little bit the value from each detail"
                 const labelWidth = doc.getTextWidth(`${item.label}:`);
                 const valueX = x + labelWidth + 5; // Add 5mm spacing
-                
+
                 doc.text(item.value.toString(), valueX, y);
             });
 
@@ -247,7 +341,7 @@ export const exportPropertiesToPDF = async (properties) => {
 
         // D. Documents Juridiques (List) - Filtered for Available only
         const availableDocs = property.papiers ? property.papiers.filter(p => p.statut === 'DISPONIBLE') : [];
-        
+
         if (availableDocs.length > 0) {
             // Check page break
             if (mainY > pageHeight - 40) {
@@ -266,20 +360,25 @@ export const exportPropertiesToPDF = async (properties) => {
             doc.setFontSize(10);
             doc.setTextColor(...mainTextColor);
             doc.setFont('helvetica', 'normal');
-            
+
             // List them comma separated or bullet points? User said "add doc juridiques not the docs theme selves just the ones available"
             // Let's do a clean list
             const docNames = availableDocs.map(d => d.nom).join(', ');
             const splitDocs = doc.splitTextToSize(docNames, mainContentWidth);
             doc.text(splitDocs, mainX, mainY);
-            
+
             mainY += (splitDocs.length * 5) + 10;
         }
 
         // E. Photos Gallery (All Publiable Photos)
-        const galleryPhotos = property.piecesJointes 
+        const galleryPhotos = property.piecesJointes
             ? property.piecesJointes.filter(pj => pj.type === 'PHOTO' && pj.visibilite === 'PUBLIABLE')
             : [];
+
+        console.log('🖼️ Gallery photos (PUBLIABLE only):', galleryPhotos.length);
+        galleryPhotos.forEach((gp, idx) => {
+            console.log(`  Gallery [${idx}]: ${gp.nom || 'unnamed'} - ${gp.url}`);
+        });
 
         if (galleryPhotos.length > 0) {
             // Check page break
@@ -299,11 +398,13 @@ export const exportPropertiesToPDF = async (properties) => {
             // Grid layout for photos (e.g., 2 columns in the main content area)
             const photoSize = (mainContentWidth - 10) / 2; // 2 photos per row with 10mm gap
             let currentX = mainX;
-            
+
             for (let pIndex = 0; pIndex < galleryPhotos.length; pIndex++) {
                 const photo = galleryPhotos[pIndex];
                 const photoUrl = getFileUrl(photo.url);
-                const photoBase64 = await getBase64FromUrl(photoUrl);
+                console.log(`📥 Loading gallery photo [${pIndex}/${galleryPhotos.length}]:`, photoUrl);
+
+                let photoBase64 = await getBase64FromUrl(photoUrl);
 
                 if (photoBase64) {
                     try {
@@ -317,27 +418,68 @@ export const exportPropertiesToPDF = async (properties) => {
                         }
 
                         const formatMatch = photoBase64.match(/^data:image\/(\w+);base64,/);
-                        const format = formatMatch ? formatMatch[1].toUpperCase() : 'JPEG';
-                        
-                        doc.addImage(photoBase64, format, currentX, mainY, photoSize, photoSize);
-                        
-                        // Draw border
-                        doc.setDrawColor(200, 200, 200);
-                        doc.rect(currentX, mainY, photoSize, photoSize);
+                        let format = formatMatch ? formatMatch[1].toUpperCase() : 'JPEG';
+                        console.log(`  ✅ Format: ${format}, Base64 length: ${photoBase64.length}`);
 
-                        // Move position
-                        if (currentX === mainX) {
-                            currentX += photoSize + 10; // Move to second column
-                        } else {
-                            currentX = mainX; // Reset to first column
-                            mainY += photoSize + 10; // Move to next row
+                        try {
+                            doc.addImage(photoBase64, format, currentX, mainY, photoSize, photoSize);
+
+                            // Draw border
+                            doc.setDrawColor(200, 200, 200);
+                            doc.rect(currentX, mainY, photoSize, photoSize);
+
+                            // Move position
+                            if (currentX === mainX) {
+                                currentX += photoSize + 10; // Move to second column
+                            } else {
+                                currentX = mainX; // Reset to first column
+                                mainY += photoSize + 10; // Move to next row
+                            }
+                            console.log(`  ✅ Gallery photo [${pIndex}] added successfully`);
+                        } catch (addImageError) {
+                            // If PNG fails, try converting to JPEG
+                            if (format === 'PNG') {
+                                console.log(`  ⚠️ PNG failed for gallery [${pIndex}], converting to JPEG...`);
+                                try {
+                                    photoBase64 = await convertImageToJPEG(photoBase64);
+                                    format = 'JPEG';
+                                    console.log(`  ✅ Converted to JPEG, Base64 length: ${photoBase64.length}`);
+
+                                    doc.addImage(photoBase64, format, currentX, mainY, photoSize, photoSize);
+
+                                    // Draw border
+                                    doc.setDrawColor(200, 200, 200);
+                                    doc.rect(currentX, mainY, photoSize, photoSize);
+
+                                    // Move position
+                                    if (currentX === mainX) {
+                                        currentX += photoSize + 10; // Move to second column
+                                    } else {
+                                        currentX = mainX; // Reset to first column
+                                        mainY += photoSize + 10; // Move to next row
+                                    }
+                                    console.log(`  ✅ Gallery photo [${pIndex}] added successfully (after conversion)`);
+                                } catch (conversionError) {
+                                    console.error(`  ❌ Conversion failed for gallery [${pIndex}]:`, conversionError);
+                                    throw addImageError;
+                                }
+                            } else {
+                                throw addImageError;
+                            }
                         }
 
                     } catch (err) {
-                        console.warn('Error adding gallery image:', err);
+                        console.error(`❌ Error adding gallery image [${pIndex}]:`, err);
+                        console.error('   URL was:', photoUrl);
+                        console.error('   Base64 preview:', photoBase64.substring(0, 100));
+                        // Continue with next photo
                     }
+                } else {
+                    console.warn(`⚠️ Failed to load gallery photo [${pIndex}]:`, photoUrl);
                 }
             }
+        } else {
+            console.log('ℹ️ No PUBLIABLE gallery photos to display');
         }
     }
 
