@@ -158,11 +158,8 @@ const Page5Tracking = () => {
     const handlePhotoUpload = async (files) => {
         setUploadingPhotos(true);
         try {
-            console.log(`📤 [Page 5] Uploading ${files.length} photos...`);
-
             // Upload files immediately to server
             const uploadedFiles = await uploadFilesImmediately(files, propertyType);
-            console.log(`✅ [Page 5] Server returned ${uploadedFiles.length} file URLs:`, uploadedFiles);
 
             // Default visibility is PUBLIABLE for Page 5 (Fichiers liés au bien)
             const newAttachments = files.map((file, index) => ({
@@ -174,18 +171,11 @@ const Page5Tracking = () => {
                 serverUrl: uploadedFiles[index],
             }));
 
-            console.log(`📦 [Page 5] Created ${newAttachments.length} attachment objects`);
             setAttachments([...attachments, ...newAttachments]);
 
             // Store URLs in context (trackingPhotos for Page 5)
             const currentPhotos = uploadedFileUrls.trackingPhotos || [];
-            const updatedPhotos = [...currentPhotos, ...uploadedFiles];
-            updateUploadedFileUrls('trackingPhotos', updatedPhotos);
-
-            console.log(`💾 [Page 5] Stored in context - trackingPhotos count: ${updatedPhotos.length}`);
-            console.log(`   Current: ${currentPhotos.length}, New: ${uploadedFiles.length}, Total: ${updatedPhotos.length}`);
-
-            console.log(`✅ [Page 5] Uploaded ${files.length} photos (PUBLIABLE)`);
+            updateUploadedFileUrls('trackingPhotos', [...currentPhotos, ...uploadedFiles]);
         } catch (error) {
             console.error('Upload failed:', error);
             alert('Échec du téléchargement des photos. Veuillez réessayer.');

@@ -126,36 +126,24 @@ export const exportPropertiesToPDF = async (properties) => {
         // A. Photo (Top Left)
         let mainPhotoUrl = null;
         if (property.piecesJointes) {
-            console.log('🔍 All piecesJointes for property:', property.titre);
-            console.log('Total pieces:', property.piecesJointes.length);
-            property.piecesJointes.forEach((pj, idx) => {
-                console.log(`  [${idx}] Type: ${pj.type}, Visibilite: ${pj.visibilite}, URL: ${pj.url}`);
-            });
-
             let photo = property.piecesJointes.find(pj => pj.type === 'PHOTO' && pj.visibilite === 'PUBLIABLE');
-            console.log('📸 PUBLIABLE photo found:', photo ? 'YES' : 'NO');
 
             // Fallback to any photo if no publiable one found
             if (!photo) {
                 photo = property.piecesJointes.find(pj => pj.type === 'PHOTO');
-                console.log('📸 Fallback to any photo:', photo ? 'YES' : 'NO');
             }
 
             if (photo) {
                 mainPhotoUrl = getFileUrl(photo.url);
-                console.log('🌐 Main photo URL:', mainPhotoUrl);
             }
         }
 
         if (mainPhotoUrl) {
-            console.log('⬇️ Fetching main photo from:', mainPhotoUrl);
             let photoBase64 = await getBase64FromUrl(mainPhotoUrl);
             if (photoBase64) {
                 try {
                     const formatMatch = photoBase64.match(/^data:image\/(\w+);base64,/);
                     let format = formatMatch ? formatMatch[1].toUpperCase() : 'JPEG';
-                    console.log('✅ Image format detected:', format);
-                    console.log('📏 Base64 length:', photoBase64.length);
 
                     // Try to add the image
                     const imgSize = 50;
@@ -164,40 +152,30 @@ export const exportPropertiesToPDF = async (properties) => {
                     try {
                         doc.addImage(photoBase64, format, xPos, yPos, imgSize, imgSize);
                         yPos += imgSize + 15;
-                        console.log('✅ Main image added successfully');
                     } catch (addImageError) {
                         // If PNG fails, try converting to JPEG
                         if (format === 'PNG') {
-                            console.log('⚠️ PNG failed, converting to JPEG...');
                             try {
                                 photoBase64 = await convertImageToJPEG(photoBase64);
                                 format = 'JPEG';
-                                console.log('✅ Converted to JPEG, Base64 length:', photoBase64.length);
 
                                 doc.addImage(photoBase64, format, xPos, yPos, imgSize, imgSize);
                                 yPos += imgSize + 15;
-                                console.log('✅ Main image added successfully (after conversion)');
                             } catch (conversionError) {
-                                console.error('❌ Conversion failed:', conversionError);
-                                throw addImageError; // Throw original error
+                                console.error('Error converting PNG to JPEG:', conversionError);
+                                throw addImageError;
                             }
                         } else {
                             throw addImageError;
                         }
                     }
                 } catch (err) {
-                    console.error('❌ Error adding main image:', err);
-                    console.error('   URL was:', mainPhotoUrl);
-                    console.error('   Base64 preview:', photoBase64.substring(0, 100));
-                    // Continue without image
+                    console.error('Error adding main image:', err);
                     yPos += 20;
                 }
-            } else {
-                console.warn('⚠️ Failed to convert main photo to base64');
             }
         } else {
-            console.log('ℹ️ No main photo found, skipping');
-            yPos += 20; // Space if no image
+            yPos += 20;
         }
 
 
@@ -402,7 +380,6 @@ export const exportPropertiesToPDF = async (properties) => {
             for (let pIndex = 0; pIndex < galleryPhotos.length; pIndex++) {
                 const photo = galleryPhotos[pIndex];
                 const photoUrl = getFileUrl(photo.url);
-                console.log(`📥 Loading gallery photo [${pIndex}/${galleryPhotos.length}]:`, photoUrl);
 
                 let photoBase64 = await getBase64FromUrl(photoUrl);
 
@@ -419,7 +396,6 @@ export const exportPropertiesToPDF = async (properties) => {
 
                         const formatMatch = photoBase64.match(/^data:image\/(\w+);base64,/);
                         let format = formatMatch ? formatMatch[1].toUpperCase() : 'JPEG';
-                        console.log(`  ✅ Format: ${format}, Base64 length: ${photoBase64.length}`);
 
                         try {
                             doc.addImage(photoBase64, format, currentX, mainY, photoSize, photoSize);
@@ -439,11 +415,9 @@ export const exportPropertiesToPDF = async (properties) => {
                         } catch (addImageError) {
                             // If PNG fails, try converting to JPEG
                             if (format === 'PNG') {
-                                console.log(`  ⚠️ PNG failed for gallery [${pIndex}], converting to JPEG...`);
                                 try {
                                     photoBase64 = await convertImageToJPEG(photoBase64);
                                     format = 'JPEG';
-                                    console.log(`  ✅ Converted to JPEG, Base64 length: ${photoBase64.length}`);
 
                                     doc.addImage(photoBase64, format, currentX, mainY, photoSize, photoSize);
 
@@ -458,9 +432,8 @@ export const exportPropertiesToPDF = async (properties) => {
                                         currentX = mainX; // Reset to first column
                                         mainY += photoSize + 10; // Move to next row
                                     }
-                                    console.log(`  ✅ Gallery photo [${pIndex}] added successfully (after conversion)`);
                                 } catch (conversionError) {
-                                    console.error(`  ❌ Conversion failed for gallery [${pIndex}]:`, conversionError);
+                                    console.error(`Error converting gallery photo [${pIndex}]:`, conversionError);
                                     throw addImageError;
                                 }
                             } else {
@@ -469,17 +442,13 @@ export const exportPropertiesToPDF = async (properties) => {
                         }
 
                     } catch (err) {
-                        console.error(`❌ Error adding gallery image [${pIndex}]:`, err);
-                        console.error('   URL was:', photoUrl);
-                        console.error('   Base64 preview:', photoBase64.substring(0, 100));
+                        console.error(`Error adding gallery image [${pIndex}]:`, err);
                         // Continue with next photo
                     }
                 } else {
-                    console.warn(`⚠️ Failed to load gallery photo [${pIndex}]:`, photoUrl);
+                    console.warn(`Failed to load gallery photo [${pIndex}]:`, photoUrl);
                 }
             }
-        } else {
-            console.log('ℹ️ No PUBLIABLE gallery photos to display');
         }
     }
 

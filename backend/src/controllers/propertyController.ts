@@ -165,21 +165,12 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
 
             // Step 5: Create PiecesJointes (Attachments)
             // This includes Photos, Documents (from Page 4 & 6), and Locations
-            console.log('📦 [Backend] Processing piecesJointes...');
-            console.log(`   Total pieces to process: ${data.piecesJointes?.length || 0}`);
-
             if (data.piecesJointes && Array.isArray(data.piecesJointes)) {
-                for (let i = 0; i < data.piecesJointes.length; i++) {
-                    const piece = data.piecesJointes[i];
-                    console.log(`   [${i}] Processing: ${piece.nom} (${piece.type}, ${piece.visibilite})`);
-                    console.log(`       URL: ${piece.url || 'none'}`);
-
+                for (const piece of data.piecesJointes) {
                     const uploadedFile = uploadedFilesMap.get(piece.nom);
-                    console.log(`       In uploadedFilesMap: ${uploadedFile ? 'YES' : 'NO'}`);
 
                     if (uploadedFile) {
                         // It's a file we just uploaded
-                        console.log(`       ✅ Creating from uploadedFile`);
                         await tx.pieceJointe.create({
                             data: {
                                 bienId: property.id,
@@ -192,7 +183,6 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
                         });
                     } else if (piece.url) {
                         // It's a URL-only attachment (like Google Maps) or pre-uploaded file
-                        console.log(`       ✅ Creating from URL: ${piece.url}`);
                         await tx.pieceJointe.create({
                             data: {
                                 bienId: property.id,
@@ -203,11 +193,8 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
                                 categorie: piece.categorie || null
                             }
                         });
-                    } else {
-                        console.log(`       ⚠️ SKIPPED - No uploadedFile and no URL!`);
                     }
                 }
-                console.log(`✅ [Backend] Finished processing ${data.piecesJointes.length} piecesJointes`);
             }
 
             // Step 6: Create Suivi (Tracking)
