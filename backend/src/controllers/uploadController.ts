@@ -5,6 +5,8 @@ import path from 'path';
 const UPLOAD_ROOT = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 const baseUrl = process.env.APP_BASE_URL || '';
 
+import { optimizeImage } from '../utils/imageOptimizer';
+
 /**
  * Upload files temporarily
  * POST /api/upload/temp
@@ -13,7 +15,7 @@ const baseUrl = process.env.APP_BASE_URL || '';
 export const uploadTemp = async (req: Request, res: Response): Promise<void> => {
     try {
         const files = req.files as Express.Multer.File[];
-        
+
         if (!files || files.length === 0) {
             res.status(400).json({
                 status: 'error',
@@ -23,6 +25,36 @@ export const uploadTemp = async (req: Request, res: Response): Promise<void> => 
         }
 
         const type = req.body.type || 'TEMP';
+        const MAX_DOC_SIZE = 5 * 1024 * 1024; // 5MB
+
+        // Process files: Validate size for docs & Optimize images
+        for (const file of files) {
+            // 1. Check Document Size Limit
+            if (!file.mimetype.startsWith('image/') && file.size > MAX_DOC_SIZE) {
+                // Cleanup: Delete all files from this request since we are failing
+                files.forEach(f => {
+                    if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
+                });
+
+                res.status(400).json({
+                    status: 'error',
+                    message: `Le fichier "${file.originalname}" dépasse la limite de 5 Mo.`
+                });
+                return;
+            }
+
+            // 2. Optimize Images
+            if (file.mimetype.startsWith('image/')) {
+                await optimizeImage(file.path);
+                // Update size after compression
+                try {
+                    const stats = fs.statSync(file.path);
+                    file.size = stats.size;
+                } catch (e) {
+                    console.error('Failed to update file stats:', e);
+                }
+            }
+        }
 
         // Generate URLs for uploaded files
         const uploadedFiles = files.map(file => ({

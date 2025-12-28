@@ -114,12 +114,31 @@ const Page6Attachments = () => {
     const propertyType = formData.basicInfo?.type || 'TEMP';
 
     const handleDocumentUpload = async (files) => {
+        // Filter out files larger than 5MB
+        const MAX_SIZE = 5 * 1024 * 1024;
+        const validFiles = [];
+        let hasLargeFile = false;
+
+        files.forEach(file => {
+            if (file.size <= MAX_SIZE) {
+                validFiles.push(file);
+            } else {
+                hasLargeFile = true;
+            }
+        });
+
+        if (hasLargeFile) {
+            alert('Certains fichiers dépassent la taille limite de 5 Mo et n\'ont pas été ajoutés.');
+        }
+
+        if (validFiles.length === 0) return;
+
         setUploadingDocs(true);
         try {
             // Upload files immediately to server
-            const uploadedFiles = await uploadFilesImmediately(files, propertyType);
+            const uploadedFiles = await uploadFilesImmediately(validFiles, propertyType);
 
-            const newAttachments = files.map((file, index) => ({
+            const newAttachments = validFiles.map((file, index) => ({
                 id: Date.now() + index,
                 type: 'DOCUMENT',
                 visibilite: 'INTERNE',
@@ -133,7 +152,7 @@ const Page6Attachments = () => {
             const currentDocs = uploadedFileUrls.attachmentDocs || [];
             updateUploadedFileUrls('attachmentDocs', [...currentDocs, ...uploadedFiles]);
 
-            console.log(`✅ Uploaded ${files.length} documents to server`);
+            console.log(`✅ Uploaded ${validFiles.length} documents to server`);
         } catch (error) {
             console.error('Upload failed:', error);
             alert('Échec du téléchargement des documents. Veuillez réessayer.');

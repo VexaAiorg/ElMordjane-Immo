@@ -103,8 +103,8 @@ const FileUploadZone = ({ onFilesAccepted, documentName, isUploading, isDisabled
 
     if (isDisabled) {
         return (
-            <div className="file-upload-zone disabled" style={{ 
-                opacity: 0.5, 
+            <div className="file-upload-zone disabled" style={{
+                opacity: 0.5,
                 cursor: 'not-allowed',
                 backgroundColor: 'rgba(100, 100, 100, 0.1)',
                 border: '2px dashed rgba(100, 100, 100, 0.3)'
@@ -191,6 +191,15 @@ const Page4Documents = () => {
 
     const handleFileUpload = async (index, files) => {
         if (files.length > 0) {
+            const file = files[0];
+
+            // Check file size (5MB limit)
+            const MAX_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+            if (file.size > MAX_SIZE) {
+                alert(`Le fichier "${file.name}" dépasse la taille limite de 5 Mo.`);
+                return;
+            }
+
             setUploadingIndex(index);
             try {
                 // Upload file immediately to server
@@ -279,85 +288,85 @@ const Page4Documents = () => {
                                     Information importante
                                 </p>
                                 <p style={{ color: '#9ca3af', fontSize: '0.9rem', margin: 0 }}>
-                                    Les documents "Acte", "Acte Indivision" et "Papier Timbre" sont mutuellement exclusifs. 
+                                    Les documents "Acte", "Acte Indivision" et "Papier Timbre" sont mutuellement exclusifs.
                                     Vous ne pouvez télécharger qu'un seul de ces trois documents.
                                 </p>
                             </div>
                         </div>
                     )}
-                    
+
                     {documents.map((doc, index) => {
                         const isExclusiveDoc = MUTUALLY_EXCLUSIVE_DOCS.includes(doc.nom);
                         const isDisabled = isDocumentDisabled(doc.nom);
-                        
+
                         return (
-                        <div 
-                            key={index} 
-                            className="document-item"
-                            style={isDisabled ? { opacity: 0.6 } : {}}
-                        >
-                            <div className="document-info">
-                                <div className="document-name">
-                                    <FileText size={20} />
-                                    <span>{doc.nom}</span>
-                                    {isExclusiveDoc && (
-                                        <span style={{
-                                            fontSize: '0.7rem',
-                                            padding: '0.15rem 0.4rem',
-                                            backgroundColor: 'rgba(251, 191, 36, 0.2)',
-                                            color: '#fbbf24',
-                                            borderRadius: '4px',
-                                            marginLeft: '0.5rem'
-                                        }}>
-                                            Exclusif
-                                        </span>
+                            <div
+                                key={index}
+                                className="document-item"
+                                style={isDisabled ? { opacity: 0.6 } : {}}
+                            >
+                                <div className="document-info">
+                                    <div className="document-name">
+                                        <FileText size={20} />
+                                        <span>{doc.nom}</span>
+                                        {isExclusiveDoc && (
+                                            <span style={{
+                                                fontSize: '0.7rem',
+                                                padding: '0.15rem 0.4rem',
+                                                backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                                                color: '#fbbf24',
+                                                borderRadius: '4px',
+                                                marginLeft: '0.5rem'
+                                            }}>
+                                                Exclusif
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="document-status">
+                                        <select
+                                            value={doc.statut}
+                                            onChange={(e) => handleStatusChange(index, e.target.value)}
+                                            className="status-select"
+                                            disabled={isDisabled}
+                                        >
+                                            <option value="DISPONIBLE">Disponible</option>
+                                            <option value="MANQUANT">Manquant</option>
+                                            <option value="EN_COURS">En cours</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="document-upload">
+                                    {doc.file ? (
+                                        <div className="file-preview">
+                                            <div className="file-info">
+                                                <Check size={16} className="check-icon" />
+                                                <span className="file-name">{doc.file.name}</span>
+                                                <span className="file-size">
+                                                    {(doc.file.size / 1024).toFixed(1)} KB
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleFileRemove(index)}
+                                                className="btn-icon-danger"
+                                                aria-label="Supprimer le fichier"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <FileUploadZone
+                                            documentName={doc.nom}
+                                            onFilesAccepted={(files) => handleFileUpload(index, files)}
+                                            isUploading={uploadingIndex === index}
+                                            isDisabled={isDocumentDisabled(doc.nom)}
+                                            disabledMessage={uploadedExclusiveDoc ? getExclusivityMessage(uploadedExclusiveDoc) : ''}
+                                        />
                                     )}
                                 </div>
-
-                                <div className="document-status">
-                                    <select
-                                        value={doc.statut}
-                                        onChange={(e) => handleStatusChange(index, e.target.value)}
-                                        className="status-select"
-                                        disabled={isDisabled}
-                                    >
-                                        <option value="DISPONIBLE">Disponible</option>
-                                        <option value="MANQUANT">Manquant</option>
-                                        <option value="EN_COURS">En cours</option>
-                                    </select>
-                                </div>
                             </div>
-
-                            <div className="document-upload">
-                                {doc.file ? (
-                                    <div className="file-preview">
-                                        <div className="file-info">
-                                            <Check size={16} className="check-icon" />
-                                            <span className="file-name">{doc.file.name}</span>
-                                            <span className="file-size">
-                                                {(doc.file.size / 1024).toFixed(1)} KB
-                                            </span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleFileRemove(index)}
-                                            className="btn-icon-danger"
-                                            aria-label="Supprimer le fichier"
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <FileUploadZone
-                                        documentName={doc.nom}
-                                        onFilesAccepted={(files) => handleFileUpload(index, files)}
-                                        isUploading={uploadingIndex === index}
-                                        isDisabled={isDocumentDisabled(doc.nom)}
-                                        disabledMessage={uploadedExclusiveDoc ? getExclusivityMessage(uploadedExclusiveDoc) : ''}
-                                    />
-                                )}
-                            </div>
-                        </div>
                         );
                     })}
                 </div>

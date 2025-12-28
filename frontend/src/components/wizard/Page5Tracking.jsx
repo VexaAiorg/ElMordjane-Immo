@@ -126,13 +126,32 @@ const Page5Tracking = () => {
     const propertyType = formData.basicInfo?.type || 'TEMP';
 
     const handleDocumentUpload = async (files) => {
+        // Filter out files larger than 5MB
+        const MAX_SIZE = 5 * 1024 * 1024;
+        const validFiles = [];
+        let hasLargeFile = false;
+
+        files.forEach(file => {
+            if (file.size <= MAX_SIZE) {
+                validFiles.push(file);
+            } else {
+                hasLargeFile = true;
+            }
+        });
+
+        if (hasLargeFile) {
+            alert('Certains fichiers dépassent la taille limite de 5 Mo et n\'ont pas été ajoutés.');
+        }
+
+        if (validFiles.length === 0) return;
+
         setUploadingDocs(true);
         try {
             // Upload files immediately to server
-            const uploadedFiles = await uploadFilesImmediately(files, propertyType);
+            const uploadedFiles = await uploadFilesImmediately(validFiles, propertyType);
 
             // Default visibility is PUBLIABLE for Page 5 (Fichiers liés au bien)
-            const newAttachments = files.map((file, index) => ({
+            const newAttachments = validFiles.map((file, index) => ({
                 id: Date.now() + index,
                 type: 'DOCUMENT',
                 visibilite: 'PUBLIABLE',
@@ -146,7 +165,7 @@ const Page5Tracking = () => {
             const currentDocs = uploadedFileUrls.trackingDocs || [];
             updateUploadedFileUrls('trackingDocs', [...currentDocs, ...uploadedFiles]);
 
-            console.log(`✅ [Page 5] Uploaded ${files.length} documents (PUBLIABLE)`);
+            console.log(`✅ [Page 5] Uploaded ${validFiles.length} documents (PUBLIABLE)`);
         } catch (error) {
             console.error('Upload failed:', error);
             alert('Échec du téléchargement des documents. Veuillez réessayer.');
