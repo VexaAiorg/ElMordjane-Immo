@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: elmordjane_db
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=sauzxa
+      - POSTGRES_PASSWORD=raouf123
+      - POSTGRES_DB=ElMordjanDb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sauzxa -d ElMordjanDb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: elmordjane_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://sauzxa:raouf123@db:5432/ElMordjanDb
+      - JWT_SECRET=8d53236a8a405f1fe02cf497911ff2cdb772a20a5ab8fd00d59052efc00dc0397dcc1ed6255cad0a560f0696536c74e30ca4bbbe
+      - ADMIN_EMAIL=ElMordjanAdmin@gmail.com
+      - ADMIN_PASSWORD=elmordjansec123
+      # Optional: Add these if you handle uploads locally
+      # - UPLOAD_DIR=uploads
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: elmordjane_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

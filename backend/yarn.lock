@@ -397,6 +397,16 @@
     effect "3.18.4"
     empathic "2.0.0"
 
+"@prisma/config@^7.0.0":
+  version "7.2.0"
+  resolved "https://registry.yarnpkg.com/@prisma/config/-/config-7.2.0.tgz#cc7b81d445df9ca75d67ea7e870844597b38eef6"
+  integrity sha512-qmvSnfQ6l/srBW1S7RZGfjTQhc44Yl3ldvU6y3pgmuLM+83SBDs6UQVgMtQuMRe9J3gGqB0RF8wER6RlXEr6jQ==
+  dependencies:
+    c12 "3.1.0"
+    deepmerge-ts "7.1.5"
+    effect "3.18.4"
+    empathic "2.0.0"
+
 "@prisma/debug@6.8.2":
   version "6.8.2"
   resolved "https://registry.yarnpkg.com/@prisma/debug/-/debug-6.8.2.tgz#59fb9e0ccb0f431fe7011c36c95f9bfcbe051749"

@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import prisma from '../lib/prisma.js';
+import prisma from '../lib/prisma';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -12,7 +12,7 @@ export const initScheduler = () => {
     // Run every day at midnight (00:00)
     cron.schedule('0 0 * * *', async () => {
         console.log('🧹 Running daily cleanup of trashed properties...');
-        
+
         try {
             // Calculate the date 30 days ago
             const thirtyDaysAgo = new Date();
@@ -47,7 +47,7 @@ export const initScheduler = () => {
                     if (piece.url && piece.url.startsWith('/uploads/')) {
                         try {
                             const filePath = path.join(process.cwd(), piece.url);
-                            await fs.unlink(filePath).catch(() => {}); // Ignore if file not found
+                            await fs.unlink(filePath).catch(() => { }); // Ignore if file not found
                         } catch (err) {
                             console.error(`Error deleting file ${piece.url}:`, err);
                         }

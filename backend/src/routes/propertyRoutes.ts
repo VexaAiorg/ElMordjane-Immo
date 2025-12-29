@@ -1,17 +1,17 @@
 import { Router } from 'express';
-import { 
-    createProperty, 
-    getAllProperties, 
-    getPropertyById, 
-    deleteProperty, 
+import {
+    createProperty,
+    getAllProperties,
+    getPropertyById,
+    deleteProperty,
     updateProperty,
     getTrashedProperties,
     restoreProperty,
     permanentlyDeleteProperty
-} from '../controllers/propertyController.js';
-import { authenticateToken, isAdmin, isAdminOrCollaborateur } from '../middleware/authMiddleware.js';
+} from '../controllers/propertyController';
+import { authenticateToken, isAdmin, isAdminOrCollaborateur } from '../middleware/authMiddleware';
 
-import { uploadPropertyFiles } from '../middleware/uploadMiddleware.js';
+import { uploadPropertyFiles } from '../middleware/uploadMiddleware';
 
 const router = Router();
 

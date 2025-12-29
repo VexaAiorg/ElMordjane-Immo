@@ -1,8 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "type": "module",
-  "main": "index.js",
+  "main": "dist/server.js",
   "license": "MIT",
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",
@@ -20,6 +19,7 @@
     "sharp": "^0.34.5"
   },
   "devDependencies": {
+    "@prisma/config": "^7.0.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.5",
@@ -36,8 +36,11 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "dev": "tsx watch server.ts",
+    "dev": "nodemon server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy"
   }
 }

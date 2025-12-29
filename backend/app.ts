@@ -3,8 +3,8 @@ import type { NextFunction, Request, Response } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
-import authRoutes from "./src/routes/authRoutes.js";
-import propertyRoutes from "./src/routes/propertyRoutes.js";
+import authRoutes from "./src/routes/authRoutes";
+import propertyRoutes from "./src/routes/propertyRoutes";
 import path from 'path';
 
 const app = express();
@@ -44,9 +44,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-import uploadRoutes from "./src/routes/uploadRoutes.js";
-import userRoutes from "./src/routes/userRoutes.js";
-import collaborateurRoutes from "./src/routes/collaborateurRoutes.js";
+import uploadRoutes from "./src/routes/uploadRoutes";
+import userRoutes from "./src/routes/userRoutes";
+import collaborateurRoutes from "./src/routes/collaborateurRoutes";
 
 // API Routes
 app.use('/api/auth', authRoutes);

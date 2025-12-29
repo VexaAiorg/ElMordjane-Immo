@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import prisma from '../lib/prisma.js';
+import prisma from '../lib/prisma';
 
 /**
  * Get all collaborateurs with their property counts
@@ -52,7 +52,7 @@ export const getAllCollaborateurs = async (req: Request, res: Response): Promise
 export const getCollaborateurProperties = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        
+
         if (!id) {
             res.status(400).json({
                 status: 'error',
@@ -192,7 +192,7 @@ export const updateCollaborateur = async (req: Request, res: Response): Promise<
         if (email) updateData.email = email;
         if (nom) updateData.nom = nom;
         if (prenom) updateData.prenom = prenom;
-        
+
         // Handle password update if provided
         if (password && password.trim() !== '') {
             if (password.length < 6) {
@@ -311,7 +311,7 @@ export const createCollaborateur = async (req: Request, res: Response): Promise<
 export const deleteCollaborateur = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        
+
         if (!id) {
             res.status(400).json({
                 status: 'error',

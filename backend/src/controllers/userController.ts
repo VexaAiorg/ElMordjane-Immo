@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import prisma from '../lib/prisma.js';
+import prisma from '../lib/prisma';
 import bcrypt from 'bcrypt';
 import fs from 'fs/promises';
 import path from 'path';

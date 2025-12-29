@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import prisma from '../lib/prisma.js';
+import prisma from '../lib/prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 const SALT_ROUNDS = 10;

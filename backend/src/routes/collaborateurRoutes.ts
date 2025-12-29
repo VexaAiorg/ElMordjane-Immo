@@ -1,9 +1,9 @@
 import express from 'express';
-import { authenticateToken, isAdmin } from '../middleware/authMiddleware.js';
-import { 
-    getAllCollaborateurs, 
+import { authenticateToken, isAdmin } from '../middleware/authMiddleware';
+import {
+    getAllCollaborateurs,
     getCollaborateurProperties,
-    createCollaborateur, 
+    createCollaborateur,
     deleteCollaborateur,
     getCollaborateurById,
     updateCollaborateur
