@@ -72,6 +72,27 @@ const apiRequest = async (endpoint, options = {}) => {
 
         // Handle non-2xx responses
         if (!response.ok) {
+            // Handle Authentication Errors
+            if (response.status === 401) {
+                // 401: No token provided
+                console.warn('Unauthorized access. Redirecting to login...');
+                removeAuthToken();
+                window.location.href = '/auth';
+                // Return a simpler error or null to avoid UI flash before redirect
+                throw new Error('Session expired. Redirecting...');
+            }
+
+            if (response.status === 403) {
+                // 403: Check if it's an expired/invalid token
+                const errorMessage = data.message || '';
+                if (errorMessage.includes('Invalid or expired token')) {
+                    console.warn('Token expired or invalid. Redirecting to login...');
+                    removeAuthToken();
+                    window.location.href = '/auth';
+                    throw new Error('Session expired. Redirecting...');
+                }
+            }
+
             throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
         }
 
@@ -221,7 +242,7 @@ export const createProperty = async (propertyData, documents = [], photos = []) 
     if (documents && documents.length > 0) {
         documents.forEach(file => formData.append('documents', file));
     }
-    
+
     if (photos && photos.length > 0) {
         photos.forEach(file => formData.append('photos', file));
     }
@@ -320,7 +341,7 @@ export const updateProperty = async (propertyId, propertyData, documents = [], p
     if (documents && documents.length > 0) {
         documents.forEach(file => formData.append('documents', file));
     }
-    
+
     if (photos && photos.length > 0) {
         photos.forEach(file => formData.append('photos', file));
     }
@@ -397,13 +418,13 @@ export const getUserProfile = async () => {
 export const updateUserProfile = async (profileData, photoFile) => {
     const token = getAuthToken();
     const url = `${API_BASE_URL}/api/user/profile`;
-    
+
     const formData = new FormData();
     // Append fields individually
     if (profileData.nom !== undefined) formData.append('nom', profileData.nom);
     if (profileData.prenom !== undefined) formData.append('prenom', profileData.prenom);
     if (profileData.email !== undefined) formData.append('email', profileData.email);
-    
+
     if (photoFile) {
         formData.append('photoProfil', photoFile);
     }
