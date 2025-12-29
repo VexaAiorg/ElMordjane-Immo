@@ -40,7 +40,7 @@ const DashboardLayout = () => {
             <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
             <main className={`main-content ${isCollapsed ? 'collapsed' : ''}`} style={{ position: 'relative' }}>
                 {/* User Profile Widget */}
-                <div 
+                <div
                     onClick={() => navigate('/dashboard/profile')}
                     className="user-widget"
                     style={{
@@ -54,14 +54,14 @@ const DashboardLayout = () => {
                         zIndex: 50,
                         padding: '0.5rem 1rem',
                         borderRadius: '30px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: 'var(--glass-bg)',
+                        border: '1px solid var(--glass-border)',
                         backdropFilter: 'blur(10px)',
                         transition: 'all 0.2s'
                     }}
                 >
                     <div style={{ textAlign: 'right', marginRight: '0.25rem' }}>
-                        <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'white' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
                             {user ? `${user.prenom} ${user.nom}` : 'Chargement...'}
                         </div>
                     </div>
@@ -77,10 +77,10 @@ const DashboardLayout = () => {
                         border: '2px solid rgba(255,255,255,0.1)'
                     }}>
                         {user && user.photoProfil ? (
-                            <img 
-                                src={getPhotoUrl(user.photoProfil)} 
-                                alt="Profile" 
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                            <img
+                                src={getPhotoUrl(user.photoProfil)}
+                                alt="Profile"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                         ) : (
                             <User size={20} color="#94a3b8" />
