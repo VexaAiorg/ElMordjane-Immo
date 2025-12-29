@@ -64,5 +64,6 @@ A robust, full-stack real estate management solution designed to streamline prop
 - [ ] **Notifications**: Email and system notifications for key events.
 
 ## 📄 License
-
 This project is licensed under the MIT License.
+## 
+Full developed by Sauzxa with ❤️
