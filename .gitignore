@@ -1,1 +1,49 @@
+# Documentation (if needed)
 docs/
+
+# Environment files - NEVER commit these!
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Database backups
+backups/
+*.sql
+*.sql.gz
+
+# SSL certificates
+certbot/
+*.pem
+*.key
+*.crt
+
+# Uploads directory (user-generated content)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node modules (already in backend/frontend .gitignore, but just in case)
+node_modules/
+
+# Docker volumes data
+postgres_data/
+#Readmes
+README.md
+DEPLOYMENT-METHODS.md
+DEPLOYMENT.md
+QUICKSTART.md   
+
