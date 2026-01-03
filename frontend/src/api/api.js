@@ -597,3 +597,30 @@ export const emptyTrash = async () => {
     });
     return data;
 };
+// --- Demande Management (Admin Only) ---
+
+/**
+ * Create a new demande (client request)
+ * @param {Object} demandeData - { prenom, nom, description }
+ * @returns {Promise<Object>} Created demande
+ */
+export const createDemande = async (demandeData) => {
+    const data = await apiRequest('/api/admin/demandes', {
+        method: 'POST',
+        headers: createHeaders(true),
+        body: JSON.stringify(demandeData),
+    });
+    return data;
+};
+
+/**
+ * Get all demandes
+ * @returns {Promise<Object>} Response with demandes list
+ */
+export const getAllDemandes = async () => {
+    const data = await apiRequest('/api/admin/demandes', {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+    return data;
+};

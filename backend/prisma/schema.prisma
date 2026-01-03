@@ -372,3 +372,11 @@ model DetailImmeuble {
   nbAppartements Int?
   surfaceSol     Float?
 }
+
+model Demande {
+  id          Int      @id @default(autoincrement())
+  prenom      String
+  nom         String
+  description String
+  dateDemande DateTime @default(now())
+}

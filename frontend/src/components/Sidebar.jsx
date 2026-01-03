@@ -14,7 +14,8 @@ import {
     ChevronRight,
     Sun,
     Moon,
-    Trash2
+    Trash2,
+    FileText
 } from 'lucide-react';
 import { logout } from '../api/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -53,6 +54,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileMenuOpen, toggleMobileMen
         { path: '/dashboard/location', icon: <Key size={20} />, label: 'Location' },
         { path: '/dashboard/archives', icon: <Archive size={20} />, label: 'Archives', adminOnly: true },
         { path: '/dashboard/corbeille', icon: <Trash2 size={20} />, label: 'Corbeille', adminOnly: true },
+        { path: '/dashboard/demandes', icon: <FileText size={20} />, label: 'Demandes', adminOnly: true },
         { path: '/dashboard/collaborateurs', icon: <Users size={20} />, label: 'Collaborateurs', adminOnly: true },
         { path: '/dashboard/wizard', icon: <PlusCircle size={20} />, label: 'Nouveau Bien' },
         { path: '/dashboard/profile', icon: <Settings size={20} />, label: 'Paramètres' },

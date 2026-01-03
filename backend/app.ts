@@ -47,12 +47,12 @@ app.get('/api/health', (req, res) => {
 import uploadRoutes from "./src/routes/uploadRoutes";
 import userRoutes from "./src/routes/userRoutes";
 import collaborateurRoutes from "./src/routes/collaborateurRoutes";
-
+import demandeRoutes from "./src/routes/demandeRoutes";
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin/collaborateurs', collaborateurRoutes);
-
+app.use('/api/admin/demandes', demandeRoutes);
 export default app;

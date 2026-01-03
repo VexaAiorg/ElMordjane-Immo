@@ -11,6 +11,7 @@ import Corbeille from './pages/dashboard/Corbeille';
 import GestionCollaborateurs from './pages/dashboard/GestionCollaborateurs';
 import ProfileSettings from './pages/dashboard/ProfileSettings';
 import PropertyWizard from './pages/dashboard/PropertyWizard';
+import Demande from './pages/dashboard/Demande';
 import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
 
@@ -37,6 +38,11 @@ function App() {
                 <Route path="corbeille" element={
                     <ProtectedRoute adminOnly>
                         <Corbeille />
+                    </ProtectedRoute>
+                } />
+                <Route path="demandes" element={
+                    <ProtectedRoute adminOnly>
+                        <Demande />
                     </ProtectedRoute>
                 } />
                 <Route path="collaborateurs" element={
