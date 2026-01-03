@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import PageTransition from '../../components/PageTransition';
 import { WizardProvider, useWizard } from '../../contexts/WizardContext';
 import Page1BasicInfo from '../../components/wizard/Page1BasicInfo';
@@ -30,10 +31,10 @@ const WizardContent = () => {
     const isStepClickable = (stepId) => {
         // Current step is always clickable
         if (stepId === currentStep) return true;
-        
+
         // Completed steps (with checkmark) are always clickable
         if (currentStep > stepId) return true;
-        
+
         // For future steps, check if all previous steps are validated
         if (stepId > currentStep) {
             // Check if all steps before this one are validated
@@ -44,7 +45,7 @@ const WizardContent = () => {
             }
             return true;
         }
-        
+
         return false;
     };
 
@@ -97,14 +98,27 @@ const WizardContent = () => {
 
                     {/* Step Counter */}
                     <div className="wizard-step-counter">
-                        <span className="current-step">{currentStep}</span>
-                        <span className="step-separator">/</span>
+                        <span className="current-step">Page {currentStep}</span>
+                        <span className="step-separator"> de </span>
                         <span className="total-steps">{steps.length}</span>
                     </div>
 
                     {/* Current Page */}
                     <div className="wizard-page-container">
-                        {CurrentPageComponent && <CurrentPageComponent />}
+                        <AnimatePresence mode="wait">
+                            {CurrentPageComponent && (
+                                <motion.div
+                                    key={currentStep}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.3 }}
+                                    style={{ width: '100%' }}
+                                >
+                                    <CurrentPageComponent />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </div>

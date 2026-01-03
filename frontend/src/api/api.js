@@ -1,7 +1,7 @@
 
 // API Utility Module
 // Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 const API_TIMEOUT = 10000; // 10 seconds
 
 // Helper Functions
@@ -580,6 +580,18 @@ export const restoreProperty = async (propertyId) => {
  */
 export const permanentlyDeleteProperty = async (propertyId) => {
     const data = await apiRequest(`/api/properties/${propertyId}/permanent`, {
+        method: 'DELETE',
+        headers: createHeaders(true),
+    });
+    return data;
+};
+
+/**
+ * Empty the trash (Permanently delete all properties in trash)
+ * @returns {Promise<Object>} Response confirming trash is empty
+ */
+export const emptyTrash = async () => {
+    const data = await apiRequest('/api/properties/trash', {
         method: 'DELETE',
         headers: createHeaders(true),
     });

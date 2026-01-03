@@ -126,8 +126,8 @@ const Page5Tracking = () => {
     const propertyType = formData.basicInfo?.type || 'TEMP';
 
     const handleDocumentUpload = async (files) => {
-        // Filter out files larger than 5MB
-        const MAX_SIZE = 5 * 1024 * 1024;
+        // Filter out files larger than 10MB (matches backend limit)
+        const MAX_SIZE = 10 * 1024 * 1024;
         const validFiles = [];
         let hasLargeFile = false;
 
@@ -140,7 +140,7 @@ const Page5Tracking = () => {
         });
 
         if (hasLargeFile) {
-            alert('Certains fichiers dépassent la taille limite de 5 Mo et n\'ont pas été ajoutés.');
+            alert('Certains fichiers dépassent la taille limite de 10 Mo et n\'ont pas été ajoutés.');
         }
 
         if (validFiles.length === 0) return;
@@ -290,38 +290,7 @@ const Page5Tracking = () => {
                     </div>
                 </div>
 
-                <div className="form-section">
-                    <h3 className="section-title">Intégration Externe (Optionnel)</h3>
-                    <div className="form-grid">
-                        <div className="form-group full-width">
-                            <label htmlFor="urlGoogleSheet">URL Google Sheet</label>
-                            <input
-                                id="urlGoogleSheet"
-                                type="url"
-                                placeholder="https://docs.google.com/spreadsheets/..."
-                                {...register('urlGoogleSheet')}
-                                className={errors.urlGoogleSheet ? 'error' : ''}
-                            />
-                            {errors.urlGoogleSheet && (
-                                <span className="error-message">{errors.urlGoogleSheet.message}</span>
-                            )}
-                        </div>
 
-                        <div className="form-group full-width">
-                            <label htmlFor="urlGooglePhotos">URL Google Photos</label>
-                            <input
-                                id="urlGooglePhotos"
-                                type="url"
-                                placeholder="https://photos.google.com/..."
-                                {...register('urlGooglePhotos')}
-                                className={errors.urlGooglePhotos ? 'error' : ''}
-                            />
-                            {errors.urlGooglePhotos && (
-                                <span className="error-message">{errors.urlGooglePhotos.message}</span>
-                            )}
-                        </div>
-                    </div>
-                </div>
 
                 {/* Fichiers et médias liés au bien */}
                 <div className="form-section">
@@ -360,7 +329,7 @@ const Page5Tracking = () => {
                                 'application/pdf': ['.pdf'],
                                 'application/msword': ['.doc'],
                                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                                'image/*': ['.png', '.jpg', '.jpeg'],
+                                'image/*': ['.png', '.webp', '.svg', '.jpg', '.jpeg'],
                             }}
                             label="Glissez-déposez des documents ou cliquez pour sélectionner"
                             isUploading={uploadingDocs}

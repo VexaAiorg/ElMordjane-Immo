@@ -1071,3 +1071,81 @@ export const permanentlyDeleteProperty = async (req: Request, res: Response): Pr
         });
     }
 };
+
+/**
+ * Empty the trash (Permanently delete all trashed properties)
+ * DELETE /api/properties/trash
+ * Protected: Admin only
+ */
+export const emptyTrash = async (req: Request, res: Response): Promise<void> => {
+    try {
+        // Find all trashed properties
+        const trashedProperties = await prisma.bienImmobilier.findMany({
+            where: {
+                deletedAt: {
+                    not: null
+                }
+            },
+            include: {
+                piecesJointes: true
+            }
+        });
+
+        if (trashedProperties.length === 0) {
+            res.status(200).json({
+                status: 'success',
+                message: 'Trash is already empty',
+                count: 0
+            });
+            return;
+        }
+
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        let deletedFilesCount = 0;
+
+        // Delete all associated files
+        for (const property of trashedProperties) {
+            for (const piece of property.piecesJointes) {
+                if (piece.url && piece.url.startsWith('/uploads/')) {
+                    try {
+                        const filePath = path.join(process.cwd(), piece.url);
+
+                        try {
+                            await fs.access(filePath);
+                            await fs.unlink(filePath);
+                            deletedFilesCount++;
+                        } catch (err) {
+                            // File not found, ignore
+                        }
+                    } catch (error) {
+                        console.error(`Error deleting file ${piece.url}:`, error);
+                    }
+                }
+            }
+        }
+
+        // Delete from database (Cascade will handle relations)
+        const result = await prisma.bienImmobilier.deleteMany({
+            where: {
+                deletedAt: {
+                    not: null
+                }
+            }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: `Trash emptied successfully. ${result.count} properties and ${deletedFilesCount} files deleted permanently.`,
+            count: result.count
+        });
+
+    } catch (error: any) {
+        console.error('Empty trash error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to empty trash',
+            error: error.message
+        });
+    }
+};

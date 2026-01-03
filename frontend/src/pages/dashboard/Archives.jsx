@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard, CheckCircle2, XCircle, AlertCircle, FileCheck, Clock } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, Edit, Trash2, X, MapPin, Home, DollarSign, Package, ChevronDown, LayoutGrid, List, User, Maximize, LayoutDashboard, CheckCircle2, XCircle, AlertCircle, FileCheck, Clock, FileDown } from 'lucide-react';
 import PageTransition from '../../components/PageTransition';
 import PropertyDetailsModal from '../../components/property/PropertyDetailsModal';
 import PropertyEditModal from '../../components/property/PropertyEditModal';
@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'; // eslint-disable-line 
 
 
 import { searchProperty } from '../../utils/searchUtils';
+import { exportPropertiesToPDF } from '../../utils/pdfExport';
 
 const Archives = () => {
     const [properties, setProperties] = useState([]);
@@ -22,6 +23,7 @@ const Archives = () => {
     const [showDateDropdown, setShowDateDropdown] = useState(false);
     const [editingProperty, setEditingProperty] = useState(null);
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+    const [isExporting, setIsExporting] = useState(false);
 
     useEffect(() => {
         fetchProperties();
@@ -32,9 +34,9 @@ const Archives = () => {
             setLoading(true);
             setError(null);
             const response = await getAllProperties();
-            
+
             // Properties fetched successfully
-            
+
             // Extract properties from response
             // Backend returns { status: 'success', data: [...], count: N }
             const propertiesData = response.data || [];
@@ -56,12 +58,12 @@ const Archives = () => {
     const filteredProperties = properties.filter(property => {
         const matchesSearch = searchProperty(property, searchQuery);
         const matchesType = filterType === 'ALL' || property.type === filterType;
-        
+
         return matchesSearch && matchesType;
     }).sort((a, b) => {
         const dateA = new Date(a.dateCreation).getTime();
         const dateB = new Date(b.dateCreation).getTime();
-        
+
         if (sortDate === 'NEWEST') return dateB - dateA;
         if (sortDate === 'OLDEST') return dateA - dateB;
         return 0;
@@ -163,7 +165,7 @@ const Archives = () => {
 
     const getPropertySpecs = (property) => {
         let specs = [];
-        
+
         // Surface
         let surface = null;
         if (property.detailAppartement?.surfaceTotal) surface = property.detailAppartement.surfaceTotal;
@@ -171,7 +173,7 @@ const Archives = () => {
         else if (property.detailTerrain?.surface) surface = property.detailTerrain.surface;
         else if (property.detailLocal?.surface) surface = property.detailLocal.surface;
         else if (property.detailImmeuble?.surface) surface = property.detailImmeuble.surface;
-        
+
         if (surface) specs.push(`${surface} m²`);
 
         // Rooms / Pieces / Type
@@ -179,7 +181,7 @@ const Archives = () => {
         if (property.detailAppartement?.typeAppart) pieces = property.detailAppartement.typeAppart;
         else if (property.detailVilla?.pieces) pieces = `${property.detailVilla.pieces} Pièces`;
         else if (property.detailImmeuble?.nbAppartements) pieces = `${property.detailImmeuble.nbAppartements} Appts`;
-        
+
         if (pieces) specs.push(pieces);
 
         return specs;
@@ -188,7 +190,7 @@ const Archives = () => {
     const handleViewProperty = async (property) => {
         setSelectedProperty(property); // Show modal immediately with basic info
         setLoadingDetails(true);
-        
+
         try {
             const response = await getPropertyById(property.id);
             if (response.data) {
@@ -210,7 +212,7 @@ const Archives = () => {
     const handleEditProperty = async (property) => {
         setEditingProperty(property);
         setLoadingDetails(true);
-        
+
         try {
             const response = await getPropertyById(property.id);
             if (response.data) {
@@ -232,26 +234,47 @@ const Archives = () => {
         fetchProperties();
     };
 
+    const handleExportPDF = async () => {
+        try {
+            setIsExporting(true);
+            await exportPropertiesToPDF(filteredProperties);
+        } catch (err) {
+            console.error('Error exporting PDF:', err);
+            alert('Erreur lors de l\'export PDF');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleExportSingleProperty = async (property) => {
+        try {
+            await exportPropertiesToPDF([property]);
+        } catch (err) {
+            console.error('Error exporting property:', err);
+            alert('Erreur lors de l\'export du bien');
+        }
+    };
+
     return (
         <PageTransition>
             <div className="page-container">
                 {selectedProperty && (
-                    <PropertyDetailsModal 
-                        property={selectedProperty} 
+                    <PropertyDetailsModal
+                        property={selectedProperty}
                         onClose={handleCloseModal}
                         isLoading={loadingDetails && !selectedProperty.detailAppartement}
                     />
                 )}
-                
+
                 {editingProperty && (
-                    <PropertyEditModal 
-                        property={editingProperty} 
+                    <PropertyEditModal
+                        property={editingProperty}
                         onClose={handleCloseEditModal}
                         onUpdate={handleUpdateSuccess}
                         isLoading={loadingDetails && !editingProperty.detailAppartement}
                     />
                 )}
-                
+
                 <header className="page-header">
                     <div>
                         <h1 className="page-title">Archives</h1>
@@ -262,9 +285,9 @@ const Archives = () => {
                 <div className="filters-bar">
                     <div className="search-wrapper">
                         <Search size={18} className="search-icon" />
-                        <input 
-                            type="text" 
-                            placeholder="Rechercher dans les archives..." 
+                        <input
+                            type="text"
+                            placeholder="Rechercher dans les archives..."
                             className="search-input"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -299,16 +322,40 @@ const Archives = () => {
                         )}
                     </div>
 
-                    <div className="view-toggles" style={{ 
-                        marginLeft: 'auto', 
-                        display: 'flex', 
-                        gap: '0.5rem', 
-                        background: 'rgba(0,0,0,0.2)', 
-                        padding: '0.25rem', 
+                    <button
+                        onClick={handleExportPDF}
+                        disabled={isExporting}
+                        title="Exporter en PDF"
+                        style={{
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            color: '#3b82f6',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '8px',
+                            padding: '0.5rem 1rem',
+                            cursor: isExporting ? 'wait' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontSize: '0.9rem',
+                            fontWeight: '500',
+                            marginLeft: 'auto',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        <FileDown size={18} />
+                        {isExporting ? 'Export...' : 'PDF'}
+                    </button>
+
+                    <div className="view-toggles" style={{
+                        marginLeft: 'auto',
+                        display: 'flex',
+                        gap: '0.5rem',
+                        background: 'rgba(0,0,0,0.2)',
+                        padding: '0.25rem',
                         borderRadius: '8px',
                         border: '1px solid rgba(255, 255, 255, 0.1)'
                     }}>
-                        <button 
+                        <button
                             onClick={() => setViewMode('list')}
                             title="Vue liste"
                             className={viewMode === 'list' ? 'active' : ''}
@@ -327,7 +374,7 @@ const Archives = () => {
                         >
                             <List size={20} />
                         </button>
-                        <button 
+                        <button
                             onClick={() => setViewMode('grid')}
                             title="Vue grille"
                             className={viewMode === 'grid' ? 'active' : ''}
@@ -358,16 +405,16 @@ const Archives = () => {
 
                 <div className="content-table-container">
                     {loading ? (
-                        <div style={{ 
-                            padding: '3rem', 
-                            textAlign: 'center', 
-                            color: 'var(--text-secondary)' 
+                        <div style={{
+                            padding: '3rem',
+                            textAlign: 'center',
+                            color: 'var(--text-secondary)'
                         }}>
                             Chargement des archives...
                         </div>
                     ) : error ? (
-                        <div style={{ 
-                            padding: '2rem', 
+                        <div style={{
+                            padding: '2rem',
                             textAlign: 'center',
                             backgroundColor: 'rgba(239, 68, 68, 0.1)',
                             border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -377,12 +424,12 @@ const Archives = () => {
                             ❌ {error}
                         </div>
                     ) : filteredProperties.length === 0 ? (
-                        <div style={{ 
-                            padding: '3rem', 
-                            textAlign: 'center', 
-                            color: 'var(--text-secondary)' 
+                        <div style={{
+                            padding: '3rem',
+                            textAlign: 'center',
+                            color: 'var(--text-secondary)'
                         }}>
-                            {searchQuery 
+                            {searchQuery
                                 ? `Aucun bien trouvé pour "${searchQuery}"`
                                 : 'Aucun bien archivé.'}
                         </div>
@@ -397,96 +444,112 @@ const Archives = () => {
                                     transition={{ duration: 0.2 }}
                                     className="glass-table"
                                 >
-                            <thead>
-                                <tr>
-                                    <th>Bien</th>
-                                    <th>Type</th>
-                                    <th>Prix</th>
-                                    <th>Statut</th>
-                                    <th>Transaction</th>
-                                    <th>Date d'ajout</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredProperties.map((property) => {
-                                    return (
-                                    <tr key={property.id}>
-                                        <td>
-                                            <div className="table-item-info">
-                                                <span className="item-name">{property.titre}</span>
-                                                <span className="item-sub">{property.adresse}</span>
-                                            </div>
-                                        </td>
-                                        <td>{property.type}</td>
-                                        <td>
-                                            {property.transaction === 'VENTE' 
-                                                ? formatPrice(property.prixVente)
-                                                : formatPrice(property.prixLocation)}
-                                        </td>
-                                        <td>
-                                            <span className={`status-badge ${getStatusBadgeClass(property.statut)}`}>
-                                                {getStatusLabel(property.statut)}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className={`status-badge ${property.transaction === 'VENTE' ? 'available' : 'pending'}`}>
-                                                {property.transaction}
-                                            </span>
-                                        </td>
-                                        <td>{formatDate(property.dateCreation)}</td>
-                                        <td>
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                <button 
-                                                    className="btn-icon" 
-                                                    title="Voir"
-                                                    onClick={() => handleViewProperty(property)}
-                                                    style={{
-                                                        background: 'rgba(59, 130, 246, 0.1)',
-                                                        border: '1px solid rgba(59, 130, 246, 0.3)',
-                                                        borderRadius: '6px',
-                                                        padding: '0.4rem',
-                                                        cursor: 'pointer',
-                                                        color: '#3b82f6'
-                                                    }}
-                                                >
-                                                    <Eye size={16} />
-                                                </button>
-                                                <button 
-                                                    className="btn-icon" 
-                                                    title="Modifier"
-                                                    onClick={() => handleEditProperty(property)}
-                                                    style={{
-                                                        background: 'rgba(245, 158, 11, 0.1)',
-                                                        border: '1px solid rgba(245, 158, 11, 0.3)',
-                                                        borderRadius: '6px',
-                                                        padding: '0.4rem',
-                                                        cursor: 'pointer',
-                                                        color: '#f59e0b'
-                                                    }}
-                                                >
-                                                    <Edit size={16} />
-                                                </button>
-                                                <button 
-                                                    className="btn-icon" 
-                                                    title="Supprimer"
-                                                    onClick={() => handleDeleteProperty(property.id)}
-                                                    style={{
-                                                        background: 'rgba(239, 68, 68, 0.1)',
-                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                        borderRadius: '6px',
-                                                        padding: '0.4rem',
-                                                        cursor: 'pointer',
-                                                        color: '#ef4444'
-                                                    }}
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )})}
-                            </tbody>
+                                    <thead>
+                                        <tr>
+                                            <th>Bien</th>
+                                            <th>Type</th>
+                                            <th>Prix</th>
+                                            <th>Statut</th>
+                                            <th>Transaction</th>
+                                            <th>Date d'ajout</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredProperties.map((property) => {
+                                            return (
+                                                <tr key={property.id}>
+                                                    <td>
+                                                        <div className="table-item-info">
+                                                            <span className="item-name">{property.titre}</span>
+                                                            <span className="item-sub">{property.adresse}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>{property.type}</td>
+                                                    <td>
+                                                        {property.transaction === 'VENTE'
+                                                            ? formatPrice(property.prixVente)
+                                                            : formatPrice(property.prixLocation)}
+                                                    </td>
+                                                    <td>
+                                                        <span className={`status-badge ${getStatusBadgeClass(property.statut)}`}>
+                                                            {getStatusLabel(property.statut)}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span className={`status-badge ${property.transaction === 'VENTE' ? 'available' : 'pending'}`}>
+                                                            {property.transaction}
+                                                        </span>
+                                                    </td>
+                                                    <td>{formatDate(property.dateCreation)}</td>
+                                                    <td>
+                                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                            <button
+                                                                className="btn-icon"
+                                                                title="Voir"
+                                                                onClick={() => handleViewProperty(property)}
+                                                                style={{
+                                                                    background: 'rgba(59, 130, 246, 0.1)',
+                                                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                                    borderRadius: '6px',
+                                                                    padding: '0.4rem',
+                                                                    cursor: 'pointer',
+                                                                    color: '#3b82f6'
+                                                                }}
+                                                            >
+                                                                <Eye size={16} />
+                                                            </button>
+                                                            <button
+                                                                className="btn-icon"
+                                                                title="Modifier"
+                                                                onClick={() => handleEditProperty(property)}
+                                                                style={{
+                                                                    background: 'rgba(245, 158, 11, 0.1)',
+                                                                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                                    borderRadius: '6px',
+                                                                    padding: '0.4rem',
+                                                                    cursor: 'pointer',
+                                                                    color: '#f59e0b'
+                                                                }}
+                                                            >
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button
+                                                                className="btn-icon"
+                                                                title="Exporter PDF"
+                                                                onClick={() => handleExportSingleProperty(property)}
+                                                                style={{
+                                                                    background: 'rgba(59, 130, 246, 0.1)',
+                                                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                                    borderRadius: '6px',
+                                                                    padding: '0.4rem',
+                                                                    cursor: 'pointer',
+                                                                    color: '#3b82f6'
+                                                                }}
+                                                            >
+                                                                <FileDown size={16} />
+                                                            </button>
+                                                            <button
+                                                                className="btn-icon"
+                                                                title="Supprimer"
+                                                                onClick={() => handleDeleteProperty(property.id)}
+                                                                style={{
+                                                                    background: 'rgba(239, 68, 68, 0.1)',
+                                                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                                    borderRadius: '6px',
+                                                                    padding: '0.4rem',
+                                                                    cursor: 'pointer',
+                                                                    color: '#ef4444'
+                                                                }}
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
                                 </motion.table>
                             ) : (
                                 <motion.div
@@ -496,301 +559,319 @@ const Archives = () => {
                                     exit={{ opacity: 0, y: -20 }}
                                     transition={{ duration: 0.2 }}
                                     className="properties-grid-view"
-                                    style={{ 
-                            display: 'grid', 
-                            gridTemplateColumns: 'repeat(2, 1fr)', 
-                            gap: '1.5rem' 
-                        }}>
-                            {filteredProperties.map((property) => {
-                                const photoUrl = getFirstPhoto(property);
-                                return (
-                                <div key={property.id} style={{
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    borderRadius: '16px',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    padding: '1rem',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '1rem',
-                                    transition: 'transform 0.2s',
-                                    cursor: 'default',
-                                    overflow: 'hidden'
-                                }}>
-                                    <div style={{ 
-                                        height: '200px', 
-                                        width: '100%',
-                                        background: '#1e293b', 
-                                        borderRadius: '12px', 
-                                        overflow: 'hidden',
-                                        position: 'relative'
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(2, 1fr)',
+                                        gap: '1.5rem'
                                     }}>
-                                        {photoUrl ? (
-                                            <img src={photoUrl} alt={property.titre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', flexDirection: 'column', gap: '0.5rem' }}>
-                                                {property.type === 'APPARTEMENT' ? <Home size={48} /> :
-                                                 property.type === 'VILLA' ? <Home size={48} /> :
-                                                 property.type === 'TERRAIN' ? <MapPin size={48} /> :
-                                                 property.type === 'LOCAL' ? <DollarSign size={48} /> :
-                                                 <Package size={48} />}
-                                                 <span style={{ fontSize: '0.9rem' }}>Pas de photo</span>
-                                            </div>
-                                        )}
-                                        <span className="status-badge sold" style={{ position: 'absolute', top: '1rem', right: '1rem', backdropFilter: 'blur(4px)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
-                                            Archivé
-                                        </span>
-                                        
-                                        <div style={{ 
-                                            position: 'absolute', 
-                                            bottom: '1rem', 
-                                            left: '1rem', 
-                                            background: 'rgba(0,0,0,0.6)', 
-                                            backdropFilter: 'blur(4px)',
-                                            padding: '0.25rem 0.75rem', 
-                                            borderRadius: '20px', 
-                                            color: 'white', 
-                                            fontSize: '0.8rem', 
-                                            fontWeight: '500',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.25rem'
-                                        }}>
-                                            {property.type === 'APPARTEMENT' ? <Home size={14} /> :
-                                             property.type === 'VILLA' ? <Home size={14} /> :
-                                             property.type === 'TERRAIN' ? <MapPin size={14} /> :
-                                             property.type === 'LOCAL' ? <DollarSign size={14} /> :
-                                             <Package size={14} />}
-                                            {property.type}
-                                        </div>
-                                    </div>
-
-                                    <div style={{ padding: '0 0.5rem' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                                            <div>
-                                                <h3 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.25rem' }}>
-                                                    {property.titre}
-                                                </h3>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
-                                                    <MapPin size={14} />
-                                                    {property.adresse}
-                                                </div>
-                                            </div>
-                                            <div style={{ textAlign: 'right' }}>
-                                                <div style={{ color: '#3b82f6', fontWeight: '700', fontSize: '1.1rem' }}>
-                                                    {property.transaction === 'VENTE' 
-                                                        ? formatPrice(property.prixVente)
-                                                        : formatPrice(property.prixLocation)}
-                                                </div>
-                                                <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>
-                                                    {property.transaction}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Owner & Specs Section */}
-                                        <div style={{ 
-                                            padding: '0.75rem', 
-                                            background: 'rgba(0,0,0,0.2)', 
-                                            borderRadius: '8px',
-                                            marginBottom: '1rem',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '0.5rem'
-                                        }}>
-                                            {/* Owner Info */}
-                                            {property.proprietaire && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#e2e8f0' }}>
-                                                    <User size={14} style={{ color: '#94a3b8' }} />
-                                                    <span style={{ fontWeight: '500' }}>
-                                                        {property.proprietaire.nom} {property.proprietaire.prenom}
-                                                    </span>
-                                                    {property.proprietaire.telephone && (
-                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>• {property.proprietaire.telephone}</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                            
-                                            {/* Specs */}
-                                            {getPropertySpecs(property).length > 0 && (
-                                                <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.85rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.5rem' }}>
-                                                    {getPropertySpecs(property).map((spec, i) => (
-                                                        <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                            {i === 0 ? <Maximize size={14} /> : <LayoutDashboard size={14} />}
-                                                            {spec}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Tracking (Suivi) Section */}
-                                        {property.suivi && (
-                                            <div style={{ 
-                                                padding: '0.75rem', 
-                                                background: 'rgba(0,0,0,0.3)', 
-                                                borderRadius: '8px',
-                                                marginBottom: '1rem',
+                                    {filteredProperties.map((property) => {
+                                        const photoUrl = getFirstPhoto(property);
+                                        return (
+                                            <div key={property.id} style={{
+                                                background: 'rgba(255, 255, 255, 0.05)',
+                                                borderRadius: '16px',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                padding: '1rem',
                                                 display: 'flex',
                                                 flexDirection: 'column',
-                                                gap: '0.5rem',
-                                                border: '1px solid rgba(255,255,255,0.05)'
+                                                gap: '1rem',
+                                                transition: 'transform 0.2s',
+                                                cursor: 'default',
+                                                overflow: 'hidden'
                                             }}>
-                                                <div style={{ 
-                                                    fontSize: '0.75rem', 
-                                                    fontWeight: '600', 
-                                                    color: '#94a3b8', 
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '0.05em',
-                                                    marginBottom: '0.25rem'
+                                                <div style={{
+                                                    height: '200px',
+                                                    width: '100%',
+                                                    background: '#1e293b',
+                                                    borderRadius: '12px',
+                                                    overflow: 'hidden',
+                                                    position: 'relative'
                                                 }}>
-                                                    Suivi
+                                                    {photoUrl ? (
+                                                        <img src={photoUrl} alt={property.titre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', flexDirection: 'column', gap: '0.5rem' }}>
+                                                            {property.type === 'APPARTEMENT' ? <Home size={48} /> :
+                                                                property.type === 'VILLA' ? <Home size={48} /> :
+                                                                    property.type === 'TERRAIN' ? <MapPin size={48} /> :
+                                                                        property.type === 'LOCAL' ? <DollarSign size={48} /> :
+                                                                            <Package size={48} />}
+                                                            <span style={{ fontSize: '0.9rem' }}>Pas de photo</span>
+                                                        </div>
+                                                    )}
+                                                    <span className="status-badge sold" style={{ position: 'absolute', top: '1rem', right: '1rem', backdropFilter: 'blur(4px)', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                                                        Archivé
+                                                    </span>
+
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        bottom: '1rem',
+                                                        left: '1rem',
+                                                        background: 'rgba(0,0,0,0.6)',
+                                                        backdropFilter: 'blur(4px)',
+                                                        padding: '0.25rem 0.75rem',
+                                                        borderRadius: '20px',
+                                                        color: 'white',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: '500',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.25rem'
+                                                    }}>
+                                                        {property.type === 'APPARTEMENT' ? <Home size={14} /> :
+                                                            property.type === 'VILLA' ? <Home size={14} /> :
+                                                                property.type === 'TERRAIN' ? <MapPin size={14} /> :
+                                                                    property.type === 'LOCAL' ? <DollarSign size={14} /> :
+                                                                        <Package size={14} />}
+                                                        {property.type}
+                                                    </div>
                                                 </div>
-                                                
-                                                <div style={{ 
-                                                    display: 'grid', 
-                                                    gridTemplateColumns: 'repeat(3, 1fr)', 
-                                                    gap: '0.5rem' 
-                                                }}>
-                                                    {/* Visité */}
-                                                    <div style={{ 
-                                                        display: 'flex', 
-                                                        flexDirection: 'column', 
-                                                        alignItems: 'center',
-                                                        gap: '0.25rem',
-                                                        padding: '0.5rem',
-                                                        background: property.suivi.estVisite 
-                                                            ? 'rgba(34, 197, 94, 0.1)' 
-                                                            : 'rgba(148, 163, 184, 0.1)',
-                                                        borderRadius: '6px',
-                                                        border: `1px solid ${property.suivi.estVisite 
-                                                            ? 'rgba(34, 197, 94, 0.3)' 
-                                                            : 'rgba(148, 163, 184, 0.2)'}`
+
+                                                <div style={{ padding: '0 0.5rem' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                                                        <div>
+                                                            <h3 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                                                                {property.titre}
+                                                            </h3>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+                                                                <MapPin size={14} />
+                                                                {property.adresse}
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right' }}>
+                                                            <div style={{ color: '#3b82f6', fontWeight: '700', fontSize: '1.1rem' }}>
+                                                                {property.transaction === 'VENTE'
+                                                                    ? formatPrice(property.prixVente)
+                                                                    : formatPrice(property.prixLocation)}
+                                                            </div>
+                                                            <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>
+                                                                {property.transaction}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Owner & Specs Section */}
+                                                    <div style={{
+                                                        padding: '0.75rem',
+                                                        background: 'rgba(0,0,0,0.2)',
+                                                        borderRadius: '8px',
+                                                        marginBottom: '1rem',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: '0.5rem'
                                                     }}>
-                                                        {property.suivi.estVisite ? (
-                                                            <CheckCircle2 size={16} style={{ color: '#22c55e' }} />
-                                                        ) : (
-                                                            <XCircle size={16} style={{ color: '#94a3b8' }} />
+                                                        {/* Owner Info */}
+                                                        {property.proprietaire && (
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#e2e8f0' }}>
+                                                                <User size={14} style={{ color: '#94a3b8' }} />
+                                                                <span style={{ fontWeight: '500' }}>
+                                                                    {property.proprietaire.nom} {property.proprietaire.prenom}
+                                                                </span>
+                                                                {property.proprietaire.telephone && (
+                                                                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>• {property.proprietaire.telephone}</span>
+                                                                )}
+                                                            </div>
                                                         )}
-                                                        <span style={{ 
-                                                            fontSize: '0.7rem', 
-                                                            color: property.suivi.estVisite ? '#22c55e' : '#94a3b8',
-                                                            fontWeight: '500'
-                                                        }}>
-                                                            {property.suivi.estVisite ? 'Visité' : 'Non visité'}
-                                                        </span>
+
+                                                        {/* Specs */}
+                                                        {getPropertySpecs(property).length > 0 && (
+                                                            <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.85rem', color: '#94a3b8', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.5rem' }}>
+                                                                {getPropertySpecs(property).map((spec, i) => (
+                                                                    <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                                        {i === 0 ? <Maximize size={14} /> : <LayoutDashboard size={14} />}
+                                                                        {spec}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        )}
                                                     </div>
 
-                                                    {/* Priorité */}
-                                                    <div style={{ 
-                                                        display: 'flex', 
-                                                        flexDirection: 'column', 
-                                                        alignItems: 'center',
-                                                        gap: '0.25rem',
-                                                        padding: '0.5rem',
-                                                        background: getPriorityColor(property.suivi.priorite).bg,
-                                                        borderRadius: '6px',
-                                                        border: `1px solid ${getPriorityColor(property.suivi.priorite).border}`
-                                                    }}>
-                                                        <AlertCircle size={16} style={{ color: getPriorityColor(property.suivi.priorite).text }} />
-                                                        <span style={{ 
-                                                            fontSize: '0.7rem', 
-                                                            color: getPriorityColor(property.suivi.priorite).text,
-                                                            fontWeight: '500',
-                                                            textAlign: 'center'
+                                                    {/* Tracking (Suivi) Section */}
+                                                    {property.suivi && (
+                                                        <div style={{
+                                                            padding: '0.75rem',
+                                                            background: 'rgba(0,0,0,0.3)',
+                                                            borderRadius: '8px',
+                                                            marginBottom: '1rem',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: '0.5rem',
+                                                            border: '1px solid rgba(255,255,255,0.05)'
                                                         }}>
-                                                            {getPriorityLabel(property.suivi.priorite)}
-                                                        </span>
-                                                    </div>
+                                                            <div style={{
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: '600',
+                                                                color: '#94a3b8',
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '0.05em',
+                                                                marginBottom: '0.25rem'
+                                                            }}>
+                                                                Suivi
+                                                            </div>
 
-                                                    {/* Mandat */}
-                                                    <div style={{ 
-                                                        display: 'flex', 
-                                                        flexDirection: 'column', 
-                                                        alignItems: 'center',
-                                                        gap: '0.25rem',
-                                                        padding: '0.5rem',
-                                                        background: property.suivi.aMandat 
-                                                            ? 'rgba(139, 92, 246, 0.15)' 
-                                                            : 'rgba(148, 163, 184, 0.1)',
-                                                        borderRadius: '6px',
-                                                        border: `1px solid ${property.suivi.aMandat 
-                                                            ? 'rgba(139, 92, 246, 0.4)' 
-                                                            : 'rgba(148, 163, 184, 0.2)'}`
-                                                    }}>
-                                                        <FileCheck size={16} style={{ color: property.suivi.aMandat ? '#8b5cf6' : '#94a3b8' }} />
-                                                        <span style={{ 
-                                                            fontSize: '0.7rem', 
-                                                            color: property.suivi.aMandat ? '#8b5cf6' : '#94a3b8',
-                                                            fontWeight: '500'
-                                                        }}>
-                                                            {property.suivi.aMandat ? 'Mandat' : 'Pas mandat'}
-                                                        </span>
-                                                    </div>
+                                                            <div style={{
+                                                                display: 'grid',
+                                                                gridTemplateColumns: 'repeat(3, 1fr)',
+                                                                gap: '0.5rem'
+                                                            }}>
+                                                                {/* Visité */}
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    alignItems: 'center',
+                                                                    gap: '0.25rem',
+                                                                    padding: '0.5rem',
+                                                                    background: property.suivi.estVisite
+                                                                        ? 'rgba(34, 197, 94, 0.1)'
+                                                                        : 'rgba(148, 163, 184, 0.1)',
+                                                                    borderRadius: '6px',
+                                                                    border: `1px solid ${property.suivi.estVisite
+                                                                        ? 'rgba(34, 197, 94, 0.3)'
+                                                                        : 'rgba(148, 163, 184, 0.2)'}`
+                                                                }}>
+                                                                    {property.suivi.estVisite ? (
+                                                                        <CheckCircle2 size={16} style={{ color: '#22c55e' }} />
+                                                                    ) : (
+                                                                        <XCircle size={16} style={{ color: '#94a3b8' }} />
+                                                                    )}
+                                                                    <span style={{
+                                                                        fontSize: '0.7rem',
+                                                                        color: property.suivi.estVisite ? '#22c55e' : '#94a3b8',
+                                                                        fontWeight: '500'
+                                                                    }}>
+                                                                        {property.suivi.estVisite ? 'Visité' : 'Non visité'}
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Priorité */}
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    alignItems: 'center',
+                                                                    gap: '0.25rem',
+                                                                    padding: '0.5rem',
+                                                                    background: getPriorityColor(property.suivi.priorite).bg,
+                                                                    borderRadius: '6px',
+                                                                    border: `1px solid ${getPriorityColor(property.suivi.priorite).border}`
+                                                                }}>
+                                                                    <AlertCircle size={16} style={{ color: getPriorityColor(property.suivi.priorite).text }} />
+                                                                    <span style={{
+                                                                        fontSize: '0.7rem',
+                                                                        color: getPriorityColor(property.suivi.priorite).text,
+                                                                        fontWeight: '500',
+                                                                        textAlign: 'center'
+                                                                    }}>
+                                                                        {getPriorityLabel(property.suivi.priorite)}
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Mandat */}
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    alignItems: 'center',
+                                                                    gap: '0.25rem',
+                                                                    padding: '0.5rem',
+                                                                    background: property.suivi.aMandat
+                                                                        ? 'rgba(139, 92, 246, 0.15)'
+                                                                        : 'rgba(148, 163, 184, 0.1)',
+                                                                    borderRadius: '6px',
+                                                                    border: `1px solid ${property.suivi.aMandat
+                                                                        ? 'rgba(139, 92, 246, 0.4)'
+                                                                        : 'rgba(148, 163, 184, 0.2)'}`
+                                                                }}>
+                                                                    <FileCheck size={16} style={{ color: property.suivi.aMandat ? '#8b5cf6' : '#94a3b8' }} />
+                                                                    <span style={{
+                                                                        fontSize: '0.7rem',
+                                                                        color: property.suivi.aMandat ? '#8b5cf6' : '#94a3b8',
+                                                                        fontWeight: '500'
+                                                                    }}>
+                                                                        {property.suivi.aMandat ? 'Mandat' : 'Pas mandat'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                                    <button
+                                                        onClick={() => handleViewProperty(property)}
+                                                        style={{
+                                                            flex: 1,
+                                                            background: 'rgba(59, 130, 246, 0.1)',
+                                                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                            borderRadius: '8px',
+                                                            padding: '0.75rem',
+                                                            cursor: 'pointer',
+                                                            color: '#3b82f6',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '0.5rem',
+                                                            fontSize: '0.9rem',
+                                                            fontWeight: '600',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        <Eye size={18} /> Détails
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleEditProperty(property)}
+                                                        style={{
+                                                            background: 'rgba(245, 158, 11, 0.1)',
+                                                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                            borderRadius: '8px',
+                                                            padding: '0.75rem',
+                                                            cursor: 'pointer',
+                                                            color: '#f59e0b',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button
+                                                        title="Exporter PDF"
+                                                        onClick={() => handleExportSingleProperty(property)}
+                                                        style={{
+                                                            background: 'rgba(59, 130, 246, 0.1)',
+                                                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                            borderRadius: '8px',
+                                                            padding: '0.75rem',
+                                                            cursor: 'pointer',
+                                                            color: '#3b82f6',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        <FileDown size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteProperty(property.id)}
+                                                        style={{
+                                                            background: 'rgba(239, 68, 68, 0.1)',
+                                                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                            borderRadius: '8px',
+                                                            padding: '0.75rem',
+                                                            cursor: 'pointer',
+                                                            color: '#ef4444',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
                                                 </div>
                                             </div>
-                                        )}
-                                    </div>
-
-                                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                                        <button 
-                                            onClick={() => handleViewProperty(property)}
-                                            style={{
-                                                flex: 1,
-                                                background: 'rgba(59, 130, 246, 0.1)',
-                                                border: '1px solid rgba(59, 130, 246, 0.3)',
-                                                borderRadius: '8px',
-                                                padding: '0.75rem',
-                                                cursor: 'pointer',
-                                                color: '#3b82f6',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '0.5rem',
-                                                fontSize: '0.9rem',
-                                                fontWeight: '600',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            <Eye size={18} /> Détails
-                                        </button>
-                                        <button 
-                                            onClick={() => handleEditProperty(property)}
-                                            style={{
-                                                background: 'rgba(245, 158, 11, 0.1)',
-                                                border: '1px solid rgba(245, 158, 11, 0.3)',
-                                                borderRadius: '8px',
-                                                padding: '0.75rem',
-                                                cursor: 'pointer',
-                                                color: '#f59e0b',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            <Edit size={18} />
-                                        </button>
-                                        <button 
-                                            onClick={() => handleDeleteProperty(property.id)}
-                                            style={{
-                                                background: 'rgba(239, 68, 68, 0.1)',
-                                                border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                borderRadius: '8px',
-                                                padding: '0.75rem',
-                                                cursor: 'pointer',
-                                                color: '#ef4444',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                                );
-                            })}
+                                        );
+                                    })}
                                 </motion.div>
                             )}
                         </AnimatePresence>

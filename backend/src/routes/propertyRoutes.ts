@@ -7,7 +7,8 @@ import {
     updateProperty,
     getTrashedProperties,
     restoreProperty,
-    permanentlyDeleteProperty
+    permanentlyDeleteProperty,
+    emptyTrash
 } from '../controllers/propertyController';
 import { authenticateToken, isAdmin, isAdminOrCollaborateur } from '../middleware/authMiddleware';
 
@@ -55,6 +56,18 @@ router.get(
     authenticateToken,
     isAdmin,
     getTrashedProperties
+);
+
+/**
+ * @route   DELETE /api/properties/trash
+ * @desc    Empty the trash (Permanently delete all trashed properties)
+ * @access  Private (Admin only)
+ */
+router.delete(
+    '/trash',
+    authenticateToken,
+    isAdmin,
+    emptyTrash
 );
 
 /**

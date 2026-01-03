@@ -231,6 +231,13 @@
     }
 }
 
+/* Form Grid */
+.auth-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .auth-container {
@@ -248,5 +255,17 @@
     .auth-tab {
         padding: 10px 16px;
         font-size: 0.9rem;
+    }
+
+    /* Stack name/prenom fields */
+    .auth-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Tablet support */
+@media (min-width: 601px) and (max-width: 1024px) {
+    .auth-card {
+        max-width: 600px;
     }
 }

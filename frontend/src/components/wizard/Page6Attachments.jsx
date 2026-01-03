@@ -114,8 +114,8 @@ const Page6Attachments = () => {
     const propertyType = formData.basicInfo?.type || 'TEMP';
 
     const handleDocumentUpload = async (files) => {
-        // Filter out files larger than 5MB
-        const MAX_SIZE = 5 * 1024 * 1024;
+        // Filter out files larger than 10MB (matches backend limit)
+        const MAX_SIZE = 10 * 1024 * 1024;
         const validFiles = [];
         let hasLargeFile = false;
 
@@ -128,7 +128,7 @@ const Page6Attachments = () => {
         });
 
         if (hasLargeFile) {
-            alert('Certains fichiers dépassent la taille limite de 5 Mo et n\'ont pas été ajoutés.');
+            alert('Certains fichiers dépassent la taille limite de 10 Mo et n\'ont pas été ajoutés.');
         }
 
         if (validFiles.length === 0) return;

@@ -189,14 +189,14 @@ const Page4Documents = () => {
         setDocuments(updated);
     };
 
-    const handleFileUpload = async (index, files) => {
+ const handleFileUpload = async (index, files) => {
         if (files.length > 0) {
             const file = files[0];
 
-            // Check file size (5MB limit)
-            const MAX_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+            // Check file size (10MB limit to match backend)
+            const MAX_SIZE = 10 * 1024 * 1024; // 10MB in bytes
             if (file.size > MAX_SIZE) {
-                alert(`Le fichier "${file.name}" dépasse la taille limite de 5 Mo.`);
+                alert(`Le fichier "${file.name}" dépasse la taille limite de 10 Mo.`);
                 return;
             }
 
@@ -228,7 +228,6 @@ const Page4Documents = () => {
             }
         }
     };
-
     const handleFileRemove = (index) => {
         const updated = [...documents];
         updated[index].file = null;

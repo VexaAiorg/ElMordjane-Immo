@@ -8,7 +8,7 @@ const ProfileSettings = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
-    
+
     // Profile Data
     const [formData, setFormData] = useState({
         nom: '',
@@ -48,8 +48,8 @@ const ProfileSettings = () => {
                 });
                 if (photoProfil) {
                     // Check if it's a full URL or relative path
-                    const url = photoProfil.startsWith('http') 
-                        ? photoProfil 
+                    const url = photoProfil.startsWith('http')
+                        ? photoProfil
                         : `${apiConfig.baseUrl}${photoProfil}`;
                     setPhotoPreview(url);
                 }
@@ -103,14 +103,14 @@ const ProfileSettings = () => {
                     throw new Error("Le mot de passe doit contenir au moins 6 caractères");
                 }
                 await updateUserPassword(passwordData.oldPassword, passwordData.newPassword);
-                
+
                 // Reset password fields
                 setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
                 setShowPasswordChange(false);
             }
 
             setSuccess('Profil mis à jour avec succès !');
-            
+
             // Refresh profile to ensure sync
             fetchProfile();
 
@@ -151,11 +151,11 @@ const ProfileSettings = () => {
 
                 <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                     {error && (
-                        <div style={{ 
-                            padding: '1rem', 
-                            background: 'rgba(239, 68, 68, 0.1)', 
-                            border: '1px solid rgba(239, 68, 68, 0.3)', 
-                            borderRadius: '8px', 
+                        <div style={{
+                            padding: '1rem',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '8px',
                             color: '#ef4444',
                             marginBottom: '1.5rem',
                             display: 'flex',
@@ -168,11 +168,11 @@ const ProfileSettings = () => {
                     )}
 
                     {success && (
-                        <div style={{ 
-                            padding: '1rem', 
-                            background: 'rgba(34, 197, 94, 0.1)', 
-                            border: '1px solid rgba(34, 197, 94, 0.3)', 
-                            borderRadius: '8px', 
+                        <div style={{
+                            padding: '1rem',
+                            background: 'rgba(34, 197, 94, 0.1)',
+                            border: '1px solid rgba(34, 197, 94, 0.3)',
+                            borderRadius: '8px',
                             color: '#22c55e',
                             marginBottom: '1.5rem',
                             display: 'flex',
@@ -185,15 +185,15 @@ const ProfileSettings = () => {
                     )}
 
                     <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: '2rem' }}>
-                        
+
                         {/* Profile Picture Section */}
                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
                             <div style={{ position: 'relative' }}>
-                                <div style={{ 
-                                    width: '120px', 
-                                    height: '120px', 
-                                    borderRadius: '50%', 
-                                    overflow: 'hidden', 
+                                <div style={{
+                                    width: '120px',
+                                    height: '120px',
+                                    borderRadius: '50%',
+                                    overflow: 'hidden',
                                     border: '4px solid rgba(255,255,255,0.1)',
                                     background: '#1e293b',
                                     display: 'flex',
@@ -206,7 +206,7 @@ const ProfileSettings = () => {
                                         <User size={48} color="#64748b" />
                                     )}
                                 </div>
-                                <label 
+                                <label
                                     htmlFor="pfp-upload"
                                     style={{
                                         position: 'absolute',
@@ -225,28 +225,28 @@ const ProfileSettings = () => {
                                 >
                                     <Camera size={18} color="white" />
                                 </label>
-                                <input 
-                                    type="file" 
-                                    id="pfp-upload" 
-                                    accept="image/*" 
-                                    onChange={handleFileChange} 
-                                    style={{ display: 'none' }} 
+                                <input
+                                    type="file"
+                                    id="pfp-upload"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    style={{ display: 'none' }}
                                 />
                             </div>
                         </div>
 
                         {/* Personal Info */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                        <div className="profile-form-grid">
                             <div className="form-group">
                                 <label className="form-label">Nom</label>
                                 <div className="input-wrapper">
                                     <User size={18} className="input-icon" />
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         name="nom"
                                         value={formData.nom}
                                         onChange={handleInputChange}
-                                        className="form-input" 
+                                        className="form-input"
                                         placeholder="Votre nom"
                                     />
                                 </div>
@@ -255,12 +255,12 @@ const ProfileSettings = () => {
                                 <label className="form-label">Prénom</label>
                                 <div className="input-wrapper">
                                     <User size={18} className="input-icon" />
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         name="prenom"
                                         value={formData.prenom}
                                         onChange={handleInputChange}
-                                        className="form-input" 
+                                        className="form-input"
                                         placeholder="Votre prénom"
                                     />
                                 </div>
@@ -271,24 +271,24 @@ const ProfileSettings = () => {
                             <label className="form-label">Email</label>
                             <div className="input-wrapper">
                                 <Mail size={18} className="input-icon" />
-                                <input 
-                                    type="email" 
+                                <input
+                                    type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
-                                    className="form-input" 
+                                    className="form-input"
                                     placeholder="votre@email.com"
                                 />
                             </div>
                         </div>
 
                         {/* Password Section */}
-                        <div style={{ 
-                            borderTop: '1px solid var(--border-primary)', 
-                            paddingTop: '2rem', 
-                            marginBottom: '2rem' 
+                        <div style={{
+                            borderTop: '1px solid var(--border-primary)',
+                            paddingTop: '2rem',
+                            marginBottom: '2rem'
                         }}>
-                            <button 
+                            <button
                                 type="button"
                                 onClick={() => setShowPasswordChange(!showPasswordChange)}
                                 style={{
@@ -315,16 +315,16 @@ const ProfileSettings = () => {
                                         <label className="form-label">Ancien mot de passe</label>
                                         <div className="input-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                             <Lock size={18} className="input-icon" style={{ position: 'absolute', left: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-                                            <input 
+                                            <input
                                                 type={showOldPassword ? "text" : "password"}
                                                 name="oldPassword"
                                                 value={passwordData.oldPassword}
                                                 onChange={handlePasswordChange}
-                                                className="form-input" 
+                                                className="form-input"
                                                 placeholder="••••••••"
-                                                style={{ 
+                                                style={{
                                                     width: '100%',
-                                                    paddingLeft: '3rem', 
+                                                    paddingLeft: '3rem',
                                                     paddingRight: '3rem',
                                                     height: '48px'
                                                 }}
@@ -353,21 +353,21 @@ const ProfileSettings = () => {
                                             </button>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                    <div className="profile-form-grid">
                                         <div className="form-group">
                                             <label className="form-label">Nouveau mot de passe</label>
                                             <div className="input-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                                 <Lock size={18} className="input-icon" style={{ position: 'absolute', left: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-                                                <input 
+                                                <input
                                                     type={showNewPassword ? "text" : "password"}
                                                     name="newPassword"
                                                     value={passwordData.newPassword}
                                                     onChange={handlePasswordChange}
-                                                    className="form-input" 
+                                                    className="form-input"
                                                     placeholder="••••••••"
-                                                    style={{ 
+                                                    style={{
                                                         width: '100%',
-                                                        paddingLeft: '3rem', 
+                                                        paddingLeft: '3rem',
                                                         paddingRight: '3rem',
                                                         height: '48px'
                                                     }}
@@ -400,16 +400,16 @@ const ProfileSettings = () => {
                                             <label className="form-label">Confirmer le mot de passe</label>
                                             <div className="input-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                                 <Lock size={18} className="input-icon" style={{ position: 'absolute', left: '1rem', color: '#94a3b8', pointerEvents: 'none' }} />
-                                                <input 
+                                                <input
                                                     type={showConfirmPassword ? "text" : "password"}
                                                     name="confirmPassword"
                                                     value={passwordData.confirmPassword}
                                                     onChange={handlePasswordChange}
-                                                    className="form-input" 
+                                                    className="form-input"
                                                     placeholder="••••••••"
-                                                    style={{ 
+                                                    style={{
                                                         width: '100%',
-                                                        paddingLeft: '3rem', 
+                                                        paddingLeft: '3rem',
                                                         paddingRight: '3rem',
                                                         height: '48px'
                                                     }}
@@ -445,8 +445,8 @@ const ProfileSettings = () => {
 
                         {/* Actions */}
                         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 onClick={handleCancel}
                                 className="btn-danger"
                                 disabled={saving}
@@ -454,8 +454,8 @@ const ProfileSettings = () => {
                             >
                                 <X size={18} /> Annuler
                             </button>
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 className="btn-primary"
                                 disabled={saving}
                                 style={{ flex: 1 }}

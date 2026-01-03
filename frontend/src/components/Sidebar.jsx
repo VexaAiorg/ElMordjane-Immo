@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import '../styles/Dashboard.css';
 
-const Sidebar = ({ isCollapsed, toggleSidebar }) => {
+const Sidebar = ({ isCollapsed, toggleSidebar, isMobileMenuOpen, toggleMobileMenu }) => {
     const navigate = useNavigate();
     const { isAdmin, clearUser } = useAuth();
     const { theme, toggleTheme } = useTheme();
@@ -32,7 +32,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
             setIsLoggingOut(true);
             await logout();
             clearUser(); // Clear user from AuthContext
-            
+
             // Add a small delay for animation effect
             setTimeout(() => {
                 navigate('/auth', { replace: true });
@@ -80,15 +80,15 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
                     zIndex: 10000,
                     animation: 'fadeIn 0.3s ease'
                 }}>
-                    <Loader2 
-                        size={48} 
-                        style={{ 
+                    <Loader2
+                        size={48}
+                        style={{
                             color: '#3b82f6',
                             animation: 'spin 1s linear infinite'
-                        }} 
+                        }}
                     />
-                    <p style={{ 
-                        color: 'white', 
+                    <p style={{
+                        color: 'white',
                         marginTop: '1rem',
                         fontSize: '1.1rem',
                         fontWeight: '500'
@@ -98,7 +98,18 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
                 </div>
             )}
 
-            <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+            <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+                {/* Mobile Close Button */}
+                {isMobileMenuOpen && (
+                    <button
+                        onClick={toggleMobileMenu}
+                        className="mobile-close-btn"
+                        aria-label="Close menu"
+                    >
+                        ×
+                    </button>
+                )}
+
                 <div className="sidebar-header">
                     <img
                         src="/assets/ElMordjanMainLogo.png"
@@ -135,14 +146,14 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
                     <button
                         onClick={toggleTheme}
                         className={`nav-item theme-toggle-btn ${isCollapsed ? 'collapsed' : ''}`}
-                        style={{ 
-                            marginBottom: '0.5rem', 
-                            justifyContent: isCollapsed ? 'center' : 'flex-start' 
+                        style={{
+                            marginBottom: '0.5rem',
+                            justifyContent: isCollapsed ? 'center' : 'flex-start'
                         }}
                         title={isCollapsed ? (theme === 'dark' ? 'Mode Clair' : 'Mode Sombre') : ''}
                     >
-                        <div style={{ 
-                            display: 'flex', 
+                        <div style={{
+                            display: 'flex',
                             alignItems: 'center',
                             transition: 'transform 0.3s ease'
                         }}>
@@ -162,8 +173,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
                     </button>
 
                     {/* Logout Button */}
-                    <button  
-                        onClick={handleLogout} 
+                    <button
+                        onClick={handleLogout}
                         className={`nav-item logout-btn ${isCollapsed ? 'collapsed' : ''}`}
                         disabled={isLoggingOut}
                         style={{

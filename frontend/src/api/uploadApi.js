@@ -2,7 +2,7 @@
 // Uploads files immediately when selected, returns URLs
 // Files are stored temporarily until property is created
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 /**
  * Upload files immediately (before property creation)

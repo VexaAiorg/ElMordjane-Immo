@@ -11,9 +11,14 @@ const DashboardLayout = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed);
+    };
+
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
     };
 
     useEffect(() => {
@@ -32,55 +37,58 @@ const DashboardLayout = () => {
 
     const getPhotoUrl = (path) => {
         if (!path) return null;
-        return path.startsWith('http') ? path : `${apiConfig.baseUrl}${path}`;
+        if (path.startsWith('http')) return path;
+        // Ensure path starts with / if it doesn't already
+        const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+        return `${apiConfig.baseUrl}${normalizedPath}`;
     };
 
     return (
         <div className="dashboard-layout">
-            <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
-            <main className={`main-content ${isCollapsed ? 'collapsed' : ''}`} style={{ position: 'relative' }}>
+            <Sidebar
+                isCollapsed={isCollapsed}
+                toggleSidebar={toggleSidebar}
+                isMobileMenuOpen={isMobileMenuOpen}
+                toggleMobileMenu={toggleMobileMenu}
+            />
+
+            {/* Mobile Menu Backdrop */}
+            {isMobileMenuOpen && (
+                <div
+                    className="mobile-backdrop"
+                    onClick={toggleMobileMenu}
+                    aria-label="Close menu"
+                />
+            )}
+
+            {/* Hamburger Menu Button (Mobile Only) */}
+            <button
+                className="hamburger-btn"
+                onClick={toggleMobileMenu}
+                aria-label="Toggle menu"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <main className={`main-content ${isCollapsed ? 'collapsed' : ''}`}>
                 {/* User Profile Widget */}
                 <div
                     onClick={() => navigate('/dashboard/profile')}
                     className="user-widget"
-                    style={{
-                        position: 'absolute',
-                        top: '1.5rem',
-                        right: '2rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        cursor: 'pointer',
-                        zIndex: 50,
-                        padding: '0.5rem 1rem',
-                        borderRadius: '30px',
-                        background: 'var(--glass-bg)',
-                        border: '1px solid var(--glass-border)',
-                        backdropFilter: 'blur(10px)',
-                        transition: 'all 0.2s'
-                    }}
                 >
-                    <div style={{ textAlign: 'right', marginRight: '0.25rem' }}>
-                        <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                    <div className="user-widget-text">
+                        <div className="user-widget-name">
                             {user ? `${user.prenom} ${user.nom}` : 'Chargement...'}
                         </div>
                     </div>
-                    <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        overflow: 'hidden',
-                        background: '#334155',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '2px solid rgba(255,255,255,0.1)'
-                    }}>
+                    <div className="user-widget-avatar">
                         {user && user.photoProfil ? (
                             <img
                                 src={getPhotoUrl(user.photoProfil)}
                                 alt="Profile"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                className="user-widget-avatar-img"
                             />
                         ) : (
                             <User size={20} color="#94a3b8" />

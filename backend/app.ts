@@ -35,7 +35,7 @@ app.use('/uploads', express.static(UPLOAD_ROOT));
 
 
 // Health check endpoint 
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'Server is running correctly',
