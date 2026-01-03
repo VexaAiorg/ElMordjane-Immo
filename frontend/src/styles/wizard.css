@@ -489,7 +489,7 @@ Custom radio circle - inner dot (checked state) */
   opacity: 0;
 }
 
-*/
+
 
 /* Hover effect on radio circle */
 .radio-label:hover span::before {
