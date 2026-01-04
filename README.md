@@ -2,7 +2,7 @@
 
 A robust, full-stack real estate management solution designed to streamline property administration, inventory tracking, and listing management. Built with a modern architecture for scalability and performance.
 
-## 🚀 Features
+## 🚀 Features :
 
 - **Role-Based Authentication**: Secure access control for Administrators and Collaborators using JWT.
 - **Property Management**: Comprehensive CRUD operations for various property types (Appartements, Villas, Terrains, Locals, Immeubles).
