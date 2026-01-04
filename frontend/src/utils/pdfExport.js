@@ -92,6 +92,81 @@ const formatDate = (dateString) => {
     });
 };
 
+// Helper to render text with emojis as an image
+const createTextImage = async (text, widthMm, fontSizePt, color = '#333333') => {
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Scale factor for high resolution (Retina-like)
+        const scale = 3;
+
+        // Convert input units
+        // 1 pt = 1.333 px approx, 1 mm = 3.78 px approx at 96 DPI
+        // We use a simplified conversion aligned with jsPDF
+        const widthPx = widthMm * 3.78 * scale;
+        const fontSizePx = fontSizePt * 1.33 * scale;
+        const lineHeightPx = fontSizePx * 1.3;
+
+        // Font settings
+        // Using Apple Color Emoji for Mac, Segoe UI Emoji for Windows, Noto Color Emoji for Linux
+        const fontFamily = '"Helvetica", "Arial", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+        ctx.font = `${fontSizePx}px ${fontFamily}`;
+
+        // Process text for wrapping
+        const paragraphs = text.split('\n');
+        const lines = [];
+
+        paragraphs.forEach(paragraph => {
+            const words = paragraph.split(' ');
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = ctx.measureText(currentLine + " " + word).width;
+                if (width < widthPx) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+        });
+
+        // Calculate total canvas height
+        const heightPx = lines.length * lineHeightPx;
+
+        // Resize canvas (this clears context, so we must reset font/styles)
+        canvas.width = widthPx;
+        canvas.height = heightPx + 10; // padding bottom
+
+        // Fill background white (transparent by default, but PDF needs consistency)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Reset text styles
+        ctx.font = `${fontSizePx}px ${fontFamily}`;
+        ctx.fillStyle = color;
+        ctx.textBaseline = 'top';
+
+        // Draw lines
+        lines.forEach((line, index) => {
+            ctx.fillText(line, 0, index * lineHeightPx);
+        });
+
+        // Convert to data URL
+        const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+        // Calculate height in mm for PDF
+        const heightMm = (heightPx / (3.78 * scale));
+
+        resolve({
+            image: imageBase64,
+            height: heightMm
+        });
+    });
+};
+
 // --- Main Export Function ---
 
 export const exportPropertiesToPDF = async (properties) => {
@@ -243,12 +318,31 @@ export const exportPropertiesToPDF = async (properties) => {
             doc.text('DESCRIPTION', mainX, mainY);
             mainY += 7;
 
-            doc.setFontSize(10);
-            doc.setTextColor(...mainTextColor);
-            doc.setFont('helvetica', 'normal');
-            const desc = doc.splitTextToSize(property.description, mainContentWidth);
-            doc.text(desc, mainX, mainY);
-            mainY += (desc.length * 5) + 10;
+            // USE IMAGE FOR DESCRIPTION TO SUPPORT EMOJIS
+            try {
+                // Generate image from text
+                // Use slightly smaller width to be safe
+                const descImage = await createTextImage(
+                    property.description,
+                    mainContentWidth,
+                    10,
+                    '#333333'
+                );
+
+                // Add image
+                doc.addImage(descImage.image, 'JPEG', mainX, mainY, mainContentWidth, descImage.height);
+                mainY += descImage.height + 10;
+
+            } catch (imgErr) {
+                console.error('Error rendering description image:', imgErr);
+                // Fallback to text if canvas fails
+                doc.setFontSize(10);
+                doc.setTextColor(...mainTextColor);
+                doc.setFont('helvetica', 'normal');
+                const desc = doc.splitTextToSize(property.description, mainContentWidth);
+                doc.text(desc, mainX, mainY);
+                mainY += (desc.length * 5) + 10;
+            }
         }
 
         // C. Specific Details (Grid)

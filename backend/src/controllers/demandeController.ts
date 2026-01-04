@@ -69,3 +69,122 @@ export const getAllDemandes = async (req: Request, res: Response): Promise<void>
         });
     }
 };
+
+/**
+ * Get a single demande by ID
+ * GET /api/admin/demandes/:id
+ * Protected: Admin only
+ */
+export const getDemandeById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        const demande = await prisma.demande.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!demande) {
+            res.status(404).json({
+                status: 'error',
+                message: 'Demande not found'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            status: 'success',
+            data: demande
+        });
+    } catch (error) {
+        console.error('Error fetching demande:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Error fetching demande'
+        });
+    }
+};
+
+/**
+ * Update a demande
+ * PUT /api/admin/demandes/:id
+ * Protected: Admin only
+ */
+export const updateDemande = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const { prenom, nom, description } = req.body;
+
+        // Check if demande exists
+        const existingDemande = await prisma.demande.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!existingDemande) {
+            res.status(404).json({
+                status: 'error',
+                message: 'Demande not found'
+            });
+            return;
+        }
+
+        const updatedDemande = await prisma.demande.update({
+            where: { id: Number(id) },
+            data: {
+                prenom: prenom ? prenom.trim() : undefined,
+                nom: nom ? nom.trim() : undefined,
+                description: description ? description.trim() : undefined
+            }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Demande updated successfully',
+            data: updatedDemande
+        });
+    } catch (error) {
+        console.error('Error updating demande:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Error updating demande'
+        });
+    }
+};
+
+/**
+ * Delete a demande
+ * DELETE /api/admin/demandes/:id
+ * Protected: Admin only
+ */
+export const deleteDemande = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        // Check if demande exists
+        const existingDemande = await prisma.demande.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!existingDemande) {
+            res.status(404).json({
+                status: 'error',
+                message: 'Demande not found'
+            });
+            return;
+        }
+
+        await prisma.demande.delete({
+            where: { id: Number(id) }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Demande deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting demande:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Error deleting demande'
+        });
+    }
+};

@@ -624,3 +624,44 @@ export const getAllDemandes = async () => {
     });
     return data;
 };
+
+/**
+ * Get a single demande by ID
+ * @param {string|number} id - Demande ID
+ * @returns {Promise<Object>} Demande data
+ */
+export const getDemandeById = async (id) => {
+    const data = await apiRequest(`/api/admin/demandes/${id}`, {
+        method: 'GET',
+        headers: createHeaders(true),
+    });
+    return data;
+};
+
+/**
+ * Update a demande
+ * @param {string|number} id - Demande ID
+ * @param {Object} updateData - Data to update
+ * @returns {Promise<Object>} Updated demande
+ */
+export const updateDemande = async (id, updateData) => {
+    const data = await apiRequest(`/api/admin/demandes/${id}`, {
+        method: 'PUT',
+        headers: createHeaders(true),
+        body: JSON.stringify(updateData),
+    });
+    return data;
+};
+
+/**
+ * Delete a demande
+ * @param {string|number} id - Demande ID
+ * @returns {Promise<Object>} Success message
+ */
+export const deleteDemande = async (id) => {
+    const data = await apiRequest(`/api/admin/demandes/${id}`, {
+        method: 'DELETE',
+        headers: createHeaders(true),
+    });
+    return data;
+};
