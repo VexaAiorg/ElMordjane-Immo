@@ -61,60 +61,25 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-}
     container_name: elmordjane_frontend
     # Ports removed (Handled by Traefik)
-    # Uncomment for direct access debugging:
     # ports:
     #   - "8080:8080"
     networks:
       - app-network
       - n8n_default
-    environment:
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-}
+
     labels:
-      # Enable Traefik for this container
       - "traefik.enable=true"
-      
-      # HTTP Router (redirects to HTTPS)
-      - "traefik.http.routers.elmordjane-http.rule=Host(`dashboard.elmodjaneimmo.site`)"
-      - "traefik.http.routers.elmordjane-http.entrypoints=web"
-      - "traefik.http.routers.elmordjane-http.middlewares=https-redirect"
-      
-      # HTTPS Router
       - "traefik.http.routers.elmordjane.rule=Host(`dashboard.elmodjaneimmo.site`)"
       - "traefik.http.routers.elmordjane.entrypoints=websecure"
       - "traefik.http.routers.elmordjane.tls=true"
       - "traefik.http.routers.elmordjane.tls.certresolver=mytlschallenge"
-      
-      # Service configuration
       - "traefik.http.services.elmordjane.loadbalancer.server.port=8080"
-      - "traefik.http.services.elmordjane.loadbalancer.server.scheme=http"
-      
-      # Middleware for HTTPS redirect
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.https-redirect.redirectscheme.permanent=true"
-      
-      # Security headers middleware
-      - "traefik.http.middlewares.security-headers.headers.framedeny=true"
-      - "traefik.http.middlewares.security-headers.headers.sslredirect=true"
-      - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
-      - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
-      - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
-      - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
-      
-      # Apply security headers to HTTPS router
-      - "traefik.http.routers.elmordjane.middlewares=security-headers"
     depends_on:
       - backend
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+
     logging:
       driver: "json-file"
       options:
