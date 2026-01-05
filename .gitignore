@@ -21,7 +21,8 @@ certbot/
 # Uploads directory (user-generated content)
 backend/uploads/*
 !backend/uploads/.gitkeep
-
+#assets 
+assets/
 # Logs
 *.log
 logs/

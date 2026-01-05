@@ -561,6 +561,7 @@ const Demande = () => {
                 .list-card-header {
                     justify-content: space-between;
                     flex-wrap: wrap;
+                    gap: 1rem;
                 }
 
                 .list-subtitle {
@@ -605,6 +606,7 @@ const Demande = () => {
                     outline: none;
                     transition: border-color 0.2s;
                     font-family: inherit;
+                    box-sizing: border-box;
                 }
 
                 .form-group input:focus,
@@ -632,6 +634,7 @@ const Demande = () => {
                     border-radius: 8px;
                     border: 1px solid rgba(255, 255, 255, 0.1);
                     min-width: 250px;
+                    max-width: 100%;
                 }
 
                 .search-input-small {
@@ -671,26 +674,32 @@ const Demande = () => {
 
                 .demande-content {
                     flex: 1;
+                    min-width: 0;
+                    overflow: hidden;
                 }
 
                 .demande-item-header {
                     display: flex;
                     flex-wrap: wrap;
-                    gap: 1rem;
+                    gap: 0.75rem;
                     align-items: center;
-                    margin-bottom: 0.5rem;
+                    margin-bottom: 0.75rem;
                 }
 
                 .demande-client {
                     display: flex;
                     align-items: center;
                     gap: 0.5rem;
+                    min-width: 0;
                 }
 
                 .client-name {
                     font-weight: 600;
                     color: var(--text-primary);
                     font-size: 1.05rem;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
 
                 .demande-date {
@@ -702,6 +711,7 @@ const Demande = () => {
                     background: rgba(255, 255, 255, 0.05);
                     padding: 0.25rem 0.5rem;
                     border-radius: 4px;
+                    white-space: nowrap;
                 }
 
                 .demande-description-preview {
@@ -711,11 +721,13 @@ const Demande = () => {
                     -webkit-line-clamp: 2;
                     -webkit-box-orient: vertical;
                     overflow: hidden;
+                    word-break: break-word;
                 }
 
                 .demande-actions {
                     display: flex;
                     gap: 0.5rem;
+                    flex-shrink: 0;
                 }
 
                 .action-btn {
@@ -729,6 +741,8 @@ const Demande = () => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    min-width: 36px;
+                    min-height: 36px;
                 }
 
                 .action-btn:hover {
@@ -820,6 +834,10 @@ const Demande = () => {
                     margin-bottom: 1.5rem;
                 }
 
+                .detail-group:last-child {
+                    margin-bottom: 0;
+                }
+
                 .detail-group label {
                     display: block;
                     font-size: 0.85rem;
@@ -842,6 +860,7 @@ const Demande = () => {
                     color: var(--text-primary);
                     line-height: 1.6;
                     white-space: pre-wrap;
+                    word-break: break-word;
                 }
 
                 .modal-footer {
@@ -850,6 +869,7 @@ const Demande = () => {
                     display: flex;
                     justify-content: flex-end;
                     gap: 1rem;
+                    flex-wrap: wrap;
                 }
 
                 /* Delete Modal specific */
@@ -884,6 +904,7 @@ const Demande = () => {
                 .delete-body p {
                     color: var(--text-secondary);
                     line-height: 1.5;
+                    word-break: break-word;
                 }
 
                 .btn-danger {
@@ -901,26 +922,63 @@ const Demande = () => {
                     filter: brightness(1.1);
                 }
 
+                .btn-danger:disabled,
+                .btn-primary:disabled,
+                .btn-secondary:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+
                 /* Responsive Design */
+                @media (max-width: 1200px) {
+                    .demande-layout {
+                        grid-template-columns: 45% 1fr;
+                        gap: 1.5rem;
+                    }
+                }
+
                 @media (max-width: 1024px) {
                     .demande-layout {
                         grid-template-columns: 1fr;
-                        /* Stack form on top of list */
+                        gap: 2rem;
                     }
                     
                     .demande-form-section {
                         margin-bottom: 0;
                     }
+
+                    .demandes-list {
+                        max-height: 500px;
+                    }
                 }
 
                 @media (max-width: 768px) {
-                    .page-container {
-                        padding-bottom: 5rem; /* Space for mobile nav if applicable */
+                    .page-header {
+                        margin-bottom: 1.5rem;
+                    }
+
+                    .page-title {
+                        font-size: 1.5rem;
+                    }
+
+                    .page-subtitle {
+                        font-size: 0.9rem;
+                    }
+
+                    .demande-layout {
+                        gap: 1.5rem;
+                        margin-top: 1.5rem;
                     }
 
                     .form-card, 
                     .list-card {
                         padding: 1.5rem;
+                        border-radius: 12px;
+                    }
+
+                    .form-card-header h2,
+                    .list-card-header h2 {
+                        font-size: 1.25rem;
                     }
 
                     .form-row {
@@ -936,11 +994,32 @@ const Demande = () => {
 
                     .search-wrapper-small {
                         width: 100%;
+                        min-width: 0;
                     }
                     
                     .demande-item {
                         flex-direction: column;
                         gap: 1rem;
+                        padding: 1rem;
+                    }
+
+                    .demande-item-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 0.5rem;
+                        width: 100%;
+                    }
+
+                    .demande-client {
+                        width: 100%;
+                    }
+
+                    .client-name {
+                        font-size: 1rem;
+                    }
+
+                    .demande-date {
+                        font-size: 0.8rem;
                     }
                     
                     .demande-actions {
@@ -948,23 +1027,140 @@ const Demande = () => {
                         justify-content: flex-end;
                         border-top: 1px solid rgba(255, 255, 255, 0.1);
                         padding-top: 0.75rem;
+                        margin-top: 0.5rem;
+                    }
+
+                    .demandes-list {
+                        max-height: 400px;
+                    }
+
+                    .modal-content {
+                        max-width: 95%;
+                    }
+
+                    .modal-header,
+                    .modal-body,
+                    .modal-footer {
+                        padding: 1.25rem;
+                    }
+
+                    .modal-header h3 {
+                        font-size: 1.1rem;
                     }
                 }
 
                 @media (max-width: 480px) {
+                    .demande-layout {
+                        gap: 1rem;
+                        margin-top: 1rem;
+                    }
+
                     .form-card,
                     .list-card {
-                        padding: 1.25rem;
+                        padding: 1rem;
+                        border-radius: 10px;
+                    }
+
+                    .form-card-header,
+                    .list-card-header {
+                        margin-bottom: 1.5rem;
+                        padding-bottom: 0.75rem;
                     }
 
                     .form-card-header h2,
                     .list-card-header h2 {
-                        font-size: 1.25rem;
+                        font-size: 1.1rem;
+                    }
+
+                    .form-group input,
+                    .form-group textarea {
+                        padding: 0.625rem;
+                        font-size: 0.95rem;
+                    }
+
+                    .form-actions {
+                        flex-direction: column;
+                        gap: 0.75rem;
                     }
 
                     .form-actions button {
                         width: 100%;
-                        flex: 1;
+                        justify-content: center;
+                    }
+
+                    .demande-item {
+                        padding: 0.875rem;
+                    }
+
+                    .demande-description-preview {
+                        font-size: 0.9rem;
+                    }
+
+                    .action-btn {
+                        padding: 0.4rem;
+                        min-width: 32px;
+                        min-height: 32px;
+                    }
+
+                    .modal-overlay {
+                        padding: 0.5rem;
+                    }
+
+                    .modal-content {
+                        border-radius: 12px;
+                    }
+
+                    .modal-header,
+                    .modal-body,
+                    .modal-footer {
+                        padding: 1rem;
+                    }
+
+                    .modal-footer {
+                        flex-direction: column;
+                        gap: 0.75rem;
+                    }
+
+                    .modal-footer button {
+                        width: 100%;
+                        justify-content: center;
+                    }
+
+                    .delete-body {
+                        padding: 1.5rem 1rem;
+                    }
+
+                    .delete-icon {
+                        width: 60px;
+                        height: 60px;
+                    }
+
+                    .delete-body h3 {
+                        font-size: 1.25rem;
+                    }
+
+                    .delete-body p {
+                        font-size: 0.9rem;
+                    }
+                }
+
+                /* Tablet specific optimizations */
+                @media (min-width: 768px) and (max-width: 1024px) {
+                    .demande-layout {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .form-card,
+                    .list-card {
+                        padding: 1.75rem;
+                    }
+
+                    .demandes-list {
+                        max-height: 550px;
+                    }
+
+                    .demande-item {
+                        padding: 1.125rem;
                     }
                 }
             `}</style>
