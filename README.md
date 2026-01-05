@@ -33,6 +33,17 @@ Une solution full-stack solide pour piloter l'administration des biens, le suivi
 | ![Filtres et tri](assets/Screenshot%20From%202026-01-05%2016-07-38.png) | ![Statuts et suivi](assets/Screenshot%20From%202026-01-05%2016-07-44.png) | ![Vue liste/grille](assets/Screenshot%20From%202026-01-05%2016-07-51.png) |
 | ![Suivi et mandat](assets/Screenshot%20From%202026-01-05%2016-08-02.png) | ![Détails bien](assets/Screenshot%20From%202026-01-05%2016-08-20.png) | ![Corbeille/archives](assets/Screenshot%20From%202026-01-05%2016-08-44.png) |
 
+## 🧭 Parcours et pages principales
+
+- **Tous les biens** : vue globale avec stats (total, disponibles, vendus/loués), recherche profonde, filtres (type, date), tri, export PDF, bascule liste/grille, ouverture fiche et édition.
+- **Vente / Location** : segmentations rapides pour suivre les biens par mode de transaction et leur statut opérationnel.
+- **Archives** : accès aux biens archivés (admin), consultation et restauration sans exposition aux collaborateurs.
+- **Corbeille** : éléments supprimés avec possibilité de restauration avant purge automatique ; visibilité restreinte admin.
+- **Demandes** : suivi des demandes clients, création/mise à jour/suppression, tri du plus récent.
+- **Collaborateurs** : gestion des comptes collaborateurs (création, édition, suppression), visibilité sur leurs biens créés.
+- **Nouveau bien** : wizard multi-étapes (infos de base, propriétaire, détails par type, documents, suivi, pièces jointes, récap) pour saisir sans friction.
+- **Paramètres / Profil** : mise à jour profil, photo, mot de passe, déconnexion sécurisée.
+
 ## 🛠️ Pile technique
 
 ### Frontend

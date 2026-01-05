@@ -47,4 +47,11 @@ README.md
 DEPLOYMENT-METHODS.md
 DEPLOYMENT.md
 QUICKSTART.md   
+#back ups files : 
+backup-db.sh
+deploy-ssl-fix.sh
+deploy.sh
+restore-db.sh
+setup-ssl.sh
+docker-compose.prod.yml
 
