@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import prisma from '../lib/prisma';
+import pool from '../lib/db';
 
 const SALT_ROUNDS = 10;
 
@@ -12,16 +12,18 @@ export const ensureAdminUser = async (): Promise<void> => {
     return;
   }
 
-  const existingAdmin = await prisma.utilisateur.findUnique({
-    where: { email: adminEmail }
-  });
+  const { rows } = await pool.query<{ id: number; role: string }>(
+    'SELECT id, role FROM "Utilisateur" WHERE email = $1 LIMIT 1',
+    [adminEmail]
+  );
+  const existingAdmin = rows[0] ?? null;
 
   if (existingAdmin) {
     if (existingAdmin.role !== 'ADMIN') {
-      await prisma.utilisateur.update({
-        where: { id: existingAdmin.id },
-        data: { role: 'ADMIN' }
-      });
+      await pool.query(
+        'UPDATE "Utilisateur" SET role = $1 WHERE id = $2',
+        ['ADMIN', existingAdmin.id]
+      );
       console.log(`Updated existing user role to ADMIN for: ${adminEmail}`);
     } else {
       console.log(`Admin user already exists: ${adminEmail}`);
@@ -31,15 +33,11 @@ export const ensureAdminUser = async (): Promise<void> => {
 
   const hashedPassword = await bcrypt.hash(adminPassword, SALT_ROUNDS);
 
-  await prisma.utilisateur.create({
-    data: {
-      email: adminEmail,
-      motDePasse: hashedPassword,
-      role: 'ADMIN',
-      nom: 'Admin',
-      prenom: 'System'
-    }
-  });
+  await pool.query(
+    `INSERT INTO "Utilisateur" (email, "motDePasse", role, nom, prenom)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [adminEmail, hashedPassword, 'ADMIN', 'Admin', 'System']
+  );
 
   console.log(`Admin user created: ${adminEmail}`);
 };

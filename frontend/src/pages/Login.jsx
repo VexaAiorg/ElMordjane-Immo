@@ -42,7 +42,7 @@ const Login = () => {
                     <div className="input-group">
                         <label htmlFor="email">Email Address</label>
                         <input
-                            type="email"
+                            type="text"
                             id="email"
                             placeholder="Enter your email"
                             value={email}

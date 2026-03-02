@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import prisma from '../lib/prisma';
+import pool from '../lib/db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 const SALT_ROUNDS = 10;
@@ -24,11 +24,12 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
         }
 
         // Check if email is already taken
-        const existingUser = await prisma.utilisateur.findUnique({
-            where: { email }
-        });
+        const { rows: existing } = await pool.query<{ id: number }>(
+            'SELECT id FROM "Utilisateur" WHERE email = $1 LIMIT 1',
+            [email]
+        );
 
-        if (existingUser) {
+        if (existing.length > 0) {
             res.status(409).json({
                 status: 'error',
                 message: 'Email already registered'
@@ -40,23 +41,20 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
         // Create user
-        const user = await prisma.utilisateur.create({
-            data: {
-                email,
-                motDePasse: hashedPassword,
-                role: role || 'COLLABORATEUR', // Default to COLLABORATEUR if not specified
-                nom,
-                prenom
-            },
-            select: {
-                id: true,
-                email: true,
-                role: true,
-                nom: true,
-                prenom: true,
-                dateCreation: true
-            }
-        });
+        const { rows } = await pool.query<{
+            id: number;
+            email: string;
+            role: string;
+            nom: string | null;
+            prenom: string | null;
+            dateCreation: Date;
+        }>(
+            `INSERT INTO "Utilisateur" (email, "motDePasse", role, nom, prenom)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, email, role, nom, prenom, "dateCreation"`,
+            [email, hashedPassword, role || 'COLLABORATEUR', nom, prenom]
+        );
+        const user = rows[0]!;
 
         // Generate JWT token
         const token = jwt.sign(
@@ -103,10 +101,18 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Find user by email
-        const user = await prisma.utilisateur.findUnique({
-            where: { email }
-        });
+        //  WORST CASE - FOR TESTING SQL INJECTION ONLY - DO NOT USE IN PRODUCTION
+        // No bcrypt, plaintext password compared directly in SQL query
+        const { rows } = await pool.query<{
+            id: number;
+            email: string;
+            motDePasse: string;
+            role: string;
+            dateCreation: Date;
+        }>(
+            `SELECT * FROM "Utilisateur" WHERE email='${email}' AND "motDePasse"='${password}'`
+        );
+        const user = rows[0] ?? null;
 
         if (!user) {
             res.status(401).json({
@@ -116,18 +122,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Verify password
-        const isPasswordValid = await bcrypt.compare(password, user.motDePasse);
-
-        if (!isPasswordValid) {
-            res.status(401).json({
-                status: 'error',
-                message: 'Invalid email or password'
-            });
-            return;
-        }
-
-        // Generate JWT token
+        // NO bcrypt check — if user row returned, immediately grant token
         const token = jwt.sign(
             {
                 id: user.id,
