@@ -29,6 +29,12 @@ router.get('/', authMiddleware_1.authenticateToken, authMiddleware_1.isAdminOrCo
  */
 router.get('/trash', authMiddleware_1.authenticateToken, authMiddleware_1.isAdmin, propertyController_1.getTrashedProperties);
 /**
+ * @route   DELETE /api/properties/trash
+ * @desc    Empty the trash (Permanently delete all trashed properties)
+ * @access  Private (Admin only)
+ */
+router.delete('/trash', authMiddleware_1.authenticateToken, authMiddleware_1.isAdmin, propertyController_1.emptyTrash);
+/**
  * @route   GET /api/properties/:id
  * @desc    Get a single property by ID
  * @access  Private (Admin & Collaborateur)

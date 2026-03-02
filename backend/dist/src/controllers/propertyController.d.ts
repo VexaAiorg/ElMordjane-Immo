@@ -52,4 +52,10 @@ export declare const restoreProperty: (req: Request, res: Response) => Promise<v
  * Note: This permanently deletes the property and all associated files
  */
 export declare const permanentlyDeleteProperty: (req: Request, res: Response) => Promise<void>;
+/**
+ * Empty the trash (Permanently delete all trashed properties)
+ * DELETE /api/properties/trash
+ * Protected: Admin only
+ */
+export declare const emptyTrash: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=propertyController.d.ts.map

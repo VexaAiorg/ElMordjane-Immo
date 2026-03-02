@@ -55,6 +55,8 @@ const createHeaders = (includeAuth = false) => {
  */
 const apiRequest = async (endpoint, options = {}) => {
     const url = `${API_BASE_URL}${endpoint}`;
+    const isPublicAuthEndpoint =
+        endpoint === '/api/auth/login' || endpoint === '/api/auth/signup';
 
     try {
         const controller = new AbortController();
@@ -73,7 +75,7 @@ const apiRequest = async (endpoint, options = {}) => {
         // Handle non-2xx responses
         if (!response.ok) {
             // Handle Authentication Errors
-            if (response.status === 401) {
+            if (response.status === 401 && !isPublicAuthEndpoint) {
                 // 401: No token provided
                 console.warn('Unauthorized access. Redirecting to login...');
                 removeAuthToken();
@@ -82,7 +84,7 @@ const apiRequest = async (endpoint, options = {}) => {
                 throw new Error('Session expired. Redirecting...');
             }
 
-            if (response.status === 403) {
+            if (response.status === 403 && !isPublicAuthEndpoint) {
                 // 403: Check if it's an expired/invalid token
                 const errorMessage = data.message || '';
                 if (errorMessage.includes('Invalid or expired token')) {

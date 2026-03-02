@@ -31,7 +31,7 @@ app.use((0, morgan_1.default)('combined')); // HTTP request logger
 const UPLOAD_ROOT = process.env.UPLOAD_DIR || path_1.default.join(process.cwd(), 'uploads');
 app.use('/uploads', express_1.default.static(UPLOAD_ROOT));
 // Health check endpoint 
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
     res.status(200).json({
         status: 'success',
         message: 'Server is running correctly',
@@ -42,11 +42,13 @@ app.get('/health', (req, res) => {
 const uploadRoutes_1 = __importDefault(require("./src/routes/uploadRoutes"));
 const userRoutes_1 = __importDefault(require("./src/routes/userRoutes"));
 const collaborateurRoutes_1 = __importDefault(require("./src/routes/collaborateurRoutes"));
+const demandeRoutes_1 = __importDefault(require("./src/routes/demandeRoutes"));
 // API Routes
 app.use('/api/auth', authRoutes_1.default);
 app.use('/api/properties', propertyRoutes_1.default);
 app.use('/api/upload', uploadRoutes_1.default);
 app.use('/api/user', userRoutes_1.default);
 app.use('/api/admin/collaborateurs', collaborateurRoutes_1.default);
+app.use('/api/admin/demandes', demandeRoutes_1.default);
 exports.default = app;
 //# sourceMappingURL=app.js.map

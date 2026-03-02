@@ -1,20 +1,19 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
     container_name: elmordjane_db
     ports:
       - "5433:5432"
+      #"5432:5432"
     environment:
-      - POSTGRES_USER=your_username
-      - POSTGRES_PASSWORD=your_password
-      - POSTGRES_DB=container_name
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - POSTGRES_USER=amine ## sauzxa
+      - POSTGRES_PASSWORD=amine123 ##  raouf123
+      - POSTGRES_DB=ElMordjanDBSqlInjection  ##  ElMordjanDb
+    volumes: 
+      - postgres_data_amine:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sauzxa -d ElMordjanDb"]
+      test: ["CMD-SHELL", "pg_isready -U amine -d ElMordjanDBSqlInjection"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,14 +24,16 @@ services:
       dockerfile: Dockerfile
     container_name: elmordjane_backend
     ports:
-      - "3000:3000"
+    # LOCAL: 3000, CONTAINER: 3000
+      - "3001:3000"
     environment:
       - PORT=3000
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://name:pass@db:5432/exemple
-      - JWT_SECRET=your_jwt_secret
-      - ADMIN_EMAIL=yourEmail
-      - ADMIN_PASSWORD=Pass
+      - DATABASE_URL=postgresql://amine:amine123@db:5432/ElMordjanDBSqlInjection
+      ## old: postgresql://sauzxa:raouf123@db:5432/ElMordjanDb
+      - JWT_SECRET=8d53236a8a405f1fe02cf497911ff2cdb772a20a5ab8fd00d59052efc00dc0397dcc1ed6255cad0a560f0696536c74e30ca4bbbe
+      - ADMIN_EMAIL=ElMordjanAdmin@gmail.com
+      - ADMIN_PASSWORD=elmordjansec123
       # Optional: Add these if you handle uploads locally
       # - UPLOAD_DIR=uploads
     volumes:
@@ -48,10 +49,10 @@ services:
       dockerfile: Dockerfile
     container_name: elmordjane_frontend
     ports:
-      - "80:80"
+      - "81:8080"
     depends_on:
       - backend
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  postgres_data_amine:

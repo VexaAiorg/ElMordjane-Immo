@@ -1,14 +1,12 @@
 import app from './app'; // Trigger restart
 import dotenv from 'dotenv';
+import { ensureAdminUser } from './src/services/adminBootstrapService';
 import { initScheduler } from './src/services/schedulerService';
 
 // Load environment variables
 dotenv.config();
 
-// Initialize Scheduler
-initScheduler();
-
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const DATABASE_URL = process.env.DATABASE_URL;
 
 // Validate required environment variables
@@ -17,12 +15,25 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🏥 Health check available at: http://localhost:${PORT}/health`);
-});
+const startServer = async (): Promise<void> => {
+  try {
+    await ensureAdminUser();
+
+    // Initialize scheduler only after database bootstrap succeeds.
+    initScheduler();
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🏥 Health check available at: http://localhost:${PORT}/health`);
+    });
+  } catch (error) {
+    console.error('Failed to bootstrap server:', error);
+    process.exit(1);
+  }
+};
+
+void startServer();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
